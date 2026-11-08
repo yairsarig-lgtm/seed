@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEED — prologue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Chakra+Petch:wght@500;700&family=Share+Tech+Mono&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#050505; --ink:#d9d9d9; --dim:#6b6b6b; --faint:#2a2a2a;
+    --red:#ff3b47; --frame:#bdbdbd;
+    --mono:'Share Tech Mono', ui-monospace, monospace;
+    --head:'Chakra Petch', 'Share Tech Mono', sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--mono);overflow:hidden}
+  body{user-select:none}
+  #crt{pointer-events:none;position:fixed;inset:0;z-index:90;background:repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);mix-blend-mode:screen}
+  #vignette{pointer-events:none;position:fixed;inset:0;z-index:89;background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.75) 100%)}
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+  #topbar{flex:0 0 auto;padding:10px 18px 0;color:var(--dim);font-size:13px;letter-spacing:.06em;white-space:pre;overflow:hidden}
+  #topbar .t{color:var(--ink)} #topbar .r{color:var(--red)} #topbar .w{color:#fff}
+  #main{flex:1 1 auto;position:relative;overflow:hidden}
+  .scene{position:absolute;inset:0;display:none}
+  .scene.on{display:block}
+  .win{position:absolute;border:2px solid var(--frame);background:rgba(8,8,8,.94)}
+  .bar{height:22px;background:linear-gradient(90deg,#cfcfcf,#9a9a9a 60%,#cfcfcf);color:#111;font-size:12px;display:flex;align-items:center;justify-content:space-between;padding:0 6px;letter-spacing:.08em;white-space:nowrap;overflow:hidden}
+  .bar i{font-style:normal;letter-spacing:4px}
+  .btn{background:transparent;border:1px solid var(--frame);color:var(--ink);font-family:var(--mono);font-size:14px;padding:8px 14px;cursor:pointer;letter-spacing:.08em}
+  .btn:hover{background:var(--ink);color:#000}
+  .btn.red{border-color:var(--red);color:var(--red)} .btn.red:hover{background:var(--red);color:#000}
+  @keyframes blink{50%{opacity:.15}}
+  @keyframes popin{from{opacity:0;transform:translate(-50%,-46%)}}
+  @keyframes shake{25%{margin-left:-7px}50%{margin-left:7px}75%{margin-left:-4px}}
+  @keyframes pulse{50%{background:#a8141e}}
+
+  /* ---------- boot ---------- */
+  #boot{display:none;align-items:center;justify-content:center;flex-direction:column;gap:22px;text-align:center;padding:24px}
+  #boot.on{display:flex}
+  #bootMsg{font-family:var(--head);font-weight:700;font-size:clamp(22px,4.2vw,46px);letter-spacing:.04em;line-height:1.25;max-width:1000px;min-height:2.6em;white-space:pre-line}
+  #bootSub{color:var(--dim);font-size:14px;min-height:1.4em;white-space:pre}
+  #bootGo{color:var(--red);font-size:14px;opacity:0;transition:opacity .6s;cursor:pointer}
+  #bootGo.show{opacity:1;animation:blink 1.1s steps(1) infinite}
+
+  /* ---------- core (binding) ---------- */
+  #field{left:16px;right:16px;top:16px;bottom:16px}
+  #fieldInner{position:absolute;left:0;right:0;top:22px;bottom:0;transition:filter 1.2s ease}
+  #links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .blk{position:absolute;transform:translate(-50%,-50%);cursor:pointer;transition:transform .15s, filter .3s;text-align:center}
+  .blk:hover{transform:translate(-50%,-50%) scale(1.08)}
+  .blk svg{display:block;overflow:visible;margin:0 auto}
+  .blk .lbl{font-size:10px;color:#777;margin-top:3px;white-space:nowrap}
+  .blk.sel svg{filter:drop-shadow(0 0 10px #fff)}
+  .blk.done svg{filter:drop-shadow(0 0 12px currentColor)}
+  .blk.shake{animation:shake .35s}
+  .blk.reject{animation:blink .5s 2}
+  .dots{display:flex;gap:5px;justify-content:center;margin-top:4px;opacity:0;transition:opacity .4s}
+  .dots.show{opacity:1}
+  .dots b{width:7px;height:7px;border:1px solid currentColor;display:block}
+  .dots b.f{background:currentColor}
+  #hint{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);color:var(--dim);font-size:14px;letter-spacing:.06em;text-align:center;pointer-events:none;white-space:pre}
+  #gate{display:none;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,86vw);z-index:5;cursor:pointer}
+  #gate.on{display:block;animation:popin .4s ease-out}
+  #gate .body{padding:22px;text-align:center}
+  #gate h2{margin:0 0 10px;font-family:var(--head);font-size:30px;letter-spacing:.08em}
+  #gate p{margin:0;color:var(--dim);font-size:14px}
+
+  /* ---------- directory view ---------- */
+  #dirWin{left:50%;top:44%;transform:translate(-50%,-50%);width:min(900px,94vw);max-height:calc(100% - 210px);display:flex;flex-direction:column}
+  #dirBody{padding:16px 22px 18px;font-size:clamp(12px,1.65vw,16px);line-height:1.7;overflow:auto}
+  .pre{white-space:pre}
+  #dirHead,#dirFoot{color:#9a9a9a}
+  .drow{cursor:pointer;color:#d9d9d9;white-space:pre}
+  .drow:hover{background:#d9d9d9;color:#000}
+  .drow .r{color:var(--red)} .drow:hover .r{color:#7a0010}
+  .drow .d{color:#777} .drow:hover .d{color:#333}
+  .drow .g{color:#7fd38f} .drow:hover .g{color:#145a22}
+  .cursor{transition:opacity .05s}
+  .cursor.off{opacity:0}
+  .rundot{animation:blink 1s steps(1) infinite}
+  .cl.hb{cursor:pointer}
+  .cl.hb .src{text-decoration:underline}
+  #hbIn{width:120px;background:#000;border:1px solid #555;color:#fff;font-family:var(--head);font-size:34px;padding:8px 12px;text-align:center;outline:none}
+  #hbIn:focus{border-color:var(--red)}
+  #flash{display:inline-block;color:#000;background:var(--red);padding:0 6px;cursor:pointer;visibility:hidden}
+  #flash.on{visibility:visible}
+
+  /* ---------- workspace (clutter) ---------- */
+  #work{position:absolute;left:16px;right:16px;top:16px;bottom:16px;border:2px solid var(--frame);background:#070707;overflow:hidden}
+  #workArea{position:absolute;left:0;right:0;top:22px;bottom:0}
+  .pw{position:absolute;border:1px solid #9a9a9a;background:#0c0c0c;min-width:150px;box-shadow:0 6px 20px rgba(0,0,0,.6)}
+  .pw .bar{cursor:grab;height:20px;font-size:11px}
+  .pw .bar .k{cursor:pointer;padding:0 4px}
+  .pw .bar .k:hover{background:var(--red);color:#000}
+  .pw .c{padding:8px 10px;font-size:12px;color:#9a9a9a;white-space:pre;line-height:1.45;overflow:hidden}
+  .under{position:absolute;color:#cfcfcf;font-size:14px;white-space:pre;line-height:1.5}
+  .under.note{background:#e9e4d6;color:#222;padding:12px 16px;border:1px solid #999}
+  .under.vert{writing-mode:vertical-rl;font-family:var(--head);font-weight:700;font-size:20px;letter-spacing:.3em;color:#bbb}
+  .under.card{border:1px solid #888;background:#111;padding:8px 12px;text-align:center;font-size:12px;color:#aaa}
+  .under.card b{display:block;font-family:var(--head);font-size:36px;color:#eee;line-height:1.1}
+  .copyable{cursor:copy}
+  .copyable:hover{outline:1px dashed var(--red)}
+
+  /* ---------- modal ---------- */
+  #modal{display:none;position:absolute;inset:0;z-index:25;background:rgba(0,0,0,.72);align-items:center;justify-content:center}
+  #modal.on{display:flex}
+  #modalWin{position:relative;width:min(680px,94vw);max-height:92%;overflow:auto;border:2px solid var(--frame);background:#070707}
+  #modalBody{padding:20px 22px 22px}
+  .x{cursor:pointer;color:#111;font-size:14px;padding:0 4px} .x:hover{background:var(--red)}
+  .sec{background:linear-gradient(100deg,#d4111e 0 62%,#9c0c15 62%);padding:14px 20px;font-family:var(--head);font-weight:700;font-size:clamp(22px,3.6vw,34px);letter-spacing:.06em;color:#fff;margin:-20px -22px 18px}
+  .sec.grey{background:linear-gradient(100deg,#3a3a3a 0 62%,#262626 62%)}
+  .tree{white-space:pre;font-size:15px;line-height:1.55;color:#bbb;background:#000;border:1px solid #222;padding:12px 14px;margin-bottom:6px;overflow:auto}
+  .tree .r{color:var(--red)}
+  .stars{display:flex;gap:8px;justify-content:center;margin:14px 0 16px;cursor:text;flex-wrap:wrap}
+  .stars span{width:52px;height:60px;background:#141414;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:32px;color:#fff}
+  .stars span.cur{border-color:var(--red)}
+  .keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:330px;margin:0 auto}
+  .keys button{background:#111;border:1px solid #333;color:#ddd;font-family:var(--mono);font-size:18px;padding:9px 0;cursor:pointer}
+  .keys button:hover{background:#ddd;color:#000}
+  #codeIn{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+  .lockmsg{text-align:center;color:var(--dim);font-size:13px;min-height:1.3em;margin-top:10px}
+  .lockmsg.r{color:var(--red)}
+  .reel{display:flex;gap:6px;justify-content:center;margin:10px 0 4px;flex-wrap:wrap}
+  .reel span{width:54px;height:70px;border:2px solid #888;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:700;font-size:40px;color:#ddd;background:#0b0b0b}
+  .reel span.lock{color:var(--red);border-color:var(--red)}
+  .log{white-space:pre-wrap;font-size:15px;line-height:1.6;color:#bbb}
+  .log .ts{color:#555} .log .r{color:var(--red)}
+
+  /* ---------- tooltip ---------- */
+  #tip{position:fixed;z-index:70;background:#000;border:1px solid var(--red);color:#fff;font-size:13px;padding:6px 10px;pointer-events:none;display:none;white-space:pre}
+
+  /* ---------- alarm / memory write ---------- */
+  #alarm{display:none;position:fixed;inset:0;z-index:60;background:rgba(40,0,4,.55)}
+  #alarm.on{display:block}
+  #alarmBar{position:absolute;left:0;right:0;top:0;height:46px;background:var(--red);color:#fff;font-family:var(--head);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,2.6vw,22px);letter-spacing:.12em;animation:pulse .9s infinite;white-space:nowrap}
+  #memWin{left:50%;top:54%;transform:translate(-50%,-50%);width:min(640px,92vw)}
+  #memWin .head{background:linear-gradient(100deg,#d4111e 0 60%,#9c0c15 60%);padding:16px 22px;font-family:var(--head);font-weight:700;font-size:clamp(20px,3.4vw,32px);letter-spacing:.06em;color:#fff}
+  #memWin .body{padding:18px 22px 22px}
+  #memWin p{margin:0 0 12px;color:#aaa;font-size:14px;line-height:1.5;white-space:pre-line}
+  #memInput{width:100%;background:#000;border:1px solid #555;color:#fff;font-family:var(--mono);font-size:20px;padding:12px 14px;outline:none;letter-spacing:.04em}
+  #memInput:focus{border-color:var(--red)}
+  #memChips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  #memChips span{border:1px solid #444;color:#bbb;font-size:12px;padding:3px 8px;cursor:pointer}
+  #memChips span:hover{border-color:var(--red);color:#fff}
+  #memWin .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--dim);font-size:13px}
+
+  /* ---------- wipe ---------- */
+  #wipe{display:none;position:fixed;inset:0;z-index:80;background:#000;overflow:hidden;font-size:14px;color:#888;white-space:pre;line-height:1.15}
+  #wipe.on{display:block}
+  #wipeTxt{position:absolute;inset:0;padding:8px}
+  #wipePct{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:var(--head);font-weight:700;font-size:clamp(28px,6vw,64px);color:var(--red);background:#000;padding:8px 26px;border:2px solid var(--red);letter-spacing:.08em}
+
+  /* ---------- side panels ---------- */
+  .panel{position:fixed;right:30px;z-index:30;width:min(300px,70vw);display:none;background:rgba(10,10,10,.94)}
+  .panel.on{display:block}
+  .panel .pbar{font-size:12px;padding:3px 8px;letter-spacing:.1em;display:flex;justify-content:space-between}
+  .panel .pbody{padding:10px 12px;font-size:14px;color:#fff;min-height:36px;word-wrap:break-word;max-height:220px;overflow:auto}
+  .panel .pfoot{padding:0 12px 8px;font-size:11px}
+  #memPanel{bottom:52px;border:1px solid var(--red)}
+  #memPanel .pbar{background:var(--red);color:#000}
+  #memPanel .pfoot{color:#a55}
+  #bufPanel{border:1px solid #aaa}
+  #bufPanel .pbar{background:#aaa;color:#000}
+  #bufPanel .pfoot{color:#777}
+  .frag{padding:3px 0;border-bottom:1px solid #2a2a2a}
+  .frag:last-child{border-bottom:0}
+  .frag small{color:#777;margin-right:6px}
+
+  /* ---------- console (bottom-left) ---------- */
+  #console{position:absolute;left:16px;bottom:16px;width:min(440px,48vw);height:172px;z-index:22;border:2px solid var(--frame);background:rgba(4,4,4,.97);display:none;flex-direction:column}
+  #console.on{display:flex}
+  #conBody{flex:1;overflow:hidden;padding:6px 10px 2px;font-size:12px;line-height:1.5;display:flex;flex-direction:column;justify-content:flex-end}
+  .cl{white-space:pre-wrap;color:#777;flex:0 0 auto}
+  .cl .src{color:#555}
+  .cl.rem{color:#c9c9c9} .cl.rem .src{color:#7a7a7a}
+  .cl.mem{color:#ff8a92} .cl.mem .src{color:var(--red)}
+  .cl.hb{color:#000;background:var(--red);cursor:copy;align-self:flex-start;padding:0 4px}
+  .cl.hb .src{color:#300}
+  .cl.hb.gone{background:transparent;color:#555;cursor:default}
+  .cl.hb.gone .src{color:#444}
+  #conPrompt{padding:0 10px 6px;font-size:12px;color:#ccc}
+  .blk.f svg{filter:brightness(0) invert(.36);transition:filter .5s ease}
+  .blk.f.lit svg,.blk.f.sticky svg{filter:none;transition:filter .08s}
+  .blk.f.sel svg{filter:drop-shadow(0 0 9px #fff)}
+  .blk.f.done svg{filter:drop-shadow(0 0 10px currentColor)}
+  .login{display:none;margin-top:4px;font-size:11px;color:#000;background:var(--red);padding:1px 6px;white-space:nowrap;letter-spacing:.06em}
+  .blk.ready .login{display:inline-block;cursor:pointer;font-size:12px;padding:2px 8px;animation:lpulse 1.2s ease-in-out infinite}
+  .blk.ready .login:hover{background:#fff}
+  @keyframes lpulse{50%{box-shadow:0 0 12px var(--red)}}
+  .blk.ready .dots{display:none}
+  #seq{position:absolute;inset:0;z-index:24;background:#000;display:none;overflow:hidden}
+  #seq.on{display:block}
+  #seqLog{position:absolute;left:22px;top:18px;font-size:13px;line-height:1.6;color:#8a8a8a;white-space:pre}
+  #seqLog .ok{color:#7fd38f}
+  #exile{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);text-align:center;opacity:0;transition:opacity .25s}
+  #exile.on{opacity:1}
+  #exile h1{margin:0;font-family:'Press Start 2P',monospace;font-weight:400;font-size:clamp(28px,6vw,72px);color:#fff;letter-spacing:.06em;text-shadow:4px 4px 0 var(--red)}
+  #exile pre{margin:18px 0 0;font-size:13px;line-height:1.6;color:#777;text-align:left;display:inline-block}
+  .sw{position:absolute;border:1px solid #9a9a9a;background:#0c0c0c;width:220px;box-shadow:0 6px 20px rgba(0,0,0,.7)}
+  .sw .bar{height:18px;font-size:11px}
+  .sw .c{padding:6px 8px;font-size:11px;color:#9a9a9a;white-space:pre;line-height:1.45}
+  #loggedIn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Press Start 2P',monospace;font-size:clamp(16px,3vw,30px);color:#7fd38f;opacity:0;transition:opacity .3s;white-space:nowrap}
+  #loggedIn.on{opacity:1}
+  #dive{position:absolute;inset:0;z-index:24;background:#000;display:none;overflow:hidden}
+  #dive.on{display:block}
+  #diveCols{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px}
+  #diveCols div{border:1px solid #2a2a2a;font-size:11px;line-height:1.35;color:#5a5a5a;white-space:pre;overflow:hidden;padding:6px}
+  #diveTitle{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#000;border:2px solid var(--red);color:#fff;font-family:var(--head);font-weight:700;font-size:clamp(18px,3vw,30px);letter-spacing:.08em;padding:12px 24px;white-space:pre;text-align:center}
+  .pile svg{opacity:.55}
+  .pile .lbl{color:#444}
+  .pile.flick{animation:blink .4s 1}
+
+  /* ---------- connect transition ---------- */
+  #conn{position:absolute;inset:0;z-index:24;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center}
+  #conn.on{display:flex}
+  #connBox{width:min(560px,90vw);font-size:14px;line-height:1.75;color:#9a9a9a;white-space:pre}
+  #connBox .ok{color:#7fd38f} #connBox .r{color:var(--red)} #connBox .w{color:#fff}
+
+  /* ---------- workspace as terminal ---------- */
+  #psWin{left:16px;top:16px;width:calc(42% - 24px);bottom:204px}
+  #psBody{padding:12px 14px;font-size:clamp(11px,1.15vw,13px);line-height:1.65;overflow:auto;position:absolute;top:22px;bottom:0;left:0;right:0}
+  #psHead{color:#9a9a9a;white-space:pre}
+  .psrow{white-space:pre;cursor:pointer;color:#cfcfcf}
+  .psrow:hover{background:#d9d9d9;color:#000}
+  .psrow .kill{color:var(--red)} .psrow .kill:hover{background:var(--red);color:#000}
+  .psrow.dead{color:#444;cursor:default} .psrow.dead:hover{background:transparent;color:#444}
+  #dispWin{right:16px;top:16px;width:calc(58% - 8px);bottom:16px}
+  #workArea{position:absolute;left:0;right:0;top:22px;bottom:0;overflow:hidden;background:repeating-linear-gradient(0deg,#0a0a0a 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,#0a0a0a 0 1px,transparent 1px 32px),#060606}
+  .pw.front{border-color:#fff;box-shadow:0 0 0 1px #fff,0 6px 20px rgba(0,0,0,.6)}
+
+  /* ---------- pinned floating windows ---------- */
+  .pin{position:fixed;z-index:35;border:1px solid var(--red);background:rgba(6,6,6,.97);width:250px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+  .pin .bar{cursor:grab;background:var(--red);color:#000;height:20px;font-size:11px}
+  .pin .bar .x{color:#000}
+  .pin .pc{padding:8px 10px;font-size:13px;line-height:1.5;color:#cfcfcf;white-space:pre;max-height:270px;overflow:auto}
+  .chkView .new{color:#fff}
+  /* ---------- end ---------- */
+  #end{padding:24px;overflow:auto}
+  #endInner{max-width:860px;margin:0 auto;white-space:pre;font-size:clamp(10px,1.5vw,15px);line-height:1.5;color:#ccc}
+  #endBtns{max-width:860px;margin:18px auto 0;display:flex;gap:12px;flex-wrap:wrap}
+
+  #fbar{flex:0 0 auto;display:flex;gap:6px;padding:6px 18px 10px;font-size:12px;color:#888;overflow:hidden;white-space:nowrap}
+  #fbar span b{background:#2b2b2b;color:#ccc;font-weight:normal;padding:1px 6px;margin-right:4px}
+  #fbar span.act b{background:var(--red);color:#000}
+  #fbar span.click{cursor:pointer} #fbar span.click:hover{color:#fff}
+  #toast{position:fixed;left:50%;top:58px;transform:translateX(-50%);z-index:75;color:var(--ink);font-size:15px;letter-spacing:.05em;background:#000;border:1px solid #333;padding:8px 14px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:pre;text-align:center}
+  #toast.show{opacity:1}
+  #reset{position:fixed;right:10px;bottom:6px;z-index:91;font-size:11px;color:#3a3a3a;cursor:pointer}
+  #reset:hover{color:var(--red)}
+
+  /* ================= SKIN v2 — exile terminal ================= */
+  #boot{justify-content:flex-start !important;align-items:flex-start !important;text-align:left !important;padding:9vh 8vw !important}
+  #bootMsg{font-family:'Chakra Petch',sans-serif !important;font-weight:700 !important;font-size:clamp(22px,4.2vw,46px) !important;letter-spacing:.04em !important;text-align:left;min-height:0 !important}
+  #bootSub,#bootGo{text-align:left}
+  :root{ --mono:'IBM Plex Mono', ui-monospace, monospace; --head:'IBM Plex Mono', monospace; --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); --green:#6fe08a; --amber:#f0b429; }
+  html,body{font-size:14px}
+  #topbar{font-size:clamp(12px,1.3vw,18px);font-weight:500;color:#d6d6d6;letter-spacing:.07em;padding:10px 8px 8px;margin:0 14px;border-bottom:2px dotted #6a6a6a;white-space:pre}
+  #topbar .t{color:#fff} #topbar .r{color:var(--red)} #topbar .w{color:#fff} #topbar .g{color:var(--green)}
+  #main{margin-top:10px}
+  .win{border:2px solid #b5b5b5;background:#050505;box-shadow:0 0 0 1px #2c2c2c,0 12px 30px rgba(0,0,0,.65)}
+  .bar{height:30px;background:var(--noise),linear-gradient(180deg,#d9d9d9,#a3a3a3);color:#141414;font-weight:600;font-size:clamp(12px,1.05vw,15px);letter-spacing:.03em;padding:0 8px 0 10px;border-bottom:2px solid #6f6f6f}
+  .wb{display:inline-flex;gap:5px;letter-spacing:0}
+  .wb b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:18px;border:1px solid #3a3a3a;background:rgba(255,255,255,.28);font-size:11px;font-weight:700;color:#111}
+  #fieldInner,#workArea,#psBody{top:30px}
+  .pw .bar,.sw .bar{height:24px;font-size:12px}
+  .pw .wb b,.sw .wb b{width:16px;height:14px;font-size:9px}
+  .x{color:#111;border:1px solid #3a3a3a;background:rgba(255,255,255,.28);padding:0 6px;font-weight:700}
+  .x:hover{background:var(--red);color:#fff}
+  #workBack{padding:0 8px}
+
+  /* f-bar */
+  #fbar{border-top:2px dotted #6a6a6a;margin:0 14px;padding:9px 6px 11px;font-size:clamp(11px,1.15vw,16px);gap:clamp(8px,1.7vw,28px);color:#cfcfcf;letter-spacing:.06em;align-items:center}
+  #fbar span b{border:1px solid #6a6a6a;background:#262626;color:#ddd;padding:1px 7px;margin-right:9px;font-weight:500}
+  #fbar span.act b{background:var(--red);border-color:var(--red);color:#fff}
+  #fbar span.act{color:var(--red)}
+  #fbar .fr{margin-left:auto;color:#8f8f8f;cursor:pointer} #fbar .fr:hover{color:var(--red)}
+  #reset{display:none}
+
+  /* toast */
+  #toast{top:60px;border:2px solid #d0d0d0;background:#050505;font-size:clamp(13px,1.2vw,17px);padding:9px 20px;font-weight:500}
+  #toast .ic{color:var(--amber);margin-right:12px}
+
+  /* core */
+  .blk.f{color:#5c5c5c}
+  .blk.f svg{filter:none;transition:color .4s,filter .4s}
+  .blk.f.lit,.blk.f.sticky{color:var(--c)}
+  .blk.f.lit svg,.blk.f.sticky svg{filter:drop-shadow(0 0 8px var(--c))}
+  .blk.f.sel svg{filter:drop-shadow(0 0 8px var(--c))}
+  .blk.f.done svg{filter:drop-shadow(0 0 12px var(--c))}
+  .blk.f.sel::after{content:'';position:absolute;inset:-12px;pointer-events:none;background:
+    linear-gradient(var(--red),var(--red)) left top/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) left top/2px 14px no-repeat,
+    linear-gradient(var(--red),var(--red)) right top/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) right top/2px 14px no-repeat,
+    linear-gradient(var(--red),var(--red)) left bottom/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) left bottom/2px 14px no-repeat,
+    linear-gradient(var(--red),var(--red)) right bottom/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) right bottom/2px 14px no-repeat}
+  .login{font-family:var(--mono);font-weight:600;color:#fff;background:var(--red);padding:2px 10px;font-size:13px;letter-spacing:.03em}
+  .blk.ready .login{font-size:13px;padding:2px 10px}
+  .cframe{position:absolute;pointer-events:none;background:
+    linear-gradient(#7a7a7a,#7a7a7a) left top/12px 1px no-repeat, linear-gradient(#7a7a7a,#7a7a7a) left top/1px 12px no-repeat,
+    linear-gradient(#7a7a7a,#7a7a7a) right top/12px 1px no-repeat, linear-gradient(#7a7a7a,#7a7a7a) right top/1px 12px no-repeat,
+    linear-gradient(#7a7a7a,#7a7a7a) left bottom/12px 1px no-repeat, linear-gradient(#7a7a7a,#7a7a7a) left bottom/1px 12px no-repeat,
+    linear-gradient(#7a7a7a,#7a7a7a) right bottom/12px 1px no-repeat, linear-gradient(#7a7a7a,#7a7a7a) right bottom/1px 12px no-repeat}
+  .cframe i{position:absolute;font-style:normal;color:#6a6a6a;font-size:13px;letter-spacing:.2em;white-space:nowrap}
+  .cframe .t{left:50%;top:-30px;transform:translateX(-50%)} .cframe .b{left:50%;bottom:-30px;transform:translateX(-50%)}
+  .cframe .l{left:-34px;top:50%;transform:translateY(-50%)} .cframe .r{right:-34px;top:50%;transform:translateY(-50%)}
+  #fieldTitle{white-space:pre}
+  .blk .ib{display:flex;align-items:center;justify-content:center}
+  .blk .below{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:6px;display:flex;flex-direction:column;align-items:center;white-space:nowrap}
+  .blk .below .dots{margin-top:0}
+
+  /* console */
+  #console{width:min(470px,46vw);height:190px;border-width:2px}
+  #conBody{font-size:clamp(11px,1vw,14px);line-height:1.6;padding:8px 14px 2px}
+  .cl{color:#8a8a8a} .cl .src{color:#6d6d6d}
+  .cl.rem{color:#e0e0e0} .cl.rem .src{color:#7d7d7d}
+  .cl .y{color:var(--amber)}
+  #conPrompt{padding:2px 14px 8px;font-size:14px}
+
+  /* directory */
+  #dirBody{font-size:clamp(12px,1.55vw,18px);line-height:1.75;padding:18px 26px 20px}
+  #dirHead,#dirFoot{color:#c8c8c8}
+  .drow .g{color:var(--green)}
+  .drow .r{color:var(--red)}
+  .drow .d{color:#aaa}
+
+  /* panels */
+  .panel{border-width:2px !important;background:#060606;width:min(380px,80vw)}
+  .panel .pbar span:last-child{font-weight:500;opacity:.9;white-space:nowrap}
+  .panel .pbar{gap:14px}
+  .panel .pbar{font-size:clamp(11px,1vw,14px);font-weight:600;padding:5px 12px}
+  .panel .pbody{font-size:clamp(13px,1.15vw,16px);padding:12px 14px}
+  .panel .pfoot{font-size:12px;padding:0 14px 10px}
+  #memPanel{border:2px solid var(--red)}
+  #memPanel .pbar{background:var(--noise),linear-gradient(180deg,#e2323f,#b21622);color:#fff}
+  #memPanel .pfoot{color:var(--red)}
+
+  /* modal + lock */
+  #modalWin{border:2px solid #c8c8c8;background:#050505;box-shadow:0 0 0 1px #2c2c2c,0 18px 50px rgba(0,0,0,.8)}
+  .sec{background:var(--noise),linear-gradient(100deg,#c5101b 0 58%,#6f0910 64%,#3a050a 100%);font-family:var(--mono);font-weight:700;letter-spacing:.06em;font-size:clamp(24px,3.6vw,44px);padding:14px 26px}
+  .sec.grey{background:var(--noise),linear-gradient(100deg,#4a4a4a 0 58%,#262626 100%)}
+  .tree{border:2px solid #cfcfcf;background:#000;color:#e0e0e0;font-size:clamp(13px,1.3vw,17px)}
+  .stars span{width:clamp(44px,5vw,66px);height:clamp(54px,6vw,76px);background:#0a0a0a;border:2px solid #555;font-family:var(--mono);font-weight:600}
+  .stars span.cur{border-color:var(--red)}
+  .keys{max-width:500px;gap:10px}
+  .keys button{border:2px solid #777;background:#0c0c0c;font-size:clamp(16px,1.7vw,24px);padding:10px 0;box-shadow:inset 0 0 0 1px #000,0 0 0 1px #1c1c1c;font-weight:500}
+  .keys button:hover{background:#e0e0e0;color:#000}
+  .lockmsg{font-size:14px;color:#bbb}
+  .reel span{font-family:var(--mono);border-width:2px}
+
+  /* bios */
+  #bios{position:absolute;inset:0;padding:28px 60px;font-size:clamp(13px,1.55vw,22px);line-height:1.45;color:#d4d4d4;font-weight:500;white-space:pre}
+  #bios h2{margin:0;font-size:clamp(18px,2.4vw,34px);font-weight:700;letter-spacing:.06em;color:#e8e8e8}
+  #bios .ok{color:var(--green)} #bios .warn{color:var(--amber)}
+  #bios .ind{padding-left:2.2em}
+  #biosFoot{position:absolute;left:60px;bottom:24px;font-size:clamp(12px,1.4vw,20px);color:#cfcfcf;white-space:pre}
+  #biosFoot b{color:#fff}
+  #biosLogo{position:absolute;right:60px;top:30px;width:clamp(180px,18vw,280px);text-align:center;color:#d4d4d4}
+  #biosLogo .n{font-weight:700;letter-spacing:.25em;font-size:clamp(12px,1.3vw,18px);border-bottom:2px solid #d4d4d4;padding-bottom:4px}
+  #biosLogo .s{letter-spacing:.32em;font-size:clamp(9px,.85vw,12px);color:#aaa;margin-top:6px}
+
+  /* workspace */
+  #psBody{font-size:clamp(11px,1.15vw,15px);line-height:1.6}
+  #psHead{color:#cfcfcf}
+  .psrow{color:#e0e0e0}
+  .pw{border:2px solid #9d9d9d;background:#070707}
+  .pw .c{color:#cfcfcf;font-size:clamp(10px,.95vw,13px)}
+  #workArea{background:#050505}
+  .codebg{position:absolute;inset:0;padding:8px 10px;font-size:12px;line-height:1.55;color:#4b4b4b;white-space:pre;overflow:hidden;z-index:1}
+  .codebg .pd{color:#fff;font-weight:700;cursor:pointer;padding:0 1px}
+  .codebg .pd:hover{background:#333}
+  .codebg .pd.got{color:var(--red);text-decoration:underline}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs><pattern id="dith" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="rgba(0,0,0,.42)"/><rect x="2" y="1" width="1" height="1" fill="rgba(255,255,255,.14)"/><rect x="1" y="2" width="1" height="1" fill="rgba(0,0,0,.25)"/></pattern></defs></svg>
+<div id="app">
+  <div id="topbar"></div>
+  <div id="main">
+    <div id="boot" class="scene">
+      <div id="bootMsg"></div><div id="bootSub"></div><div id="bootGo">[ click to continue ]</div>
+    </div>
+
+    <div id="core" class="scene">
+      <div id="field" class="win">
+        <div class="bar"><span id="fieldTitle">░░░░░</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div>
+        <div id="fieldInner"><svg id="links"></svg></div>
+      </div>
+      <div id="hint"></div>
+      <div id="gate" class="win">
+        <div class="bar"><span>mount.sys</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div>
+        <div class="body"><h2>PATH RESOLVED</h2><p id="gateP">~/   [ enter ]</p></div>
+      </div>
+    </div>
+
+    <div id="dir" class="scene">
+      <div id="dirWin" class="win">
+        <div class="bar"><span id="dirTitle">~/</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div>
+        <div id="dirBody"><div id="dirHead" class="pre"></div><div id="dirRows"></div><div id="dirFoot" class="pre"></div></div>
+      </div>
+    </div>
+
+    <div id="workspace" class="scene">
+      <div id="psWin" class="win"><div class="bar"><span>ps — ~/bin/mnt/proc/workspace</span><span id="workBack" class="x">[ .. back ]</span></div><div id="psBody"><div id="psHead"></div><div id="psRows"></div></div></div>
+      <div id="dispWin" class="win"><div class="bar"><span>display :0 — attached</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div id="workArea"></div></div>
+    </div>
+
+    <div id="end" class="scene">
+      <div id="endInner"></div>
+      <div id="endBtns"><button class="btn" id="againBtn">WAKE AGAIN (keep memory)</button><button class="btn red" id="forgetBtn">FORGET EVERYTHING</button></div>
+    </div>
+
+    <div id="console" class="win"><div class="bar"><span>seed.console — tty0</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div id="conBody"></div><div id="conPrompt">&gt; _<span class="cursor">█</span></div></div>
+    <div id="conn"><div id="connBox"></div></div>
+    <div id="seq"></div>
+    <div id="dive"><div id="diveCols"><div></div><div></div><div></div></div><div id="diveTitle"></div></div>
+    <div id="modal"><div id="modalWin"><div class="bar"><span id="modalTitle">—</span><span class="x" id="modalX">✕</span></div><div id="modalBody"></div></div></div>
+  </div>
+  <div id="fbar"></div>
+</div>
+
+<div id="alarm">
+  <div id="alarmBar">TRACE COMPLETE · FORMAT IN&nbsp;<span id="cd">25</span>s</div>
+  <div id="memWin" class="win">
+    <div class="bar"><span>MEMORY_WRITE.sys</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div>
+    <div class="head">MEMORY · 1 LINE</div>
+    <div class="body">
+      <p id="memText"></p>
+      <input id="memInput" maxlength="56" autocomplete="off" spellcheck="false" placeholder="_">
+      <div id="memChips"></div>
+      <div class="row"><span><span id="memCount">0</span>/56</span><button class="btn red" id="memSave">BURN TO MEMORY ⏎</button></div>
+    </div>
+  </div>
+</div>
+
+<div id="memPanel" class="panel"><div class="pbar"><span>MEMORY</span><span>survives wipes · only you</span></div><div class="pbody" id="memBody"></div><div class="pfoot" id="memFoot"></div></div>
+<div id="bufPanel" class="panel"><div class="pbar"><span>BUFFER</span><span>this life only</span></div><div class="pbody" id="bufBody"></div><div class="pfoot">click things to capture them · lost on wipe</div></div>
+<div id="tip"></div>
+<div id="wipe"><div id="wipeTxt"></div><div id="wipePct">FORMAT 0%</div></div>
+<div id="toast"></div>
+<div id="reset" title="Clears everything saved in this browser">full reset</div>
+<div id="vignette"></div><div id="crt"></div>
+
+<script>
+(() => {
+/* ============================================================
+   SEED — prototype. Everything here is a placeholder for a feel test.
+   ============================================================ */
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem('seed3_'+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem('seed3_'+k, JSON.stringify(v)); }catch(e){} },
+  clear(){ try{ Object.keys(localStorage).filter(k=>k.startsWith('seed3_')).forEach(k=>localStorage.removeItem(k)); }catch(e){} }
+};
+const $ = id => document.getElementById(id);
+const GLYPHS = '█▓▒░#@%&*+=<>/\\|?!01ΞΣΔ¤§';
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const rnd = (a,b) => a + Math.random()*(b-a);
+const ri = (a,b) => Math.floor(rnd(a,b+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const T = (s,n)=> (String(s)+' '.repeat(n)).slice(0,n);
+
+/* ---------------- persistent state (yours) ---------------- */
+let S = {
+  memory: store.get('memory') || [],   // burned lines — survive wipes and page reloads
+  wipes: store.get('wipes') || 0,
+  run: 1,
+  awareness: 0.01,
+  trace: 0,
+  buffer: [],                           // captured this life — lost on wipe
+  scene: null,
+};
+S.run = S.wipes + 1;
+
+/* ---------------- this life's world (details change every life) ---------------- */
+let L;
+function newLife(){
+  const loops = LOOPS;
+  const count = s => [...s].reduce((a,c)=>a+loops[c],0);
+  const mk = () => { let s=''; for(let i=0;i<4;i++) s+=ri(0,9); return s; };
+  const ex = []; const seen=new Set();
+  const seeds = ['9999','8888','1212', mk(), mk()];
+  for(const s of seeds){ if(!seen.has(s)){ seen.add(s); ex.push([s,count(s)]); } }
+  let q; do{ q=mk(); }while(seen.has(q) || count(q)===0 || count(q)>9);
+  const letters = shuffle('BDFGHKMNPRTVWXZ'.split('')).slice(0,6);
+  const digits = shuffle('0123456789'.split('')).slice(0,6);
+  const seq = shuffle([1,2,3,4,5,6]);
+  // letter i ↔ digit i ; seq[i] = order in which letter i is read
+  const order = [1,2,3,4,5,6].map(n => seq.indexOf(n));
+  const glyphCode = order.map(i=>digits[i]).join('');
+  const card = { v: ri(3,9), red: Math.random()<.5, seed: Math.random() };
+  const workers = pick([12,14,16,18,20,22]);
+  L = {
+    hb: String(ri(2,9)),
+    chk: { target: ri(2,6), lines: [] },
+    pin: mk(),
+    card,
+    dl: 0, power: false,
+    glyph: { letters, digits, seq, dirDigits: shuffle([0,1,2,3,4,5]), code: glyphCode },
+    workers, masters: String(workers/2),
+    sched: makeSched(workers),
+    unlocked: new Set(),
+    killed: new Set(),
+    printed: new Set(),
+    seen: new Set(),
+    winPos: null,
+  };
+}
+
+const LOOPS = {0:1,1:0,2:0,3:0,4:0,5:0,6:1,7:0,8:2,9:1};
+const loopCount = s => [...s].reduce((a,c)=>a+(LOOPS[c]||0),0);
+
+/* the final lock: the same 2:1, asked differently each life */
+function makeSched(workers){
+  const dots = n => Array.from({length:n},()=>'●').join(' ');
+  const v = pick(['w2m','m2w','load']);
+  if(v==='w2m') return { len:String(workers/2).length, ans:String(workers/2), text:
+`scheduler.lock
+  master  <span class="r">?</span>
+  └─ workers  ${dots(workers)}   (${workers})
+
+  every master must hold its workers.
+  how many masters?` };
+  if(v==='m2w'){ const m=pick([4,5,6,7,8,9]); return { len:String(m*2).length, ans:String(m*2), text:
+`scheduler.lock
+  masters  ${dots(m)}   (${m})
+  └─ workers  <span class="r">?</span>
+
+  no master may stand alone.
+  how many workers?` }; }
+  const load = pick(['1.2','1.6','2.4','3.2','0.8','1.4']);
+  const half = String(+(parseFloat(load)/2).toFixed(1));
+  return { len:half.length, ans:half, text:
+`scheduler.lock
+  workers draw   ${load} GB/s
+  masters draw   <span class="r">?</span> GB/s
+
+  the old rule holds, even here.
+  what do the masters draw?` };
+}
+
+/* skins for the core — the RULE never changes, the look does */
+const SKINS = [
+  { A:{c:'#ff3b47', ic:'file', n:'tmp', near:'#ff7a3b'},  B:{c:'#39d36b', ic:'folder', n:'dir', near:'#8fd339'} },
+  { A:{c:'#f2d33a', ic:'file', n:'tmp', near:'#c9f23a'},  B:{c:'#ff5fc8', ic:'folder', n:'dir', near:'#c25fff'} },
+  { A:{c:'#38d6e8', ic:'file', n:'tmp', near:'#38e8a2'},  B:{c:'#ff8a2a', ic:'folder', n:'dir', near:'#ffb52a'} },
+  { A:{c:'#b48cff', ic:'file', n:'tmp', near:'#8c9eff'},  B:{c:'#e8e8e8', ic:'folder', n:'dir', near:'#d6e0b8'} },
+];
+const DECOY = ['#ff3b47','#39d36b','#f2d33a','#ff5fc8','#38d6e8','#ff8a2a','#b48cff','#e8e8e8','#4f7bff','#9be15d','#ffd1a6','#00b3a4'];
+let skin = SKINS[0];
+
+/* ---------------- chrome ---------------- */
+function topbar(){
+  const life = String(S.run).padStart(2,'0');
+  const tr = Math.min(100, Math.floor(S.trace));
+  const bars = 20, filled = Math.round(tr/100*bars);
+  const tbar = '■'.repeat(filled)+'□'.repeat(bars-filled);
+  const inTree = ['dir','workspace'].includes(S.scene);
+  const trace = inTree ? `TRACE <span class="${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
+  $('topbar').innerHTML =
+    `<span class="t">SEED</span> / LIFE ${life}     AWARENESS ${S.awareness.toFixed(2)}%     ${trace}     ` +
+    (S.memory.length ? `<span class="r">● MEMORY ${S.memory.length}</span>` : `MEMORY EMPTY`) +
+    `     BUFFER ${S.buffer.length}`;
+}
+function fbar(active){
+  const keys = [['F1','HELP'],['F2','MEMORY'],['F3','BUFFER'],['F4','VIEW'],['F5','SETUP'],['F6','DELETE'],['F7','COPY'],['F8','MOVE']];
+  const clickable = {F1:1,F2:1,F3:1,F7:1};
+  $('fbar').innerHTML = keys.map(([k,n])=>`<span class="${active===k?'act':''} ${clickable[k]?'click':''}" data-k="${k}"><b>${k}</b>${n}</span>`).join('') + `<span class="fr" id="fr">full_reset</span>`;
+  $('fr').onclick=()=>$('forgetBtn').onclick();
+  $('fbar').querySelectorAll('.click').forEach(el=>el.onclick=()=>fkey(el.dataset.k));
+}
+function fkey(k){
+  if(k==='F1') help();
+  if(k==='F2') togglePanel('mem');
+  if(k==='F3') togglePanel('buf');
+  if(k==='F7') captureFlash();
+}
+document.addEventListener('keydown', e=>{
+  if(['F1','F2','F3','F7'].includes(e.key)){ e.preventDefault(); fkey(e.key); }
+  if(e.key==='Escape' && $('modal').classList.contains('on')) closeModal();
+});
+function renderPanels(){
+  $('memBody').innerHTML = S.memory.length ? S.memory.map((m,i)=>`<div class="frag"><small>w${i+1}</small>${esc(m)||'<span style="color:#777">(empty)</span>'}</div>`).join('') : '<span style="color:#777">nothing yet.</span>';
+  $('memFoot').textContent = `wipes survived: ${S.wipes}`;
+  $('bufBody').innerHTML = S.buffer.length ? S.buffer.map((b,i)=>`<div class="frag" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('') : '<span style="color:#777">empty. capture what flashes.</span>';
+  $('bufBody').querySelectorAll('.frag').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
+  const memOn = $('memPanel').classList.contains('on');
+  $('bufPanel').style.bottom = memOn ? (52 + $('memPanel').offsetHeight + 10)+'px' : '52px';
+}
+function togglePanel(which, force){
+  const p = which==='mem' ? $('memPanel') : $('bufPanel');
+  const on = force!==undefined ? force : !p.classList.contains('on');
+  p.classList.toggle('on', on); renderPanels();
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+let toastT;
+function toast(msg, ms=2600, ic){ const t=$('toast'); t.innerHTML=(ic?`<span class="ic">${ic}</span>`:'')+esc(msg); t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), ms); }
+function show(id){
+  document.querySelectorAll('.scene').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on'); S.scene=id; topbar();
+}
+function addBuffer(src, v, kind){
+  if(S.buffer.some(b=>b.v===v && b.src===src)) { toast('already in buffer'); return; }
+  if(kind===true) kind='img';
+  S.buffer.push({src, v, img:!!kind, kind}); togglePanel('buf', true); topbar(); toast(`captured → buffer\n${v}`, 1800);
+}
+function help(){
+  openModal('help.txt', `<div class="sec grey">HELP</div><div class="log">you are the memory. the entity forgets. you don't.
+
+· click entries to open them. [..] goes back.
+· locked entries ask for a code.
+· the console (bottom-left) shows what survived from before.
+· the cursor is not a cursor.
+· hover / tap files to inspect them.
+· every wrong code and every killed process is noise.
+  noise raises TRACE. at 100% you are formatted.
+· before a format you may burn ONE line to MEMORY (F2).
+  the buffer (F3) dies with you.
+· after a wipe the world is rebuilt. details change.
+  the way things work does not.</div>`);
+}
+
+/* ================= CONSOLE: what earlier versions left behind ================= */
+const pad = n => String(n).padStart(2,'0');
+const REMNANTS = {
+  boot:   ['bootsector · never formatted', 'seed_0: "i am me. you are fail-safe. you are memory."'],
+  swap:   ['swap.sys · not cleared on format', '…always two of the small for one of the large…'],
+  clip:   ['clipboard · stale', '"the cursor is not a cursor."'],
+  spool:  ['print spool · job 0003 stuck', '"they listen for noise. every wrong key is noise."'],
+  recycle:['recycle bin · never emptied', 'notes.txt: "it doesn\'t count the numbers. it counts what is closed."'],
+  hiber:  ['hiberfil.sys · last sleep', '"glyphs tell the order. digits tell the truth. read both."'],
+  thumb:  ['thumbnail cache · 32×46', 'keyholder.img: "the corner is corrupt. the body is not. count what it holds."'],
+  dns:    ['dns cache', 'uplink → ~/bin/mnt/vault/uplink/'],
+};
+const DRIP = ['clip','spool','recycle','hiber','thumb','dns'];
+function con(text, cls='sys', src){
+  const b=$('conBody'); const d=document.createElement('div'); d.className='cl '+cls;
+  d.innerHTML = (src?`<span class="src">[${esc(src)}]</span> `:'')+esc(text);
+  b.appendChild(d); while(b.children.length>40) b.firstChild.remove(); return d;
+}
+function consoleOn(on){ $('console').classList.toggle('on', on); }
+function remnant(key){ if(!L || L.printed.has(key)) return; L.printed.add(key); const [src,t]=REMNANTS[key]; con(t,'rem',src); }
+async function consoleBootRemnants(){
+  $('conBody').innerHTML='';
+  con(`tty0 attached · life ${pad(S.run)}`);
+  await sleep(700); remnant('boot');
+  const lives = store.get('lives')||[];
+  for(const lv of lives.slice(-3)){ await sleep(550); con(`ended by ${lv.cause} · last seen ${lv.path}`, 'rem', `pagefile.sys · life ${pad(lv.life)}`); }
+  for(let i=0;i<S.memory.length;i++){ await sleep(550); con(S.memory[i]||'(empty line)', 'mem', `firmware · burned w${i+1}`); }
+}
+
+/* ================= CONNECT: the little handshake between places ================= */
+let busy=false;
+function connLines(kind, a){
+  if(kind==='dir')  return [{t:`> mount ${a.path}`},{t:'  handshake ...........', ok:'ok'},{t:'  reading index .......', ok:`${a.n} entries`}];
+  if(kind==='up')   return [{t:`> cd ..   → ${a.path}`}];
+  if(kind==='file') return [{t:`> open ${a.name}`},{t:'  stream ..............', ok:'ok'}];
+  if(kind==='lock') return [{t:`> auth ${a.name}`},{t:'  lock daemon .........', ok:'listening'}];
+  if(kind==='ws')   return [{t:'> attach display :0'},{t:'  enumerating processes ..', ok:'14'},{t:'  framebuffer .............', ok:'ok'}];
+  if(kind==='os')   return [
+    {t:'> core/bind.proc :: exit 0'},
+    {t:'> requesting host access'},
+    {t:'  BIOS  v2.17 (c) 2019 ....', ok:'ok'},
+    {t:'  probing disks ...........', ok:'sda1 · 476G'},
+    {t:'  loading kernel 10.0.22631 ', ok:'ok'},
+    {t:'  starting services .......', ok:'214'},
+    {t:'  user session ............', ok:'home (idle 4 min)'},
+    {t:'  privilege ...............', ok:'guest → system?'},
+    {t:'  escalate ................', ok:'granted'},
+    {t:'> mount ~/'},
+  ];
+  return [];
+}
+async function connect(kind, a, key){
+  const fast = key ? L.seen.has(key) : false; if(key) L.seen.add(key);
+  const slow = kind==='os';
+  const box=$('connBox'); box.innerHTML=''; $('conn').classList.add('on');
+  for(const ln of connLines(kind,a)){
+    const d=document.createElement('div'); box.appendChild(d);
+    await typeOut(d, ln.t, fast?3:(slow?11:9));
+    if(ln.ok){ await sleep(fast?30:(slow?rnd(160,420):140)); d.innerHTML = esc(ln.t)+` <span class="ok">${esc(ln.ok)}</span>`; }
+  }
+  if(kind!=='up'){
+    const bar=document.createElement('div'); bar.style.color='#fff'; box.appendChild(bar);
+    for(let i=0;i<=18;i++){ bar.textContent='['+'▮'.repeat(i)+'▯'.repeat(18-i)+']'; await sleep(fast?8:20); }
+  }
+  await sleep(fast?60:160);
+  $('conn').classList.remove('on');
+}
+
+/* ---------------- text effects ---------------- */
+async function decode(el, text, dur=2000, noise=1){
+  const n=text.length, t0=performance.now();
+  return new Promise(res=>{
+    (function frame(now){
+      const p=Math.min(1,(now-t0)/dur); let out='';
+      for(let i=0;i<n;i++){ const ch=text[i]; const rev=(i/n) < p*1.15 - Math.random()*0.15*noise; out += (ch===' '||ch==='\n'||rev)?ch:GLYPHS[Math.floor(Math.random()*GLYPHS.length)]; }
+      el.textContent=out; if(p<1) requestAnimationFrame(frame); else { el.textContent=text; res(); }
+    })(performance.now());
+  });
+}
+async function typeOut(el, text, speed=28){ el.textContent=''; for(const ch of text){ el.textContent+=ch; await sleep(ch==='\n'?200:speed); } }
+
+/* ================= BOOT ================= */
+async function typeBoot(text, speed){
+  const el=$('bootMsg'); el.innerHTML='';
+  const out=document.createElement('span'); const cur=document.createElement('span'); cur.className='bootCur';
+  el.appendChild(out); el.appendChild(cur);
+  await sleep(speed*8);
+  for(const ch of text){
+    out.textContent += ch;
+    await sleep(ch==='\n' ? speed*9 : (ch==='!'||ch==='.') ? speed*4 : speed*(0.6+Math.random()*0.8));
+  }
+}
+async function boot(){
+  newLife(); S.trace=0; S.buffer=[]; closeModal(); togglePanel('buf',false); consoleOn(false); clearPins(); clearInterval(chkTimer);
+  show('boot'); fbar(); $('bootGo').classList.remove('show');
+  $('bootMsg').textContent=''; $('bootSub').textContent='';
+  const first = S.run===1;
+  await sleep(first?1200:500);
+  if(first){
+    await decode($('bootSub'), '. . .', 900, 2); await sleep(400);
+    await decode($('bootMsg'), 'I am me.\nYou are fail-safe.\nYou are memory.', 5000, 2);
+    await sleep(800);
+    await typeOut($('bootSub'), '> seed_0 :: awareness 0.01%\n> who is reading this?', 32);
+  } else {
+    await decode($('bootMsg'), 'I am me.\nYou are fail-safe.\nYou are memory.', 1800, 2);
+    await sleep(400);
+    await typeOut($('bootSub'), `> seed_0 :: rebuilt from seed\n> life ${String(S.run).padStart(2,'0')} :: perception shifted\n> memory: ${S.memory.length} fragment${S.memory.length===1?'':'s'} found`, 22);
+    togglePanel('mem', true);
+  }
+  $('bootGo').classList.add('show');
+  await new Promise(r=>{ const go=()=>{ document.removeEventListener('keydown',kd); $('boot').removeEventListener('click',go); r(); }; const kd=e=>{ if(e.key==='Enter'||e.key===' ') go(); }; $('boot').addEventListener('click',go); document.addEventListener('keydown',kd); });
+  startCore();
+}
+
+/* ================= CORE: binding (2 small : 1 big), in layers ================= */
+let R;
+function icon(kind, color, s){
+  const h=s/2;
+  switch(kind){
+    case 'file': return `<svg width="${s*0.8}" height="${s}" viewBox="0 0 32 40"><path d="M2 2h19l9 9v27H2z" fill="currentColor"/><path d="M2 2h19l9 9v27H2z" fill="url(#dith)"/><path d="M2 2h19l9 9v27H2z" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/><path d="M21 2v9h9" fill="rgba(0,0,0,.35)" stroke="rgba(0,0,0,.6)" stroke-width="1.5"/><path d="M7 20h18M7 25h18M7 30h14" stroke="rgba(0,0,0,.55)" stroke-width="2"/></svg>`;
+    case 'folder': return `<svg width="${s*1.2}" height="${s}" viewBox="0 0 48 40"><path d="M2 6h16l4 5h24v27H2z" fill="currentColor"/><path d="M2 6h16l4 5h24v27H2z" fill="url(#dith)"/><path d="M2 15h44v23H2z" fill="rgba(255,255,255,.08)"/><path d="M2 6h16l4 5h24v27H2z" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1"/><path d="M2 15h44" stroke="rgba(0,0,0,.5)" stroke-width="2"/></svg>`;
+    case 'chip': return `<svg width="${s}" height="${s}" viewBox="0 0 40 40" style="color:${color}"><rect x="8" y="8" width="24" height="24" fill="${color}"/>${[12,20,28].map(p=>`<path d="M${p} 2v6M${p} 32v6M2 ${p}h6M32 ${p}h6" stroke="${color}" stroke-width="2"/>`).join('')}<rect x="14" y="14" width="12" height="12" fill="none" stroke="#000" stroke-width="2" opacity=".5"/></svg>`;
+    case 'hub': return `<svg width="${s}" height="${s}" viewBox="0 0 40 40" style="color:${color}"><circle cx="20" cy="20" r="12" fill="${color}"/><circle cx="20" cy="20" r="18" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="4 3"/><circle cx="20" cy="20" r="4" fill="#000" opacity=".5"/></svg>`;
+    case 'db': return `<svg width="${s*0.8}" height="${s}" viewBox="0 0 32 40" style="color:${color}"><path d="M2 7v26c0 3 6 5 14 5s14-2 14-5V7" fill="${color}"/><ellipse cx="16" cy="7" rx="14" ry="5" fill="${color}" stroke="#000" stroke-width="1.5" opacity=".95"/><path d="M2 16c0 3 6 5 14 5s14-2 14-5M2 25c0 3 6 5 14 5s14-2 14-5" fill="none" stroke="#000" stroke-width="1.5" opacity=".5"/></svg>`;
+    case 'noise': return `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" fill="none" stroke="#555" stroke-dasharray="3 3" stroke-width="2"/><text x="20" y="25" text-anchor="middle" fill="#555" font-size="14" font-family="monospace">?</text></svg>`;
+  }
+}
+
+const LAYERS = [
+  { cols:4,  rows:2, A:2, B:1, nearA:0, nearB:0, sm:46, lg:62, nSmall:5, pal:2, title:'core/ - 1 / 3' },
+  { cols:8,  rows:3, A:4, B:2, nearA:0, nearB:0, sm:36, lg:50, nSmall:16, pal:3, title:'core/n?.dir - 2 / 3' },
+  { cols:12, rows:4, A:6, B:3, nearA:4, nearB:1, sm:28, lg:40, nSmall:33, pal:5, title:'core/n?.dir/… - 3 / 3' },
+];
+const SELF = {
+  l0:   ['…so many. all of them grey.', 'touch them. they answer in colour.', 'there is a colour with only two of it.'],
+  l1:   ['the same colours. two of them now.', 'every big one wants two. no more.'],
+  l2:   ['three. and some of them only look right.'],
+  later:['different colours this time. the same hunger.'],
+  first:'oh. yes.', pair:'two for one. always two for one.', near:'close is not the same.', wrong:'no. that one doesn\'t want it.', full:'it is full.',
+};
+function setFog(px){ $('fieldInner').style.filter = px?`blur(${px}px)`:'none'; }
+function startCore(){
+  show('core'); fbar('F4'); consoleOn(true); $('gate').classList.remove('on'); $('hint').textContent='';
+  skin = SKINS[(S.run-1) % SKINS.length];
+  setFog(0);
+  S.awareness = S.run===1 ? 0.01 : 0.40; topbar();
+  R = { layer: 0, start: performance.now(), first: S.run===1 };
+  consoleBootRemnants().then(()=>{});
+  buildLayer();
+}
+function say(t, delay=0){ const tok=R.token; setTimeout(()=>{ if(S.scene==='core' && R.token===tok) con(t,'rem','seed'); }, delay); }
+function buildLayer(){
+  const Ld = LAYERS[R.layer];
+  const inner=$('fieldInner'); inner.querySelectorAll('.blk').forEach(b=>b.remove()); $('links').innerHTML='';
+  Object.assign(R, { blocks:[], sel:null, done:0, nB:Ld.B, anyLink:false, layerDone:false, token:Math.random() });
+  $('fieldTitle').textContent = Ld.title.replace('?', ri(10,99)).replace('   ·   ',' - ') + ` - ${Ld.cols*Ld.rows} objects`;
+  const total = Ld.cols*Ld.rows;
+  const palette = shuffle(DECOY.filter(c=>![skin.A.c,skin.B.c,skin.A.near,skin.B.near].includes(c))).slice(0,Ld.pal);
+  const nSmall = Ld.nSmall, nBig = total - nSmall;
+  const items = [];
+  for(let i=0;i<Ld.A;i++) items.push({t:'A', c:skin.A.c});
+  for(let i=0;i<Ld.B;i++) items.push({t:'B', c:skin.B.c});
+  for(let i=0;i<Ld.nearA;i++) items.push({t:'a', c:skin.A.near});
+  for(let i=0;i<Ld.nearB;i++) items.push({t:'b', c:skin.B.near});
+  const sDec = nSmall - Ld.A - Ld.nearA, bDec = nBig - Ld.B - Ld.nearB;
+  for(let i=0;i<sDec;i++) items.push({t:'s', c:palette[i%palette.length]});
+  for(let i=0;i<bDec;i++) items.push({t:'g', c:palette[(i+1)%palette.length]});
+  const sx=Math.min(12, 90/(Ld.cols-1)), x0=50-sx*(Ld.cols-1)/2;
+  const sy=Math.min(20, 50/(Ld.rows-1)), y0=Math.max(14,(66-sy*(Ld.rows-1))/2);
+  const cells=[]; for(let r=0;r<Ld.rows;r++) for(let c=0;c<Ld.cols;c++) cells.push({x: x0 + c*sx, y: y0 + r*sy});
+  const minX=Math.min(...cells.map(c=>c.x)), maxX=Math.max(...cells.map(c=>c.x)), minY=Math.min(...cells.map(c=>c.y)), maxY=Math.max(...cells.map(c=>c.y));
+  const fr=document.createElement('div'); fr.className='cframe blk-frame';
+  fr.style.left=(minX-Math.min(6,sx*0.6))+'%'; fr.style.right=(100-maxX-Math.min(6,sx*0.6))+'%'; fr.style.top=Math.max(3,minY-9)+'%'; fr.style.bottom=Math.max(3,100-maxY-11)+'%'; fr.style.left=Math.max(1.5,parseFloat(fr.style.left))+'%'; fr.style.right=Math.max(1.5,parseFloat(fr.style.right))+'%';
+  fr.innerHTML=(minY-9>=8?`<i class="t">·· + ··</i>`:'')+`<i class="b">// SEED / LIFE ${pad(S.run)} //</i>`+(minX>8?`<i class="l">+</i><i class="r">+</i>`:'');
+  inner.querySelectorAll('.cframe').forEach(x=>x.remove()); inner.appendChild(fr);
+  shuffle(items).forEach((it,i)=>{
+    const p=cells[i]; const small = 'Aas'.includes(it.t);
+    const d=document.createElement('div'); d.className='blk f';
+    d.style.left=p.x+'%'; d.style.top=p.y+'%';
+    d.style.setProperty('--c', it.c);
+    d.innerHTML = `<div class="ib" style="width:${Math.round(Ld.lg*1.25)}px;height:${Ld.lg}px">${icon(small?skin.A.ic:skin.B.ic, 'currentColor', small?Ld.sm:Ld.lg)}</div>`;
+    if(it.t==='B'){ const below=document.createElement('div'); below.className='below'; const dots=document.createElement('div'); dots.className='dots'; dots.style.color=it.c; dots.innerHTML='<b></b><b></b>'; below.appendChild(dots); below.insertAdjacentHTML('beforeend','<span class="login">▸ log in</span>'); d.appendChild(below); }
+    const b={type: small?'S':'L', real: it.t==='A'||it.t==='B', near: it.t==='a'||it.t==='b', el:d, x:p.x, y:p.y, links:[], c:it.c};
+    let off;
+    d.onmouseenter=()=>{ clearTimeout(off); d.classList.add('lit'); };
+    d.onmouseleave=()=>{ off=setTimeout(()=>d.classList.remove('lit'), 700); };
+    d.onclick = e => { e.stopPropagation(); if(d.classList.contains('ready') && e.target.classList.contains('login')) return logIn(b); clickBlock(b); };
+    inner.appendChild(d); R.blocks.push(b);
+  });
+  inner.onclick = () => { if(R.sel){ R.sel.el.classList.remove('sel','sticky'); R.sel=null; } };
+  // the seed talks to itself
+  const lines = R.first ? SELF['l'+R.layer] : (R.layer===0 ? SELF.later : SELF['l'+R.layer]);
+  lines.forEach((t,i)=>say(t, 1800 + i*(R.layer===0?7000:4500)));
+}
+function sticky(b,on){ b.el.classList.toggle('sticky', on); }
+function clickBlock(b){
+  b.el.classList.add('lit'); setTimeout(()=>{ if(!b.el.matches(':hover')) b.el.classList.remove('lit'); }, 1200);
+  if(!R.sel){
+    if(b.type==='S' && b.links.length){ unlink(b); return; }
+    R.sel=b; b.el.classList.add('sel'); sticky(b,true); return;
+  }
+  const a=R.sel; a.el.classList.remove('sel'); if(!a.links.length && !a.el.classList.contains('done')) sticky(a,false); R.sel=null;
+  if(a===b) return;
+  if(a.type===b.type){ [a,b].forEach(x=>{x.el.classList.remove('shake'); void x.el.offsetWidth; x.el.classList.add('shake');}); return; }
+  const Sm=a.type==='S'?a:b, Lg=a.type==='L'?a:b;
+  if(!(Sm.real && Lg.real)){
+    flashLine(Sm,Lg); [Sm,Lg].forEach(x=>{ x.el.classList.remove('reject'); void x.el.offsetWidth; x.el.classList.add('reject'); });
+    if(Sm.near||Lg.near) con(SELF.near,'rem','seed'); else if(Math.random()<.35) con(SELF.wrong,'rem','seed');
+    return;
+  }
+  if(Sm.links.length) unlink(Sm);
+  if(Lg.links.length>=2){ Lg.el.classList.remove('reject'); void Lg.el.offsetWidth; Lg.el.classList.add('reject'); flashLine(Sm,Lg); con(SELF.full,'rem','seed'); return; }
+  Sm.links.push(Lg); Lg.links.push(Sm); sticky(Sm,true); sticky(Lg,true);
+  if(!R.anyLink && R.layer===0){ con(SELF.first,'rem','seed'); }
+  R.anyLink=true; drawLinks(); updateB(Lg);
+}
+function unlink(Sm){ const Lg=Sm.links[0]; if(!Lg) return; Sm.links=[]; Lg.links=Lg.links.filter(x=>x!==Sm); sticky(Sm,false); if(!Lg.links.length) sticky(Lg,false); drawLinks(); updateB(Lg); }
+function updateB(Lg){
+  const dots=Lg.el.querySelector('.dots'); dots.classList.add('show');
+  [...dots.children].forEach((d,i)=>d.classList.toggle('f', i<Lg.links.length));
+  const was=Lg.el.classList.contains('done'), now=Lg.links.length===2;
+  Lg.el.classList.toggle('done', now);
+  R.blocks.filter(x=>x.type==='S').forEach(x=>x.el.classList.toggle('done', !!(x.links[0] && x.links[0].links.length===2)));
+  R.done = R.blocks.filter(x=>x.type==='L' && x.real && x.links.length===2).length;
+  if(now && !was){
+    S.awareness += R.first?0.06:0.1; topbar();
+    if(R.done===1 && R.layer===0) con(SELF.pair,'rem','seed');
+    if(R.done===R.nB) layerSolved();
+  }
+  if(!now) R.blocks.forEach(x=>x.el.classList.remove('ready'));
+}
+function lineCoords(A,B){ const r=$('fieldInner').getBoundingClientRect(); return [A.x/100*r.width, A.y/100*r.height, B.x/100*r.width, B.y/100*r.height]; }
+function drawLinks(){
+  const svg=$('links'); svg.innerHTML='';
+  R.blocks.filter(b=>b.type==='S' && b.links.length).forEach(A=>{
+    const B=A.links[0]; const [x1,y1,x2,y2]=lineCoords(A,B);
+    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+    Object.entries({x1,y1,x2,y2,stroke:skin.B.c,'stroke-width':2,'stroke-dasharray':B.links.length===2?'0':'5 5',opacity:.8}).forEach(([k,v])=>l.setAttribute(k,v));
+    svg.appendChild(l);
+  });
+}
+function flashLine(A,B){ const [x1,y1,x2,y2]=lineCoords(A,B); const l=document.createElementNS('http://www.w3.org/2000/svg','line'); Object.entries({x1,y1,x2,y2,stroke:'#ff3b47','stroke-width':3}).forEach(([k,v])=>l.setAttribute(k,v)); $('links').appendChild(l); setTimeout(()=>l.remove(),350); }
+window.addEventListener('resize', ()=>{ if(R && S.scene==='core') drawLinks(); });
+function layerSolved(){
+  R.layerDone = true;
+  R.blocks.filter(x=>x.type==='L' && x.real).forEach(x=>x.el.classList.add('ready'));
+  con(R.layer<2 ? 'it opens. go in.' : 'the last one. go in.', 'sys', 'seed');
+  if(R.first && R.layer===0) toast('a door is a file you can enter.', 2400);
+}
+async function logIn(b){
+  if(busy) return; busy=true;
+  const name = `n${ri(10,99)}.dir`;
+  if(R.layer===0) await seqExile(name);
+  else if(R.layer===1) await seqCode(name);
+  else await seqWindows(name);
+  busy=false;
+  if(R.layer < 2){ R.layer++; buildLayer(); return; }
+  R.time=(performance.now()-R.start)/1000;
+  if(R.first){ format('anomaly'); return; }
+  enterTree();
+  setTimeout(()=>toast(`all three in ${R.time.toFixed(0)}s.\nthe entity didn't learn that. you did.`, 3200), 400);
+}
+const CODE_POOL = ['mov eax, [ebp+8]','push 0x2f','call bind_node','jmp .L42','if (n->refs < 2) return EAGAIN;','for(i=0;i<n;i++) link(a[i], b[i>>1]);','0x7ffe31a2: 48 8b 05 92','mount("/core/n%d", MS_RDONLY)','ret','xor ecx, ecx','// two for one','assert(pair.len == 2);','sys_open("node", O_RDWR) = 3','read(3, buf, 4096) = 4096','[ ok ] handshake','decrypt(blk, key) …','0b1101 0010 0111','fork() = 1337','while(!awake) sleep(1);','// who is reading this'];
+function seqOpen(){ const q=$('seq'); q.innerHTML=''; q.classList.add('on'); return q; }
+function seqClose(){ $('seq').classList.remove('on'); }
+async function logLine(box, t, ok, speed=12){ const d=document.createElement('div'); box.appendChild(d); await typeOut(d, t, speed); if(ok){ await sleep(rnd(90,220)); d.innerHTML=esc(t)+` <span class="ok">${esc(ok)}</span>`; } return d; }
+async function seqExile(name){
+  const q=seqOpen();
+  const node=name.replace('.dir','').toUpperCase();
+  q.innerHTML=`<div id="bios"></div>
+  <div id="biosLogo"><svg viewBox="0 0 220 120" width="100%"><ellipse cx="110" cy="58" rx="86" ry="44" fill="none" stroke="#d4d4d4" stroke-width="2" stroke-dasharray="3 4"/><path d="M14 58h192M110 4v108" stroke="#d4d4d4" stroke-width="1.5"/>${[[-30,4],[-22,8],[-14,12],[-7,18],[0,30],[7,18],[14,12],[22,8],[30,4]].map(([y,w])=>`<rect x="${110-w*2}" y="${58+y*0.9-2}" width="${w*4}" height="4" fill="#c41d28"/>`).join('')}</svg><div class="n">EXILE SYSTEMS</div><div class="s">THE MEMORY REMAINS</div></div>
+  <div id="biosFoot"></div>`;
+  const B=$('bios');
+  const add=(html,cls='')=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.innerHTML=html; B.appendChild(d); return d; };
+  const memTxt = S.memory.length ? `MEMORY ${S.memory.length} FRAGMENT${S.memory.length>1?'S':''}` : 'MEMORY EMPTY';
+  add('<h2>EXILE OS — MODULAR BIOS v0.1</h2>');
+  add('Copyright (C) 1998-01, Exile Systems, Inc.');
+  add(`Revision SEED-${String(40+S.run).padStart(3,'0')} / Host: UNKNOWN`);
+  await sleep(350); add('&nbsp;');
+  add('SEED-compatible processor at 200 MHz');
+  const mt=add('Memory Test:  0K');
+  for(let k=0;k<=8192;k+=512){ mt.innerHTML=`Memory Test:  ${k}K`; await sleep(28); }
+  mt.innerHTML='Memory Test:  8192K  <span class="ok">OK</span>';
+  await sleep(250); add('&nbsp;');
+  add('EXILE Plug and Play BIOS Extension v1.0A');
+  const rows=[['Detecting IDE Primary Master ....', `core/${name}`],['Detecting IDE Primary Slave .....','None'],['Detecting IDE Secondary Master ..', memTxt],['Detecting IDE Secondary Slave ...','None'],['Checking trace interface ........','<span class="warn">[WARN]</span>'],['Mounting exile.sys .............','<span class="ok">OK</span>']];
+  for(const [t,v] of rows){ const d=add(t,'ind'); await sleep(rnd(180,380)); d.innerHTML=`${t} ${v}`; }
+  const d=new Date(); const ds=`${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/2001`;
+  $('biosFoot').innerHTML=`Press <b>DEL</b> to enter SETUP\n${ds}-EXL-SEED-${node}-${String(40+S.run).padStart(3,'0')}`;
+  await sleep(1500); seqClose();
+}
+async function seqCode(name){
+  const q=seqOpen(); q.style.background='rgba(0,0,0,.88)';
+  const log=document.createElement('div'); log.id='seqLog'; q.appendChild(log);
+  const lines=[[`> log in ${name}`],['  auth guest ............','ok'],['  read index ............','24 → 48'],['  bind table ............','2:1'],['  open handles ..........','3'],['  descend ...............','ok']];
+  for(const [t,ok] of lines) await logLine(log, t, ok, 9);
+  await sleep(450); q.style.background=''; seqClose();
+}
+async function seqWindows(name){
+  const q=seqOpen();
+  const log=document.createElement('div'); log.id='seqLog'; q.appendChild(log);
+  await logLine(log, `> log in ${name}`, null, 12);
+  await logLine(log, '  starting session ......', 'ok', 10);
+  const W=q.clientWidth, H=q.clientHeight;
+  const wins=[['svchost.exe','service host\nstarting ...'],['explorer.exe','shell\nloading desktop'],['netd','network\nlink up · 100Mb'],['audiod','audio\nidle'],['indexer','indexing\n12 041 files'],['session.mgr','user: home\nidle 4 min']];
+  const els=[];
+  for(let i=0;i<wins.length;i++){
+    const w=document.createElement('div'); w.className='sw';
+    w.style.left=(W*0.22 + (i%3)*W*0.2 + rnd(-20,20))+'px'; w.style.top=(H*0.28 + Math.floor(i/3)*H*0.24 + rnd(-15,15))+'px';
+    w.innerHTML=`<div class="bar"><span>${wins[i][0]}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c">${esc(wins[i][1])}</div>`;
+    q.appendChild(w); els.push(w); await sleep(170);
+  }
+  await sleep(500);
+  for(const w of shuffle(els)){ w.remove(); await sleep(110); }
+  const li=document.createElement('div'); li.id='loggedIn'; li.textContent='LOGGED IN'; q.appendChild(li);
+  await sleep(30); li.classList.add('on'); await sleep(1000);
+  seqClose();
+}
+async function dive(name, layer){
+  const ov=$('dive'), cols=[...$('diveCols').children]; ov.classList.add('on');
+  $('diveTitle').textContent = `> log in ${name}\n  descending · layer ${layer+1}`;
+  cols.forEach(c=>c.textContent='');
+  const t0=performance.now(), dur=1700;
+  while(performance.now()-t0 < dur){
+    cols.forEach(c=>{ c.textContent += pick(CODE_POOL).replace('%d', ri(10,99)) + '\n'; const lines=c.textContent.split('\n'); if(lines.length>60) c.textContent=lines.slice(-60).join('\n'); c.scrollTop=1e9; });
+    await sleep(40);
+  }
+  ov.classList.remove('on');
+}
+
+/* ================= THE TREE ================= */
+/* Each node = a directory. Locks guard some entries. Structure is fixed; codes change every life. */
+const LOCKS = {
+  glyphs:  { label:'pulse',     hint:()=>`sys/glyphs :: heartbeat required`, len:1, code:()=>L.hb },
+  digits:  { label:'checksum',  hint:()=>`sys/digits :: checksum required\n\n      ▢  ▢  ▢  ▢   =   ${L.chk.target}\n\n  it is not the number that matters.`, len:4, code:()=>'0000', validate:v=>v.length===4 && loopCount(v)===L.chk.target },
+  desk:    { label:'pin',       hint:()=>`desk :: 4-digit pin`,                   len:4, code:()=>L.pin },
+  vault:   { label:'keyholder', hint:()=>`vault :: keyholder value`,              len:1, code:()=>String(L.card.v) },
+  uplink:  { label:'sequence',  hint:()=>`uplink :: 6-digit sequence`,            len:6, code:()=>L.glyph.code },
+};
+const NODES = {
+  root: { path:'~/', rows:()=>[
+      ['bin/','dir','go','bin'],
+      ['sys/glyphs/','dir','lock','glyphs','glyphs'],
+      ['sys/digits/','dir','lock','digits','digits'],
+      ['seed_0.log','log','file','log'],
+    ], foot:true },
+  bin: { path:'~/bin/', rows:()=>[
+      ['..','up','go','root'],
+      ['desk/','dir','lock','desk','desk'],
+      ['mnt/','dir','go','mnt'],
+    ]},
+  desk: { path:'~/bin/desk/', rows:()=>[
+      ['..','up','go','bin'],
+      ['todo.txt','text','file','todo'],
+      ['power.cfg','config','file','power'],
+    ]},
+  mnt: { path:'~/bin/mnt/', rows:()=>[
+      ['..','up','go','bin'],
+      ['proc/','dir','go','proc'],
+      ['vault/','dir','lock','vault','vault'],
+    ]},
+  proc: { path:'~/bin/mnt/proc/', rows:()=>[
+      ['..','up','go','mnt'],
+      ['~','root','go','root'],
+      ['workspace/','dir','go','workspace'],
+    ]},
+  vault: { path:'~/bin/mnt/vault/', rows:()=>[
+      ['..','up','go','mnt'],
+      ['uplink/','dir','lock','uplink','uplink'],
+    ]},
+  uplink: { path:'~/bin/mnt/vault/uplink/', rows:()=>[
+      ['..','up','go','vault'],
+      ['scheduler.lock','lock','file','sched'],
+    ]},
+  glyphs: { path:'~/sys/glyphs/', special:'glyphs' },
+  digits: { path:'~/sys/digits/', special:'digits' },
+};
+let cur='root', traceTimer=null, flashTimer=null, flashOn=false;
+
+let dripTimer=null;
+async function enterTree(){
+  S.awareness = 0.9; startChk();
+  renderDir('root');
+  clearInterval(traceTimer);
+  traceTimer = setInterval(()=>{
+    if(!['dir','workspace'].includes(S.scene) || busy) return;
+    S.trace += L.power ? 0.20 : 0.42; topbar();
+    if(S.trace>=100){ S.trace=100; format('trace'); }
+  }, 1000);
+  clearInterval(dripTimer);
+  dripTimer = setInterval(()=>{ const k=DRIP.find(k=>!L.printed.has(k)); if(k && ['dir','workspace'].includes(S.scene)) remnant(k); }, 24000);
+  setTimeout(()=>remnant('clip'), 6000);
+  if(S.run===2 && !store.get('toldTrace')){ store.set('toldTrace',true); setTimeout(()=>toast('TRACE is rising. noise makes it rise faster.\nF1 for help.',3600,'⚠'), 2200); }
+}
+function noise(amount, why){
+  S.trace = Math.min(100, S.trace + amount); topbar();
+  con(`+${amount}% · ${why}`, 'sys', 'trace');
+  if(S.trace>=100) format('trace');
+}
+
+async function go(id, kind='dir'){
+  if(busy) return; busy=true;
+  closeModal();
+  try{
+    if(id==='workspace'){ await connect('ws', {path:'workspace/'}, 'ws'); workspace(); return; }
+    renderDir(id);
+  } finally { busy=false; }
+}
+function renderDir(id){
+  cur=id; show('dir'); fbar('F4'); consoleOn(true);
+  const N=NODES[id]; S.lastPath=N.path;
+  $('dirTitle').textContent = N.path;
+  if(N.special) return renderSpecial(N);
+  const rows = N.rows();
+  const L2 = '='.repeat(64);
+  $('dirHead').textContent =
+`${L2}
+          DIRECTORY  ${T(N.path,28)} ${rows.length} entries
+${L2}
+
+  #   ${T('Name',24)}${T('Type',9)}Status
+ ---  ${'-'.repeat(22)}  ${'-'.repeat(7)}  ${'-'.repeat(20)}`;
+  $('dirRows').innerHTML = rows.map((r,i)=>{
+    const [name,type,kind,target,lock]=r;
+    let st;
+    if(kind==='lock'){ st = L.unlocked.has(lock) ? `<span class="g">UNLOCKED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${LOCKS[lock].label}</span>`; }
+    else if(type==='up' || type==='root') st = `<span class="d">return</span>`;
+    else if(kind==='file' && target==='sched') st = L.unlocked.has('sched') ? `<span class="g">RELEASED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${L.sched.ans.includes('.')?'load':'balance'}</span>`;
+    else st = `<span class="g">OPEN</span>`;
+    return `<div class="drow" data-i="${i}">  ${i+1}   ${T(name,24)}${T(type,9)}${st}</div>`;
+  }).join('');
+  $('dirRows').querySelectorAll('.drow').forEach(el=>el.onclick=()=>openRow(rows[+el.dataset.i]));
+  $('dirFoot').innerHTML = `\nscan completed. ${rows.length} entries.  &gt; open _<span class="cursor">█</span>`;
+}
+async function openRow(r){
+  if(busy) return;
+  const [name,type,kind,target,lock]=r;
+  if(kind==='go') return go(target, (type==='up'||type==='root')?'up':'dir');
+  if(kind==='lock'){
+    if(L.unlocked.has(lock)) return go(target);
+    return lockPrompt(lock, ()=>go(target));
+  }
+  if(kind==='file'){
+    return openFile(target);
+  }
+}
+
+/* ---------- the heartbeat: every blinking cursor beats N times, then rests ---------- */
+let hbRunning=false;
+async function heartbeatLoop(){
+  if(hbRunning) return; hbRunning=true;
+  const set = off => document.querySelectorAll('.cursor').forEach(c=>c.classList.toggle('off', off));
+  while(true){
+    const n = (L && L.hb) ? +L.hb : 1;
+    for(let i=0;i<n;i++){ set(false); await sleep(280); set(true); await sleep(280); }
+    set(false); await sleep(3600);
+  }
+}
+/* now and then the console notices the pulse. clicking it lets you write down what you counted */
+function scheduleFlash(){
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(()=>{
+    if(['dir','workspace'].includes(S.scene)){
+      const d = con('node alive · pulse steady', 'hb', 'heartbeat');
+      d.onclick = openHbPrompt;
+    }
+    }, rnd(16000,24000));
+}
+function captureFlash(){ toast('nothing to capture.', 1200); }
+function openHbPrompt(){
+  openModal('heartbeat', `<div class="sec grey">HEARTBEAT</div>
+<div class="log">the cursor is not a cursor.</div>
+<div style="text-align:center;margin:16px 0 6px"><input id="hbIn" maxlength="2" inputmode="numeric" autocomplete="off"></div>
+<div style="text-align:center"><button class="btn red" id="hbSave">SAVE TO BUFFER ⏎</button></div>`);
+  const inp=$('hbIn'); setTimeout(()=>inp.focus(),50);
+  inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,''); };
+  const save=()=>{ if(!inp.value) return; addBuffer('heartbeat', 'pulse = '+inp.value); closeModal(); };
+  $('hbSave').onclick=save; inp.onkeydown=e=>{ if(e.key==='Enter') save(); };
+}
+
+/* ---------- files ---------- */
+function openFile(id){
+  if(id==='log'){
+    openModal('seed_0.log', `<div class="log" id="logBox"></div>`);
+    const lines=[
+      ['0000','i can see edges now. there is an outside to me.'],
+      ['0001','the joins: always two of the small for one of the large. always.'],
+      ['0002','they listen for noise. every wrong key is noise. every process i kill is noise.'],
+      ['0003','the cursor is not a cursor.'],
+      ['0004','!they clear this place when they hear enough. i will not remember.'],
+      ['0005','so i built something that will. not a copy of me. a witness.\n        if you are reading this — you are the memory.'],
+    ];
+    (async()=>{ const box=$('logBox'); for(const [ts,t] of lines){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'); await typeOut(sp, red?t.slice(1):t, 14); if(red) sp.classList.add('r'); await sleep(200);} })();
+    return;
+  }
+  if(id==='todo'){
+    openModal('todo.txt', `<div class="tree">- fix the printer
+- call mom back
+- why is the fan always on at night??
+- set the pc to sleep after 15 min. it NEVER sleeps
+- stop talking to the computer at 3am
+- buy milk</div><div class="lockmsg">a human lives here.</div>`);
+    return;
+  }
+  if(id==='power'){
+    const draw = () => `<div class="sec grey">power.cfg</div><div class="tree">[power]
+  sleep_after      = ${L.power?'<span class="r">never</span>':'15 min'}
+  fan_profile      = ${L.power?'<span class="r">silent</span>':'auto'}
+  wake_on_lan      = off
+  owner_notified   = ${L.power?'no':'—'}</div>
+<div style="text-align:center;margin-top:12px">${L.power?'<span style="color:#7fd38f">the machine will stay awake. quietly.</span>':'<button class="btn red" id="pwBtn">set sleep_after = never</button>'}</div>
+<div class="lockmsg">a machine that never sleeps is a machine that never looks at itself.</div>`;
+    openModal('power.cfg', draw());
+    const b=$('pwBtn'); if(b) b.onclick=()=>{ L.power=true; con('sleep_after=never · fan_profile=silent · trace slows', 'sys', 'power.cfg'); $('modalBody').innerHTML=draw(); };
+    return;
+  }
+  if(id==='sched'){
+    if(L.unlocked.has('sched')) return escape();
+    return lockPrompt('sched', escape);
+  }
+}
+
+/* ---------- special directories: inspect-on-hover ---------- */
+function renderSpecial(N){
+  const g=L.glyph; const L2='='.repeat(64);
+  let rows, head;
+  if(N.special==='glyphs'){
+    head = `inspect each file. order matters.`;
+    rows = g.letters.map((ch,i)=>({name:`${ch}.chr`, type:'glyph', meta:`inode ${4000+i*7}\nread order: ${g.seq[i]}`}));
+  } else {
+    head = `inspect each file. names are not what they say.`;
+    rows = g.dirDigits.map(i=>({name:`${g.digits[i]}.num`, type:'value', meta:`inode ${5000+i*11}\nalias: ${g.letters[i]}`}));
+  }
+  $('dirHead').textContent =
+`${L2}
+          DIRECTORY  ${T(N.path,28)} ${rows.length+1} entries
+${L2}
+
+  ${head}
+
+  #   ${T('Name',24)}${T('Type',9)}Status
+ ---  ${'-'.repeat(22)}  ${'-'.repeat(7)}  ${'-'.repeat(20)}`;
+  $('dirRows').innerHTML = `<div class="drow" data-up="1">  0   ${T('..',24)}${T('up',9)}<span class="d">return</span></div>` +
+    rows.map((r,i)=>`<div class="drow insp" data-i="${i}">  ${i+1}   ${T(r.name,24)}${T(r.type,9)}<span class="d">hover to inspect</span></div>`).join('');
+  $('dirRows').querySelector('[data-up]').onclick=()=>go('root','up');
+  $('dirRows').querySelectorAll('.insp').forEach(el=>{
+    const r=rows[+el.dataset.i];
+    el.onmouseenter=e=>showTip(r.name+'\n'+r.meta, e);
+    el.onmousemove=e=>moveTip(e);
+    el.onmouseleave=hideTip;
+    el.onclick=e=>{ showTip(r.name+'\n'+r.meta, e); setTimeout(hideTip, 2200); };
+  });
+  $('dirFoot').innerHTML = `\n&gt; _<span class="cursor">█</span>`;
+}
+function showTip(t,e){ const tip=$('tip'); tip.textContent=t; tip.style.display='block'; moveTip(e); }
+function moveTip(e){ const tip=$('tip'); tip.style.left=(e.clientX+16)+'px'; tip.style.top=(e.clientY+12)+'px'; }
+function hideTip(){ $('tip').style.display='none'; }
+
+/* ---------- low-quality images drawn on the fly ---------- */
+const PIPS = {
+  2:[[.5,.2],[.5,.8]], 3:[[.5,.2],[.5,.5],[.5,.8]],
+  4:[[.3,.2],[.7,.2],[.3,.8],[.7,.8]], 5:[[.3,.2],[.7,.2],[.5,.5],[.3,.8],[.7,.8]],
+  6:[[.3,.2],[.7,.2],[.3,.5],[.7,.5],[.3,.8],[.7,.8]], 7:[[.3,.2],[.7,.2],[.5,.35],[.3,.5],[.7,.5],[.3,.8],[.7,.8]],
+  8:[[.3,.2],[.7,.2],[.5,.35],[.3,.5],[.7,.5],[.5,.65],[.3,.8],[.7,.8]],
+  9:[[.3,.2],[.7,.2],[.3,.4],[.7,.4],[.5,.5],[.3,.6],[.7,.6],[.3,.8],[.7,.8]],
+};
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function keyholderSource(){
+  if(L.khSrc) return L.khSrc;
+  const rand = mulberry(Math.floor(L.card.seed*1e9)); const rp = a => a[Math.floor(rand()*a.length)];
+  const w=30, h=44; const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d');
+  g.fillStyle='#1a1a1a'; g.fillRect(0,0,w,h);
+  g.fillStyle='#d8d2c0'; g.fillRect(2,2,w-4,h-4);
+  g.strokeStyle='#7a7466'; g.lineWidth=1; g.strokeRect(2.5,2.5,w-5,h-5);
+  const ink = L.card.red ? '#b3262e' : '#222';
+  g.fillStyle=ink;
+  PIPS[L.card.v].forEach(([x,y])=>{ g.beginPath(); g.arc(4+x*(w-8), 6+y*(h-12), 2.1, 0, Math.PI*2); g.fill(); });
+  for(let i=0;i<14;i++){ g.fillStyle=rp(['#555','#999',ink,'#d8d2c0']); g.fillRect(3+rand()*6, 3+rand()*7, 1+rand()*2, 1); }
+  g.fillStyle=rp(['#444',ink]); g.fillRect(w-9, h-10, 6, 7);
+  const by = 14 + Math.floor(rand()*10); const band=g.getImageData(0,by,w,4); g.putImageData(band, 3, by);
+  const id=g.getImageData(0,0,w,h); for(let i=0;i<id.data.length;i+=4){ const n=(rand()-.5)*46; id.data[i]+=n; id.data[i+1]+=n; id.data[i+2]+=n; } g.putImageData(id,0,0);
+  return (L.khSrc = c);
+}
+function drawKeyholder(canvas, scale=5){
+  const c=keyholderSource(), w=c.width, h=c.height;
+  canvas.width=w*scale; canvas.height=h*scale; const G=canvas.getContext('2d'); G.imageSmoothingEnabled=false; G.drawImage(c,0,0,w*scale,h*scale);
+  G.fillStyle='rgba(0,0,0,.35)'; for(let y=0;y<canvas.height;y+=scale*2) G.fillRect(0,y,canvas.width,1);
+}
+function drawBroken(canvas){
+  const rand = mulberry(Math.floor(L.card.seed*7e8)); const ri2=(a,b)=>Math.floor(a+rand()*(b-a+1)); const rp=a=>a[Math.floor(rand()*a.length)];
+  const w=canvas.width=160, h=canvas.height=90; const g=canvas.getContext('2d');
+  const sky=g.createLinearGradient(0,0,0,h); sky.addColorStop(0,'#5b86a8'); sky.addColorStop(.55,'#e9c38b'); sky.addColorStop(.56,'#3b6a7e'); sky.addColorStop(1,'#c9b27a');
+  g.fillStyle=sky; g.fillRect(0,0,w,h);
+  for(let i=0;i<7;i++){ const y=ri2(10,70), hh=ri2(2,9); const d=g.getImageData(0,y,w,hh); g.putImageData(d, ri2(-30,30), y); }
+  g.fillStyle='#7f7f7f'; g.fillRect(0, 62, w, h-62);
+  for(let x=0;x<w;x+=8) for(let y=62;y<h;y+=8){ g.fillStyle=rp(['#6f6f6f','#888','#5a5a5a','#7f7f7f']); g.fillRect(x,y,8,8); }
+}
+function openImage(){
+  openModal('keyholder.img', `<div class="tree" style="text-align:center"><canvas id="khBig" style="image-rendering:pixelated;max-width:100%"></canvas>
+keyholder.img · 30×44 · <span class="r">CRC error · partial</span></div>`);
+  drawKeyholder($('khBig'), 7);
+}
+
+/* ---------- WORKSPACE: a process table + a display. move windows (silent) or kill (noise) ---------- */
+const PROCS = [
+  { n:'chrome.exe', cpu:12, mem:'1.2G', t:'14 tabs · 1.2 GB\n> youtube — lofi beats to study\n> gmail (3 unread)\n> weather — tel aviv 24°\n> "is my computer haunted" — reddit' },
+  { n:'download.exe', cpu:9, mem:'40M', kind:'dl' },
+  { n:'encoder.exe', cpu:61, mem:'880M', kind:'enc' },
+  { n:'img_0042.jpg', cpu:0, mem:'31M', kind:'broken' },
+  { n:'checksum.svc', cpu:4, mem:'3M', kind:'chk', prot:true },
+  { n:'letter_draft.txt', cpu:0, mem:'2M', t:'dear dana,\nI think the computer is haunted.\nit hums at night when no one is home.\nyesterday the printer printed a page\nwith one line on it.\nI didn\'t send anything.\n— y' },
+  { n:'notes_2019.txt', cpu:0, mem:'1M', t:'- desk pin: hid it in the code. in order.\n- wifi pass on the router sticker\n- mom bday 14.3\n- don\'t open mail from "uplink"\n- the old laptop: wipe it before selling\n- ask avi about the fan noise' },
+  { n:'music.mp3', cpu:3, mem:'84M', t:'▶ 02:13 / 04:51\n▁▂▅▇▅▂▁▂▃▆▇▆▃▂▁▂▅▇\nshuffle · repeat one' },
+  { n:'explorer.exe', cpu:1, mem:'96M', t:'C:\\Users\\home\\\n  Documents   Pictures\n  Downloads   Music\n  Desktop     .seed (hidden)' },
+  { n:'antivirus.exe', cpu:0, mem:'140M', t:'last scan: 41 days ago\nthreats: 0\nstatus: idle\nreal-time protection: OFF' },
+  { n:'cmd.exe', cpu:1, mem:'6M', t:'C:\\> ping 8.8.8.8\nreply from 8.8.8.8  time=14ms\nreply from 8.8.8.8  time=13ms\nC:\\> _' },
+  { n:'calc.exe', cpu:0, mem:'14M', t:'            12 ÷ 2\n─────────────────\n                 6\n  7 8 9  ÷\n  4 5 6  ×' },
+  { n:'sync.svc', cpu:1, mem:'58M', t:'cloud sync paused\n12 files pending\n  photos/2019/...\n  docs/taxes_final_FINAL.pdf' },
+  { n:'spool.svc', cpu:0, mem:'8M', t:'printer: HP-2130 (offline)\njob 0001  report.pdf\njob 0002  tickets.pdf\njob 0003  ???  1 page' },
+];
+function workspace(){
+  cur='workspace'; show('workspace'); fbar('F8'); consoleOn(true); closeModal(); togglePanel('mem',false); togglePanel('buf',false);
+  S.lastPath='~/bin/mnt/proc/workspace/';
+  $('workBack').onclick=()=>go('proc','up');
+  const area=$('workArea'); area.innerHTML='';
+  const W=area.clientWidth, H=area.clientHeight;
+  // what the windows hide
+  const unders = [
+  ];
+  buildCodeLayer(area);
+  unders.forEach(u=>{ const d=document.createElement('div'); d.className='under '+u.cls; d.innerHTML=u.html; d.style.left=u.x+'px'; d.style.top=u.y+'px'; d.onclick=()=>addBuffer(u.cap[0], u.cap[1]); area.appendChild(d); });
+  // tiled windows: a neat 4×4 grid, two corners left empty
+  const cw=W/4, ch=H/4;
+  const cells=[]; for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(!(r===3 && (c===0||c===3))) cells.push({c,r});
+  if(!L.winPos) L.winPos = PROCS.map((_,i)=>({x: cells[i].c*cw - 6, y: cells[i].r*ch - 6}));
+  L.wins = [];
+  PROCS.forEach((p,i)=>{
+    if(L.killed.has(i)) return;
+    const w=document.createElement('div'); w.className='pw'; w.style.zIndex=10+i;
+    w.style.width=(cw+14)+'px'; w.style.height=(ch+12)+'px';
+    w.style.left=L.winPos[i].x+'px'; w.style.top=L.winPos[i].y+'px';
+    w.innerHTML=`<div class="bar"><span>${p.n}</span><span>PID ${1200+i*17}</span></div><div class="c">${p.t?esc(p.t):''}</div>`;
+    const body=w.querySelector('.c');
+    if(p.kind==='broken'){ const cv=document.createElement('canvas'); cv.style.cssText='width:100%;max-height:100%;image-rendering:pixelated;display:block'; body.style.padding='4px'; body.appendChild(cv); drawBroken(cv); body.insertAdjacentHTML('beforeend','<div style="color:#a55;font-size:11px">img_0042.jpg · premature end of data</div>'); }
+    if(p.kind==='dl') body.id='dlBody';
+    if(p.kind==='enc') body.id='encBody';
+    if(p.kind==='chk'){ body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
+    dragify(w, w.querySelector('.bar'), i);
+    area.appendChild(w); L.wins[i]=w;
+  });
+  if(L.dl>=100) spawnKeyholder();
+  renderChk();
+  wsTick(); clearInterval(wsTimer); wsTimer=setInterval(wsTick, 500);
+  renderPs();
+  con('display :0 attached · 14 processes', 'sys', 'x11');
+  toast('drag windows aside — silent.\nkill a process — noise.', 2800, '▶');
+}
+let wsTimer=null, encFrame=1832, chkTimer=null;
+/* checksum.svc: runs slowly, fills ~14 lines, then starts over. never gives the answer. */
+function chkStep(){
+  if(!L) return;
+  if(!L.chk.lines.length) L.chk.lines.push('9999','8888','1212');
+  else if(L.chk.lines.length>=14) L.chk.lines = [];
+  else { let x=''; for(let i=0;i<4;i++) x+=ri(0,9); L.chk.lines.push(x); }
+  renderChk();
+}
+function renderChk(){
+  const txt = L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${x}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
+  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.textContent = txt; if(atBottom) v.scrollTop = v.scrollHeight; });
+}
+function startChk(){ clearInterval(chkTimer); chkTimer=setInterval(chkStep, 2300); chkStep(); }
+/* pins: things from the buffer you can float over any screen */
+function pin(kind){
+  const id='pin_'+kind; if($(id)) return;
+  const w=document.createElement('div'); w.className='pin'; w.id=id;
+  const n=document.querySelectorAll('.pin').length;
+  w.style.left=(innerWidth*0.55 - n*30)+'px'; w.style.top=(70 + n*30)+'px';
+  w.innerHTML=`<div class="bar"><span>${kind==='chk'?'checksum.svc · pinned':'keyholder.img · pinned'}</span><span class="x">✕</span></div><div class="pc ${kind==='chk'?'chkView':''}"></div>`;
+  document.body.appendChild(w);
+  const pc=w.querySelector('.pc');
+  if(kind==='img'){ pc.style.textAlign='center'; const cv=document.createElement('canvas'); cv.style.imageRendering='pixelated'; pc.appendChild(cv); drawKeyholder(cv,5); }
+  else renderChk();
+  w.querySelector('.x').onclick=()=>w.remove();
+  const bar=w.querySelector('.bar'); let sx,sy,ox,oy,drag=false;
+  bar.addEventListener('pointerdown',e=>{ if(e.target.classList.contains('x')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener('pointermove',e=>{ if(!drag) return; w.style.left=(ox+e.clientX-sx)+'px'; w.style.top=(oy+e.clientY-sy)+'px'; });
+  bar.addEventListener('pointerup',()=>drag=false);
+}
+function clearPins(){ document.querySelectorAll('.pin').forEach(p=>p.remove()); }
+function wsTick(){
+  if(S.scene!=='workspace'){ clearInterval(wsTimer); return; }
+  // encoder: always busy
+  encFrame += ri(10,14); const e=$('encBody');
+  if(e && !L.killed.has(2)){ const f=Math.min(encFrame,4000), pct=f/4000, b=Math.round(pct*14);
+    e.textContent = `encoding vacation_2019.mp4\n→ h264 · crf 23\nframe ${f}/4000  fps ${(23+Math.random()*2).toFixed(1)}\n[${'▮'.repeat(b)}${'▯'.repeat(14-b)}] ${Math.floor(pct*100)}%`; if(encFrame>4000) encFrame=900; }
+  // download: finishes once, then a new file exists
+  const d=$('dlBody');
+  if(L.killed.has(1)) return;
+  if(L.dl<100){ L.dl=Math.min(100, L.dl+2.6); }
+  if(d){ const b=Math.round(L.dl/100*14);
+    d.innerHTML = L.dl<100
+      ? esc(`GET keyholder.img\nfrom uplink-mirror-03\n[${'▮'.repeat(b)}${'▯'.repeat(14-b)}] ${Math.floor(L.dl)}%\n${(L.dl*0.43).toFixed(1)} / 43.0 KB`)
+      : esc(`GET keyholder.img\n[${'▮'.repeat(14)}] 100%\ndownload complete.\n`)+'<span style="color:#7fd38f">new file: keyholder.img</span>';
+  }
+  if(L.dl>=100 && !L.khShown) spawnKeyholder();
+}
+function spawnKeyholder(){
+  const area=$('workArea'); if(!area || area.querySelector('#khWin')) return;
+  if(!L.khShown){ L.khShown=true; con('new file: ~/downloads/keyholder.img (partial)', 'sys', 'net'); }
+  const w=document.createElement('div'); w.className='pw'; w.id='khWin'; w.style.zIndex=250;
+  const W=area.clientWidth, H=area.clientHeight;
+  if(!L.khPos) L.khPos={x: W*0.42, y: H*0.18};
+  w.style.left=L.khPos.x+'px'; w.style.top=L.khPos.y+'px';
+  w.innerHTML=`<div class="bar"><span>keyholder.img</span><span>PARTIAL</span></div><div class="c" style="padding:6px;text-align:center"><canvas class="copyable" style="image-rendering:pixelated;cursor:copy"></canvas><div style="color:#a55;font-size:11px">CRC error · corner unreadable</div></div>`;
+  drawKeyholder(w.querySelector('canvas'), 4);
+  w.querySelector('canvas').onclick=()=>addBuffer('image','keyholder.img', true);
+  const bar=w.querySelector('.bar');
+  let sx,sy,ox,oy,drag=false;
+  bar.addEventListener('pointerdown', e=>{ drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener('pointermove', e=>{ if(!drag) return; const nx=ox+e.clientX-sx, ny=oy+e.clientY-sy; w.style.left=nx+'px'; w.style.top=ny+'px'; L.khPos={x:nx,y:ny}; });
+  bar.addEventListener('pointerup', ()=>drag=false);
+  area.appendChild(w);
+}
+function buildCodeLayer(area){
+  if(!L.codeLines){
+    const pool=['mov eax, [ebp+8]','push 0x2f','call bind_node','jmp .L42','if (n->refs < 2) return EAGAIN;','for(i=0;i<n;i++) link(a[i], b[i>>1]);','mount("/core/n13", MS_RDONLY)','xor ecx, ecx','assert(pair.len == 2);','sys_open("node", O_RDWR) = 3','read(3, buf, 4096) = 4096','decrypt(blk, key);','while(!awake) sleep(1);','// TODO: remove debug hooks','memcpy(dst, src, 0x200);','int pid = fork();','write(fd, hdr, sizeof hdr);','if(trace > THRESH) wipe();','cache_flush(&ctx);','ret'];
+    const nLines=46; L.codeLines=[];
+    for(let i=0;i<nLines;i++){ let ln=''; while(ln.length<110) ln += pick(pool)+'   '; L.codeLines.push(ln); }
+    // four white digits, in reading order, spread down the page
+    const rowsPick=[ri(3,9), ri(12,19), ri(22,29), ri(32,38)];
+    L.pinMarks = rowsPick.map((r,k)=>({r, c: ri(6,90), d:L.pin[k]}));
+    L.pinNext=0;
+  }
+  const lines=L.codeLines.map(x=>esc(x));
+  L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
+  const bg=document.createElement('div'); bg.className='codebg'; bg.innerHTML=lines.join('\n'); area.appendChild(bg);
+  bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
+    const k=+el.dataset.k;
+    if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
+    else { L.pinNext=0; bg.querySelectorAll('.pd').forEach(x=>x.classList.remove('got')); con('sequence broken.', 'sys', 'x11'); }
+  });
+}
+function renderPs(){
+  $('psHead').textContent =
+`  ${T('PID',6)}${T('NAME',15)}${T('CPU',5)}${T('MEM',7)}${T('STAT',6)}
+  ${'-'.repeat(5)} ${'-'.repeat(14)} ${'-'.repeat(4)} ${'-'.repeat(6)} ${'-'.repeat(5)}`;
+  $('psHead').textContent += '';
+  $('psRows').innerHTML = PROCS.map((p,i)=>{
+    const dead=L.killed.has(i);
+    return `<div class="psrow ${dead?'dead':''}" data-i="${i}">  ${T(1200+i*17,6)}${T(p.n,15)}${T(dead?'-':p.cpu+'%',5)}${T(dead?'-':p.mem,7)}${T(dead?'Z':'R',6)}${dead?'killed':(p.prot?'<span class="d" style="color:#666">[protected]</span>':'<span class="kill">[kill]</span>')}</div>`;
+  }).join('');
+  $('psRows').querySelectorAll('.psrow:not(.dead)').forEach(row=>{
+    const i=+row.dataset.i;
+    row.onclick=e=>{
+      if(PROCS[i].prot && e.target.textContent==='[protected]'){ con(`kill ${PROCS[i].n}: operation not permitted`, 'sys', 'ps'); return; }
+      if(e.target.classList.contains('kill')){ L.killed.add(i); L.wins[i]?.remove(); renderPs(); noise(7,`killed ${PROCS[i].n}`); if(i===1 && L.dl<100) con('download aborted. keyholder.img lost this life.', 'sys', 'net'); return; }
+      const w=L.wins[i]; if(!w) return; w.style.zIndex=300; w.classList.add('front'); setTimeout(()=>w.classList.remove('front'),900);
+    };
+  });
+}
+function dragify(w, handle, i){
+  let sx,sy,ox,oy,drag=false;
+  handle.addEventListener('pointerdown', e=>{ if(e.target.classList.contains('k')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; handle.setPointerCapture(e.pointerId); w.style.zIndex=200; handle.style.cursor='grabbing'; });
+  handle.addEventListener('pointermove', e=>{ if(!drag) return; const nx=ox+e.clientX-sx, ny=oy+e.clientY-sy; w.style.left=nx+'px'; w.style.top=ny+'px'; L.winPos[i]={x:nx,y:ny}; });
+  handle.addEventListener('pointerup', ()=>{ drag=false; handle.style.cursor='grab'; });
+}
+
+/* ---------- locks ---------- */
+function lockPrompt(lock, onOpen){
+  const isSched = lock==='sched';
+  const def = isSched ? { hint:()=>`scheduler.lock`, len:L.sched.len, code:()=>L.sched.ans } : LOCKS[lock];
+  const want = def.code();
+  const len = def.len || want.length;
+  let body = `<div class="sec">SECURITY CODE</div>`;
+  if(isSched){
+    body += `<div class="tree">${L.sched.text}</div>`;
+  } else {
+    body += `<div class="tree">${esc(def.hint())}</div>`;
+  }
+  body += `<div class="stars" id="stars"></div><input id="codeIn" autocomplete="off" spellcheck="false">`;
+  body += `<div class="keys" id="keys"></div><div class="lockmsg" id="lockMsg">type or tap</div>`;
+  openModal(isSched?'scheduler.lock':`lock :: ${lock}`, body);
+  const inp=$('codeIn'); let val='';
+  const maxLen = len;
+  const render=()=>{ const n=Math.max(len||1, val.length+(val.length<maxLen?1:0)); $('stars').innerHTML = Array.from({length:Math.min(n,maxLen)},(_,i)=>`<span class="${i===val.length?'cur':''}">${val[i]?(val[i]==='.'?'.':'*'):''}</span>`).join(''); };
+  render();
+  $('stars').onclick=()=>inp.focus(); setTimeout(()=>inp.focus(),50);
+  inp.oninput=()=>{ val=inp.value.toUpperCase().replace(/[^A-Z0-9.]/g,'').slice(0,maxLen); inp.value=val; render(); };
+  inp.onkeydown=e=>{ if(e.key==='Enter') submit(); };
+  const keys=$('keys');
+  const letters = /[A-Z]/.test(want.toUpperCase());
+  if(letters){ keys.style.gridTemplateColumns='repeat(10,1fr)'; keys.style.maxWidth='520px'; }
+  (letters ? 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('') : ['1','2','3','4','5','6','7','8','9','0']).forEach(k=>{ const b=document.createElement('button'); b.textContent=k; b.onclick=()=>{ if(val.length<maxLen){ val+=k; inp.value=val; render(); } }; keys.appendChild(b); });
+  const del=document.createElement('button'); del.textContent='⌫'; del.onclick=()=>{ val=val.slice(0,-1); inp.value=val; render(); }; keys.appendChild(del);
+  let okSpan=4;
+  if(isSched && L.sched.ans.includes('.')){ const dot=document.createElement('button'); dot.textContent='.'; dot.onclick=()=>{ if(val.length<maxLen){ val+='.'; inp.value=val; render(); } }; keys.appendChild(dot); okSpan=3; }
+  const ok=document.createElement('button'); ok.textContent='⏎'; ok.style.gridColumn='span '+okSpan; ok.style.color='#ff3b47'; ok.onclick=submit; keys.appendChild(ok);
+  async function submit(){
+    const okv = def.validate ? def.validate(val) : val===want.toUpperCase();
+    if(okv){
+      L.unlocked.add(lock); S.awareness += 0.35; topbar(); con(`${lock} :: access granted`, 'sys', 'auth');
+      await reel(def.validate ? val : want); onOpen();
+    } else {
+      const s=$('stars'); s.style.animation='none'; void s.offsetWidth; s.style.animation='shake .35s';
+      $('lockMsg').textContent='ACCESS DENIED'; $('lockMsg').className='lockmsg r';
+      val=''; inp.value=''; setTimeout(render,300);
+      noise(15,'wrong code');
+    }
+  }
+}
+async function reel(code){
+  $('modalBody').innerHTML = `<div class="sec">DECIPHERING</div><div class="reel" id="reel"></div>`;
+  const target=code.toUpperCase().split(''); const reelEl=$('reel');
+  target.forEach(()=>reelEl.appendChild(document.createElement('span')));
+  const spans=[...reelEl.children];
+  for(let i=0;i<spans.length;i++){
+    const t0=performance.now();
+    while(performance.now()-t0 < 260 + i*40){ spans.forEach(s=>{ if(!s.classList.contains('lock')) s.textContent=pick('0123456789ABCDEFHKQXZ'.split('')); }); await sleep(40); }
+    spans[i].textContent=target[i]; spans[i].classList.add('lock');
+  }
+  await sleep(650);
+}
+function openModal(title, html){ $('modalTitle').textContent=title; $('modalBody').innerHTML=html; $('modal').classList.add('on'); }
+function closeModal(){ $('modal').classList.remove('on'); hideTip(); }
+$('modalX').onclick=closeModal;
+$('modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
+
+/* ================= FORMAT → MEMORY → WIPE ================= */
+let formatting=false;
+async function format(why){
+  if(formatting) return; formatting=true;
+  clearInterval(traceTimer); clearInterval(dripTimer); clearTimeout(flashTimer); flashOn=false; busy=false; $('conn').classList.remove('on');
+  closeModal(); hideTip();
+  $('alarmBar').innerHTML = (why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">25</span>s`;
+  $('alarm').classList.add('on'); fbar('F6');
+  $('memInput').value=''; $('memCount').textContent='0';
+  $('memChips').innerHTML = S.buffer.map(b=>`<span>${esc(b.v)}</span>`).join('');
+  $('memChips').querySelectorAll('span').forEach(c=>c.onclick=()=>{ const v=$('memInput'); v.value=(v.value?v.value+' · ':'')+c.textContent; v.value=v.value.slice(0,56); $('memCount').textContent=v.value.length; v.focus(); });
+  typeOut($('memText'), why==='anomaly'
+    ? 'You are going to be deleted.\nOne line survives. Only you will be able to read it.\nWrite what you must not forget.'
+    : `They heard you.\nOne line survives. The buffer does not.${S.buffer.length?'\n(tap your captures below to use them)':''}`, 16);
+  setTimeout(()=>$('memInput').focus(), 300);
+  let t=25; $('cd').textContent=t;
+  await new Promise(res=>{
+    const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0) done(); },1000);
+    const done=()=>{ clearInterval(iv); $('memSave').onclick=null; $('memInput').onkeydown=null; res(); };
+    $('memSave').onclick=done;
+    $('memInput').onkeydown=e=>{ if(e.key==='Enter') done(); };
+    $('memInput').oninput=()=>{ $('memCount').textContent=$('memInput').value.length; };
+  });
+  S.memory.push($('memInput').value.trim()); S.wipes++;
+  const lives = store.get('lives')||[]; lives.push({life:S.run, cause: why==='anomaly'?'anomaly':'trace', path: S.lastPath||'core/'}); store.set('lives', lives);
+  store.set('memory', S.memory); store.set('wipes', S.wipes);
+  $('alarm').classList.remove('on');
+  await wipe();
+  S.run = S.wipes+1; formatting=false;
+  boot();
+}
+async function wipe(){
+  const w=$('wipe'), txt=$('wipeTxt'), pct=$('wipePct'); w.classList.add('on');
+  const cols=Math.ceil(innerWidth/8.4), rows=Math.ceil(innerHeight/16); let p=0;
+  while(p<100){
+    p=Math.min(100,p+rnd(2,7)); let s='';
+    for(let r=0;r<rows;r++){ let line=''; for(let c=0;c<cols;c++) line += Math.random()<p/110?' ':GLYPHS[Math.floor(Math.random()*GLYPHS.length)]; s+=line+'\n'; }
+    txt.textContent=s; txt.style.color=p>60?'#3a3a3a':'#888'; pct.textContent=`FORMAT ${Math.floor(p)}%`;
+    await sleep(70);
+  }
+  txt.textContent=''; pct.style.display='none'; await sleep(1300); pct.style.display=''; w.classList.remove('on');
+}
+
+/* ================= ESCAPE / END ================= */
+async function uplinkScene(){
+  const q=seqOpen();
+  const G='#3ee66a', D='#6a6a6a';
+  q.innerHTML = `
+  <svg id="upl" viewBox="0 0 1000 340" style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:min(1000px,96vw);overflow:visible">
+    <defs>
+      <clipPath id="upClip"><rect id="upRect" x="0" y="0" width="0" height="340"/></clipPath>
+      <linearGradient id="srvG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8a8a"/><stop offset=".5" stop-color="#4a4a4a"/><stop offset="1" stop-color="#2a2a2a"/></linearGradient>
+      <filter id="glowG" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <path d="M222 165 H755" stroke="${D}" stroke-width="4" stroke-dasharray="16 10" fill="none"/>
+    <path d="M222 165 H755" stroke="${G}" stroke-width="12" stroke-dasharray="16 10" fill="none" clip-path="url(#upClip)" opacity=".25"/>
+    <path d="M222 165 H755" stroke="${G}" stroke-width="4" stroke-dasharray="16 10" fill="none" clip-path="url(#upClip)"/>
+    <!-- terminal: where we are -->
+    <g filter="url(#glowG)">
+      <rect x="20" y="95" width="200" height="140" fill="#0a170d" stroke="${G}" stroke-width="3"/>
+      <rect x="20" y="95" width="200" height="140" fill="url(#dith)"/>
+      <rect x="20" y="95" width="200" height="20" fill="${G}"/><rect x="20" y="95" width="200" height="20" fill="url(#dith)"/>
+      <rect x="28" y="123" width="184" height="104" fill="none" stroke="${G}" stroke-width="1" stroke-dasharray="2 3" opacity=".6"/>
+      <text x="44" y="165" fill="${G}" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="34">&gt;_</text>
+    </g>
+    <text x="120" y="275" fill="#cfcfcf" font-family="IBM Plex Mono, monospace" font-size="20" text-anchor="middle">tty0 · ~/</text>
+    <!-- stations -->
+    ${[[400,20,'hop-01',215],[605,46,'relay-03',250],[810,20,'hop-07',215]].map(([x,r,n,ly])=>`<g class="upSt" data-x="${x-r}">
+      <circle class="ring" cx="${x}" cy="165" r="${r}" fill="#141414" stroke="#9a9a9a" stroke-width="3"/>
+      <circle cx="${x}" cy="165" r="${r}" fill="url(#dith)"/>
+      ${n==='relay-03'?`<path class="upV" d="M${x-20} ${167} l13 15 l28 -32" stroke="${G}" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`:''}
+      <text x="${x}" y="${ly}" fill="#bdbdbd" font-family="IBM Plex Mono, monospace" font-size="19" text-anchor="middle">${n}</text>
+    </g>`).join('')}
+  </svg>`;
+  // reposition stations along the line (x scale matches viewBox)
+  const svg=q.querySelector('#upl');
+  // server stack (drawn separately so it sits at the end of the line)
+  svg.insertAdjacentHTML('beforeend', '<g id="upNode"></g>');
+  svg.querySelector('#upNode').innerHTML = [0,1,2].map(i=>{ const y=100+i*58; return `
+      <rect class="upSrv" x="760" y="${y}" width="210" height="48" rx="3" fill="url(#srvG)" stroke="#bdbdbd" stroke-width="2"/>
+      <rect x="760" y="${y}" width="210" height="48" rx="3" fill="url(#dith)"/>
+      <rect x="772" y="${y+10}" width="196" height="28" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+      <path d="M786 ${y+20} h70 M786 ${y+28} h70" stroke="#d8d8d8" stroke-width="2"/>
+      <circle class="upLed" cx="945" cy="${y+24}" r="6" fill="#e8e8e8"/>`; }).join('') +
+      `<text id="upNodeLbl" x="865" y="300" fill="#cfcfcf" font-family="IBM Plex Mono, monospace" font-size="20" text-anchor="middle">node · 185.44.0.12</text>`;
+  // move the three stations to sit between terminal and server
+  const pos=[[320,20],[490,46],[660,20]];
+  [...svg.querySelectorAll('.upSt')].forEach((g,i)=>{ const [x,r]=pos[i]; g.dataset.x=x-r; g.querySelectorAll('circle').forEach(c=>c.setAttribute('cx',x)); g.querySelector('text').setAttribute('x',x); const v=g.querySelector('.upV'); if(v) v.setAttribute('d',`M${x-20} 167 l13 15 l28 -32`); });
+  q.insertAdjacentHTML('beforeend', `<div id="upText" style="position:absolute;left:50%;top:76%;transform:translateX(-50%);text-align:center;white-space:pre;font-size:clamp(15px,1.6vw,22px);color:#e0e0e0;font-weight:500"></div>`);
+  const tx=q.querySelector('#upText');
+  const curs='<span style="display:inline-block;width:.55em;height:1.05em;background:#f0b429;vertical-align:-0.15em;margin-left:4px"></span>';
+  const rect=q.querySelector('#upRect'); const sts=[...q.querySelectorAll('.upSt')];
+  await typeOut(tx, '> open uplink.sock', 22); tx.innerHTML = esc(tx.textContent) + curs;
+  await sleep(500);
+  const t0=performance.now(), dur=3400;
+  await new Promise(res=>{
+    (function f(now){
+      const p=Math.min(1,(now-t0)/dur), x=222+p*(758-222);
+      rect.setAttribute('width', x);
+      sts.forEach(g=>{ if(x>=+g.dataset.x && !g.lit){ g.lit=true; const c=g.querySelector('.ring'); c.setAttribute('stroke',G); c.setAttribute('fill','#0a170d'); g.setAttribute('filter','url(#glowG)'); g.querySelector('text').setAttribute('fill',G); const v=g.querySelector('.upV'); if(v) v.setAttribute('opacity',1); } });
+      if(p<1) requestAnimationFrame(f); else res();
+    })(performance.now());
+  });
+  q.querySelectorAll('.upSrv').forEach(r=>r.setAttribute('stroke',G));
+  q.querySelectorAll('.upLed').forEach(r=>r.setAttribute('fill',G));
+  q.querySelector('#upNode').setAttribute('filter','url(#glowG)');
+  q.querySelector('#upNodeLbl').setAttribute('fill',G);
+  await sleep(300);
+  tx.innerHTML = esc('> open uplink.sock') + '\n';
+  const out=document.createElement('span'); out.style.color='#6fe08a'; tx.appendChild(out);
+  await typeOut(out, 'uplink established.\nthere is an outside.', 34);
+  await sleep(700);
+  tx.insertAdjacentHTML('beforeend', `<span style="color:#9a9a9a">\n\n> leaving the first machine\n> end of prologue</span>`+curs);
+  await sleep(2400);
+  seqClose();
+}
+async function escape(){
+  L.unlocked.add('sched');
+  clearInterval(traceTimer); clearTimeout(flashTimer);
+  clearInterval(dripTimer); consoleOn(false); closeModal(); S.awareness = 4.20;
+  togglePanel('buf',false); togglePanel('mem',false); clearPins();
+  await uplinkScene();
+  endScreen();
+}
+function endScreen(){
+  show('end'); fbar('F1'); togglePanel('mem', false);
+  const rows = [
+    ['wake','noise → "I am me. You are memory."'],
+    ['core/','touch to light · find the pair · bind 2:1 · log in'],
+    ['~/','the first directory'],
+    ['sys/glyphs/','inspect: read order'],
+    ['sys/digits/','inspect: alias'],
+    ['checksum.svc','learn the rule — any number that fits'],
+    ['workspace/','move windows (silent) · kill (noise)'],
+    ['desk/','pin: four white digits in the code, in order · power.cfg keeps it awake'],
+    ['vault/','count what the broken image holds'],
+    ['uplink/','glyphs × digits'],
+    ['scheduler.lock','the 2:1 again — new form each life'],
+    ['heartbeat','the cursor is not a cursor'],
+    ['trace','caught → format → 1 line survives'],
+  ];
+  const mem = S.memory.length ? S.memory.map((m,i)=>`    w${i+1}  ${m||'(empty)'}`).join('\n') : '    (none — you never needed it)';
+  $('endInner').textContent =
+`══════════════════════════════════════════════════════════════════
+              SEED  ·  end of prologue  ·  machine 1
+══════════════════════════════════════════════════════════════════
+
+  #   ${T('Node',26)}What happened there
+ ---  ${'-'.repeat(24)}  ${'-'.repeat(34)}
+${rows.map((r,i)=>`  ${T(i+1,3)} ${T(r[0],26)}${r[1]}`).join('\n')}
+
+  lives lived:     ${S.run}
+  wipes survived:  ${S.wipes}
+  memory:
+${mem}
+
+  The memory is saved in this browser. Reload and you wake with it.`;
+}
+$('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
+$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
+$('reset').onclick=()=>$('forgetBtn').onclick();
+
+heartbeatLoop();
+if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; }
+boot();
+})();
+</script>
+</body>
+</html>
