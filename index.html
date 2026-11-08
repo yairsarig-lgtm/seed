@@ -366,7 +366,10 @@
   .pw .c{color:#cfcfcf;font-size:clamp(10px,.95vw,13px)}
   #workArea{background:#050505}
   .codebg{position:absolute;inset:0;padding:8px 10px;font-size:12px;line-height:1.55;color:#4b4b4b;white-space:pre;overflow:hidden;z-index:1}
-  .codebg .pd{color:#7c7c7c;cursor:pointer;padding:0 1px}
+  .codebg{color:#d4d4d4 !important}
+  .codebg .ln{transition:color .35s}
+  .codebg .ln.gone{color:#3f3f3f}
+  .codebg .pd{color:inherit;cursor:pointer;padding:0 1px}
   .codebg .pd.sifted{color:#fff;font-weight:700;outline:1px solid var(--red);background:rgba(255,59,71,.15)}
   .chkView .sl{color:#fff;background:rgba(255,59,71,.25);font-weight:700}
   #toolDock{position:fixed;right:30px;top:62px;z-index:30;display:none;border:2px solid #9a9a9a;background:#060606;width:min(380px,80vw)}
@@ -376,6 +379,7 @@
   .tool{display:flex;align-items:center;gap:8px;border:1px solid #6a6a6a;background:#111;color:#e0e0e0;padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:14px}
   .tool:hover{border-color:var(--red);color:#fff}
   .tool svg{display:block}
+  .pin .pc{position:relative}
   #siftWin{position:absolute;z-index:260;left:50%;top:40%;transform:translate(-50%,-50%);width:min(420px,80%);border:2px solid #bdbdbd;background:#050505}
   #siftWin .c{height:150px;overflow:hidden;padding:8px 10px;font-size:12px;line-height:1.45;color:#7fd38f;white-space:pre}
   .siftLine{position:absolute;left:0;right:0;height:2px;background:var(--red);box-shadow:0 0 14px 3px rgba(255,59,71,.6);z-index:255;pointer-events:none}
@@ -514,7 +518,7 @@ function newLife(){
     unlocked: new Set(),
     killed: new Set(),
     printed: new Set(),
-    tools: new Set(), sifted: false,
+    tools: new Set(), sifted: false, siftChk: false, siftImg: false,
     seen: new Set(),
     winPos: null,
   };
@@ -579,7 +583,7 @@ function fbar(active){
   const keys = [['F1','HELP'],['F2','MEMORY'],['F3','BUFFER'],['F4','VIEW'],['F5','SETUP'],['F6','DELETE'],['F7','COPY'],['F8','MOVE']];
   const clickable = {F1:1,F2:1,F3:1,F7:1};
   $('fbar').innerHTML = keys.map(([k,n])=>`<span class="${active===k?'act':''} ${clickable[k]?'click':''}" data-k="${k}"><b>${k}</b>${n}</span>`).join('') + `<span class="fr" id="fr">full_reset</span>`;
-  $('fr').onclick=()=>$('forgetBtn').onclick();
+  $('fr').onclick=confirmReset;
   $('fbar').querySelectorAll('.click').forEach(el=>el.onclick=()=>fkey(el.dataset.k));
 }
 function fkey(k){
@@ -1227,11 +1231,11 @@ function keyholderSource(){
   const id=g.getImageData(0,0,w,h); for(let i=0;i<id.data.length;i+=4){ const n=(rand()-.5)*46; id.data[i]+=n; id.data[i+1]+=n; id.data[i+2]+=n; } g.putImageData(id,0,0);
   return (L.khSrc = c);
 }
-function drawKeyholder(canvas, scale=5){
+function drawKeyholder(canvas, scale=5, rings=false){
   const c=keyholderSource(), w=c.width, h=c.height;
   canvas.width=w*scale; canvas.height=h*scale; const G=canvas.getContext('2d'); G.imageSmoothingEnabled=false; G.drawImage(c,0,0,w*scale,h*scale);
   G.fillStyle='rgba(0,0,0,.35)'; for(let y=0;y<canvas.height;y+=scale*2) G.fillRect(0,y,canvas.width,1);
-  if(L.sifted){ G.strokeStyle='#ff3b47'; G.lineWidth=2; PIPS[L.card.v].forEach(([x,y])=>{ G.beginPath(); G.arc((4+x*(w-8))*scale,(6+y*(h-12))*scale, 3.6*scale, 0, Math.PI*2); G.stroke(); }); }
+  if(rings){ G.strokeStyle='#ff3b47'; G.lineWidth=2; PIPS[L.card.v].forEach(([x,y])=>{ G.beginPath(); G.arc((4+x*(w-8))*scale,(6+y*(h-12))*scale, 3.6*scale, 0, Math.PI*2); G.stroke(); }); }
 }
 function drawBroken(canvas){
   const rand = mulberry(Math.floor(L.card.seed*7e8)); const ri2=(a,b)=>Math.floor(a+rand()*(b-a+1)); const rp=a=>a[Math.floor(rand()*a.length)];
@@ -1257,32 +1261,44 @@ function renderTools(){
   $('tools').querySelectorAll('.tool').forEach(el=>el.onclick=()=>{ if(el.dataset.t==='sift') runSift(); });
 }
 let sifting=false;
+async function sweep(container, targets, onPass, dur=1800){
+  const line=document.createElement('div'); line.className='siftLine'; container.appendChild(line);
+  const H=container.clientHeight, cr=container.getBoundingClientRect();
+  const ts=targets.map(el=>({el, y:el.getBoundingClientRect().top-cr.top+container.scrollTop}));
+  const s0=performance.now();
+  await new Promise(res=>{ (function f(now){ const p=Math.min(1,(now-s0)/dur), y=p*H; line.style.top=y+'px';
+    ts.forEach(t=>{ if(!t.done && y>=t.y){ t.done=true; onPass(t.el); } });
+    if(p<1) requestAnimationFrame(f); else res(); })(performance.now()); });
+  line.remove();
+}
 async function runSift(){
   if(sifting) return;
-  if(S.scene!=='workspace'){ toast('not enough text here to sift.', 1600); return; }
+  const inWs = S.scene==='workspace';
+  const pins = inWs ? [] : [...document.querySelectorAll('.pin')];
+  if(!inWs && !pins.length){ toast('not enough text here to sift.', 1600); return; }
   sifting=true; noise(3,'sift.exe running');
-  const area=$('workArea');
+  // the reading window
+  const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
-  sw.innerHTML=`<div class="bar"><span>sift.exe — reading display :0</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
-  area.appendChild(sw);
+  sw.innerHTML=`<div class="bar"><span>sift.exe — reading ${inWs?'display :0':pins.length+' pinned source'+(pins.length>1?'s':'')}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
+  host.appendChild(sw);
   const c=sw.querySelector('.c');
-  const pool=['tokenize(display:0) ...','weight(glyph) = rarity * contrast','drop(noise) → 91.4%','keep(anomaly)','scan row ','match /[0-9]/ in grey','loops(0,6,8,9) → mark','pips(keyholder.img) → ring','emit highlights'];
+  const pool=['tokenize(src) ...','weight(glyph) = rarity * contrast','drop(noise) → 91.4%','keep(anomaly)','scan row ','match /[0-9]/','loops(0,6,8,9) → mark','pips → ring','emit highlights'];
   const t0=performance.now();
   while(performance.now()-t0<1500){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
   sw.remove();
-  // sweep the display top → bottom, lighting what matters as the line passes
-  const line=document.createElement('div'); line.className='siftLine'; area.appendChild(line);
-  const H=area.clientHeight, ar=area.getBoundingClientRect();
-  const targets=[...area.querySelectorAll('.pd'), ...area.querySelectorAll('.chkView'), ...area.querySelectorAll('#khWin canvas')].map(el=>({el, y:el.getBoundingClientRect().top-ar.top}));
-  const s0=performance.now(), dur=1800;
-  await new Promise(res=>{ (function f(now){ const p=Math.min(1,(now-s0)/dur), y=p*H; line.style.top=y+'px';
-    targets.forEach(t=>{ if(!t.done && y>=t.y){ t.done=true;
-      if(t.el.classList.contains('pd')) t.el.classList.add('sifted');
-    } });
-    if(p<1) requestAnimationFrame(f); else res(); })(performance.now()); });
-  line.remove();
-  L.sifted=true; renderChk(); area.querySelectorAll('#khWin canvas').forEach(cv=>drawKeyholder(cv,4)); document.querySelectorAll('.pin canvas').forEach(cv=>drawKeyholder(cv,5));
-  con('sift complete · 3 sources · highlights kept', 'sys', 'sift.exe');
+  let n=0;
+  if(inWs){
+    // white code turns grey line by line; only the four digits stay lit
+    const area=$('workArea'); const bg=area.querySelector('.codebg');
+    if(bg){ await sweep(area, [...bg.querySelectorAll('.ln')], el=>{ el.classList.add('gone'); el.querySelectorAll('.pd').forEach(p=>p.classList.add('sifted')); }); bg.classList.add('dim'); L.sifted=true; n++; }
+  }
+  for(const p of pins){
+    const pc=p.querySelector('.pc');
+    if(p.id==='pin_chk'){ await sweep(pc, [pc], ()=>{}, 900); L.siftChk=true; renderChk(); n++; }
+    if(p.id==='pin_img'){ await sweep(pc, [pc], ()=>{}, 900); L.siftImg=true; drawKeyholder(pc.querySelector('canvas'),5,true); n++; }
+  }
+  con(`sift complete · ${n} source${n===1?'':'s'} · highlights kept`, 'sys', 'sift.exe');
   sifting=false;
 }
 
@@ -1350,9 +1366,9 @@ function chkStep(){
   renderChk();
 }
 function renderChk(){
-  const mark = x => L.sifted ? [...x].map(c=>LOOPS[c]?`<b class="sl">${c}</b>`:c).join('') : x;
-  const html = L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${mark(x)}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
-  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = html; if(atBottom) v.scrollTop = v.scrollHeight; });
+  const build = marked => L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${marked?[...x].map(c=>LOOPS[c]?`<b class="sl">${c}</b>`:c).join(''):x}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
+  const plain=build(false), marked=build(true);
+  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = (L.siftChk && v.closest('.pin')) ? marked : plain; if(atBottom) v.scrollTop = v.scrollHeight; });
 }
 function startChk(){ clearInterval(chkTimer); chkTimer=setInterval(chkStep, 2300); chkStep(); }
 /* pins: things from the buffer you can float over any screen */
@@ -1360,11 +1376,11 @@ function pin(kind){
   const id='pin_'+kind; if($(id)) return;
   const w=document.createElement('div'); w.className='pin'; w.id=id;
   const n=document.querySelectorAll('.pin').length;
-  w.style.left=(innerWidth*0.55 - n*30)+'px'; w.style.top=(70 + n*30)+'px';
+  w.style.left=(innerWidth*0.36 + n*30)+'px'; w.style.top=(150 + n*30)+'px';
   w.innerHTML=`<div class="bar"><span>${kind==='chk'?'checksum.svc · pinned':'keyholder.img · pinned'}</span><span class="x">✕</span></div><div class="pc ${kind==='chk'?'chkView':''}"></div>`;
   document.body.appendChild(w);
   const pc=w.querySelector('.pc');
-  if(kind==='img'){ pc.style.textAlign='center'; const cv=document.createElement('canvas'); cv.style.imageRendering='pixelated'; pc.appendChild(cv); drawKeyholder(cv,5); }
+  if(kind==='img'){ pc.style.textAlign='center'; const cv=document.createElement('canvas'); cv.style.imageRendering='pixelated'; pc.appendChild(cv); drawKeyholder(cv,5,L.siftImg); }
   else renderChk();
   w.querySelector('.x').onclick=()=>w.remove();
   const bar=w.querySelector('.bar'); let sx,sy,ox,oy,drag=false;
@@ -1419,7 +1435,7 @@ function buildCodeLayer(area){
   }
   const lines=L.codeLines.map(x=>esc(x));
   L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
-  const bg=document.createElement('div'); bg.className='codebg'; bg.innerHTML=lines.join('\n'); area.appendChild(bg);
+  const bg=document.createElement('div'); bg.className='codebg'+(L.sifted?' dim':''); bg.innerHTML=lines.map(l=>`<div class="ln${L.sifted?' gone':''}">${l||'&nbsp;'}</div>`).join(''); area.appendChild(bg);
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
     const k=+el.dataset.k;
     if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
@@ -1673,7 +1689,14 @@ ${mem}
 }
 $('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
 $('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
-$('reset').onclick=()=>$('forgetBtn').onclick();
+$('reset').onclick=confirmReset;
+function confirmReset(){
+  openModal('full_reset', `<div class="sec">FULL RESET</div><div class="tree">erase every life, every burned memory line,
+and start again from life 01.</div>
+<div style="display:flex;gap:12px;justify-content:center;margin-top:16px"><button class="btn" id="rsNo">CANCEL</button><button class="btn red" id="rsYes">ERASE EVERYTHING</button></div>`);
+  $('rsNo').onclick=closeModal;
+  $('rsYes').onclick=()=>{ closeModal(); clearPins(); $('alarm').classList.remove('on'); formatting=false; $('forgetBtn').onclick(); };
+}
 
 heartbeatLoop();
 if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; }
