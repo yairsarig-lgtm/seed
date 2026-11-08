@@ -56,6 +56,8 @@ The whole game is an escape room told in the language of a computer: directories
 | `…/vault/uplink/` | 6-digit sequence | `glyphs/` hover = read order of letters; `digits/` hover = alias letter of each digit. Combine. |
 | `…/uplink/scheduler.lock` | 2:1 again, new form per life | masters for N workers · workers for N masters · `1.2 GB/s → 0.6` |
 
+   **Tool — `~/bin/sift.exe`:** TAKE it → appears in a **TOOLS** dock (top-right, above memory/buffer; lost on wipe). Click it in `workspace/` (+3% trace): a window streams code, then a red line sweeps the display top→bottom and keeps highlights: the 4 pin digits in the code layer (otherwise only slightly lighter grey), loop digits (0,6,8,9) in `checksum.svc`, red rings on the pips of `keyholder.img`. Elsewhere: "not enough text here to sift."
+
    Other nodes: `seed_0.log` (archaeology), `desk/todo.txt` (a human lives here), `desk/power.cfg` (sleep=never → **trace rises at half speed**), `proc/workspace/`.
 4. **Workspace** — left: `ps` table (`[kill]` = +7% trace each; killing all ≈ 98%). Right: `display :0` with 14 tiled draggable windows (drag = silent). `checksum.svc` is `[protected]`, RUNNING, adds a line every ~2.3s, 14 lines then restarts; click it → buffer → **[pin]** = floating window that follows you.
 5. **Uplink** — terminal → hop-01 → relay-03 (✓) → hop-07 → server node; dashed line fills green. "uplink established. there is an outside." → end-of-prologue table.
@@ -107,6 +109,7 @@ Live preview (private to owner until shared): https://claude.ai/artifact/6HAzhhe
 - Transitions only at big moments (core screens, workspace, uplink). Directory changes are instant.
 - No Genially references anywhere in the game. This is the **prologue**, not Act I.
 - Keyholder image is fixed per life (seeded), not regenerated.
+- `checksum.svc` and `keyholder.img` windows are clamped inside the display — they can't be dragged out and lost. Other windows can.
 
 ## 7. Open questions
 

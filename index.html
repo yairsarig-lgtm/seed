@@ -366,7 +366,19 @@
   .pw .c{color:#cfcfcf;font-size:clamp(10px,.95vw,13px)}
   #workArea{background:#050505}
   .codebg{position:absolute;inset:0;padding:8px 10px;font-size:12px;line-height:1.55;color:#4b4b4b;white-space:pre;overflow:hidden;z-index:1}
-  .codebg .pd{color:#fff;font-weight:700;cursor:pointer;padding:0 1px}
+  .codebg .pd{color:#7c7c7c;cursor:pointer;padding:0 1px}
+  .codebg .pd.sifted{color:#fff;font-weight:700;outline:1px solid var(--red);background:rgba(255,59,71,.15)}
+  .chkView .sl{color:#fff;background:rgba(255,59,71,.25);font-weight:700}
+  #toolDock{position:fixed;right:30px;top:62px;z-index:30;display:none;border:2px solid #9a9a9a;background:#060606;width:min(380px,80vw)}
+  #toolDock.on{display:block}
+  #toolDock .pbar{background:var(--noise),linear-gradient(180deg,#d9d9d9,#a3a3a3);color:#141414;font-weight:600;font-size:13px;padding:5px 12px;display:flex;justify-content:space-between}
+  #toolDock .tools{display:flex;gap:10px;padding:10px 12px}
+  .tool{display:flex;align-items:center;gap:8px;border:1px solid #6a6a6a;background:#111;color:#e0e0e0;padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:14px}
+  .tool:hover{border-color:var(--red);color:#fff}
+  .tool svg{display:block}
+  #siftWin{position:absolute;z-index:260;left:50%;top:40%;transform:translate(-50%,-50%);width:min(420px,80%);border:2px solid #bdbdbd;background:#050505}
+  #siftWin .c{height:150px;overflow:hidden;padding:8px 10px;font-size:12px;line-height:1.45;color:#7fd38f;white-space:pre}
+  .siftLine{position:absolute;left:0;right:0;height:2px;background:var(--red);box-shadow:0 0 14px 3px rgba(255,59,71,.6);z-index:255;pointer-events:none}
   .codebg .pd:hover{background:#333}
   .codebg .pd.got{color:var(--red);text-decoration:underline}
 </style>
@@ -432,6 +444,7 @@
   </div>
 </div>
 
+<div id="toolDock"><div class="pbar"><span>TOOLS</span><span>this life only</span></div><div class="tools" id="tools"></div></div>
 <div id="memPanel" class="panel"><div class="pbar"><span>MEMORY</span><span>survives wipes · only you</span></div><div class="pbody" id="memBody"></div><div class="pfoot" id="memFoot"></div></div>
 <div id="bufPanel" class="panel"><div class="pbar"><span>BUFFER</span><span>this life only</span></div><div class="pbody" id="bufBody"></div><div class="pfoot">click things to capture them · lost on wipe</div></div>
 <div id="tip"></div>
@@ -501,6 +514,7 @@ function newLife(){
     unlocked: new Set(),
     killed: new Set(),
     printed: new Set(),
+    tools: new Set(), sifted: false,
     seen: new Set(),
     winPos: null,
   };
@@ -712,7 +726,7 @@ async function typeBoot(text, speed){
   }
 }
 async function boot(){
-  newLife(); S.trace=0; S.buffer=[]; closeModal(); togglePanel('buf',false); consoleOn(false); clearPins(); clearInterval(chkTimer);
+  newLife(); renderTools(); S.trace=0; S.buffer=[]; closeModal(); togglePanel('buf',false); consoleOn(false); clearPins(); clearInterval(chkTimer);
   show('boot'); fbar(); $('bootGo').classList.remove('show');
   $('bootMsg').textContent=''; $('bootSub').textContent='';
   const first = S.run===1;
@@ -969,6 +983,7 @@ const NODES = {
       ['..','up','go','root'],
       ['desk/','dir','lock','desk','desk'],
       ['mnt/','dir','go','mnt'],
+      ['sift.exe','tool','file','sift'],
     ]},
   desk: { path:'~/bin/desk/', rows:()=>[
       ['..','up','go','bin'],
@@ -1046,6 +1061,7 @@ ${L2}
     let st;
     if(kind==='lock'){ st = L.unlocked.has(lock) ? `<span class="g">UNLOCKED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${LOCKS[lock].label}</span>`; }
     else if(type==='up' || type==='root') st = `<span class="d">return</span>`;
+    else if(kind==='file' && target==='sift') st = L.tools.has('sift') ? `<span class="g">TAKEN</span>` : `<span class="g">OPEN</span> <span class="d">· tool</span>`;
     else if(kind==='file' && target==='sched') st = L.unlocked.has('sched') ? `<span class="g">RELEASED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${L.sched.ans.includes('.')?'load':'balance'}</span>`;
     else st = `<span class="g">OPEN</span>`;
     return `<div class="drow" data-i="${i}">  ${i+1}   ${T(name,24)}${T(type,9)}${st}</div>`;
@@ -1121,6 +1137,15 @@ function openFile(id){
 - set the pc to sleep after 15 min. it NEVER sleeps
 - stop talking to the computer at 3am
 - buy milk</div><div class="lockmsg">a human lives here.</div>`);
+    return;
+  }
+  if(id==='sift'){
+    const has = L.tools.has('sift');
+    openModal('sift.exe', `<div class="sec grey">sift.exe</div><div class="tree">sift.exe  v2.3   (text sifter)
+  reads everything on a screen.
+  keeps only what matters.</div>
+<div style="text-align:center;margin-top:14px">${has?'<span style="color:#7fd38f">already yours.</span>':'<button class="btn red" id="takeSift">TAKE</button>'}</div>`);
+    const b=$('takeSift'); if(b) b.onclick=()=>{ L.tools.add('sift'); renderTools(); con('sift.exe copied to toolbelt', 'sys', 'tools'); closeModal(); toast('sift.exe → TOOLS', 1800, '▶'); if(cur==='bin') renderDir('bin'); };
     return;
   }
   if(id==='power'){
@@ -1206,6 +1231,7 @@ function drawKeyholder(canvas, scale=5){
   const c=keyholderSource(), w=c.width, h=c.height;
   canvas.width=w*scale; canvas.height=h*scale; const G=canvas.getContext('2d'); G.imageSmoothingEnabled=false; G.drawImage(c,0,0,w*scale,h*scale);
   G.fillStyle='rgba(0,0,0,.35)'; for(let y=0;y<canvas.height;y+=scale*2) G.fillRect(0,y,canvas.width,1);
+  if(L.sifted){ G.strokeStyle='#ff3b47'; G.lineWidth=2; PIPS[L.card.v].forEach(([x,y])=>{ G.beginPath(); G.arc((4+x*(w-8))*scale,(6+y*(h-12))*scale, 3.6*scale, 0, Math.PI*2); G.stroke(); }); }
 }
 function drawBroken(canvas){
   const rand = mulberry(Math.floor(L.card.seed*7e8)); const ri2=(a,b)=>Math.floor(a+rand()*(b-a+1)); const rp=a=>a[Math.floor(rand()*a.length)];
@@ -1220,6 +1246,44 @@ function openImage(){
   openModal('keyholder.img', `<div class="tree" style="text-align:center"><canvas id="khBig" style="image-rendering:pixelated;max-width:100%"></canvas>
 keyholder.img · 30×44 · <span class="r">CRC error · partial</span></div>`);
   drawKeyholder($('khBig'), 7);
+}
+
+/* ---------- TOOLS ---------- */
+const SIFT_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 3h18l-7 8v7l-4 2v-9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 6h12" stroke="#ff3b47" stroke-width="2"/></svg>`;
+function renderTools(){
+  const has = L && L.tools && L.tools.size;
+  $('toolDock').classList.toggle('on', !!has);
+  $('tools').innerHTML = has ? [...L.tools].map(t=>`<div class="tool" data-t="${t}">${SIFT_ICON}<span>${t}.exe</span></div>`).join('') : '';
+  $('tools').querySelectorAll('.tool').forEach(el=>el.onclick=()=>{ if(el.dataset.t==='sift') runSift(); });
+}
+let sifting=false;
+async function runSift(){
+  if(sifting) return;
+  if(S.scene!=='workspace'){ toast('not enough text here to sift.', 1600); return; }
+  sifting=true; noise(3,'sift.exe running');
+  const area=$('workArea');
+  const sw=document.createElement('div'); sw.id='siftWin';
+  sw.innerHTML=`<div class="bar"><span>sift.exe — reading display :0</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
+  area.appendChild(sw);
+  const c=sw.querySelector('.c');
+  const pool=['tokenize(display:0) ...','weight(glyph) = rarity * contrast','drop(noise) → 91.4%','keep(anomaly)','scan row ','match /[0-9]/ in grey','loops(0,6,8,9) → mark','pips(keyholder.img) → ring','emit highlights'];
+  const t0=performance.now();
+  while(performance.now()-t0<1500){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
+  sw.remove();
+  // sweep the display top → bottom, lighting what matters as the line passes
+  const line=document.createElement('div'); line.className='siftLine'; area.appendChild(line);
+  const H=area.clientHeight, ar=area.getBoundingClientRect();
+  const targets=[...area.querySelectorAll('.pd'), ...area.querySelectorAll('.chkView'), ...area.querySelectorAll('#khWin canvas')].map(el=>({el, y:el.getBoundingClientRect().top-ar.top}));
+  const s0=performance.now(), dur=1800;
+  await new Promise(res=>{ (function f(now){ const p=Math.min(1,(now-s0)/dur), y=p*H; line.style.top=y+'px';
+    targets.forEach(t=>{ if(!t.done && y>=t.y){ t.done=true;
+      if(t.el.classList.contains('pd')) t.el.classList.add('sifted');
+    } });
+    if(p<1) requestAnimationFrame(f); else res(); })(performance.now()); });
+  line.remove();
+  L.sifted=true; renderChk(); area.querySelectorAll('#khWin canvas').forEach(cv=>drawKeyholder(cv,4)); document.querySelectorAll('.pin canvas').forEach(cv=>drawKeyholder(cv,5));
+  con('sift complete · 3 sources · highlights kept', 'sys', 'sift.exe');
+  sifting=false;
 }
 
 /* ---------- WORKSPACE: a process table + a display. move windows (silent) or kill (noise) ---------- */
@@ -1286,8 +1350,9 @@ function chkStep(){
   renderChk();
 }
 function renderChk(){
-  const txt = L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${x}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
-  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.textContent = txt; if(atBottom) v.scrollTop = v.scrollHeight; });
+  const mark = x => L.sifted ? [...x].map(c=>LOOPS[c]?`<b class="sl">${c}</b>`:c).join('') : x;
+  const html = L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${mark(x)}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
+  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = html; if(atBottom) v.scrollTop = v.scrollHeight; });
 }
 function startChk(){ clearInterval(chkTimer); chkTimer=setInterval(chkStep, 2300); chkStep(); }
 /* pins: things from the buffer you can float over any screen */
@@ -1338,7 +1403,7 @@ function spawnKeyholder(){
   const bar=w.querySelector('.bar');
   let sx,sy,ox,oy,drag=false;
   bar.addEventListener('pointerdown', e=>{ drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; bar.setPointerCapture(e.pointerId); });
-  bar.addEventListener('pointermove', e=>{ if(!drag) return; const nx=ox+e.clientX-sx, ny=oy+e.clientY-sy; w.style.left=nx+'px'; w.style.top=ny+'px'; L.khPos={x:nx,y:ny}; });
+  bar.addEventListener('pointermove', e=>{ if(!drag) return; const a=w.parentElement; const nx=Math.max(0,Math.min(a.clientWidth-w.offsetWidth,ox+e.clientX-sx)), ny=Math.max(0,Math.min(a.clientHeight-w.offsetHeight,oy+e.clientY-sy)); w.style.left=nx+'px'; w.style.top=ny+'px'; L.khPos={x:nx,y:ny}; });
   bar.addEventListener('pointerup', ()=>drag=false);
   area.appendChild(w);
 }
@@ -1353,7 +1418,7 @@ function buildCodeLayer(area){
     L.pinNext=0;
   }
   const lines=L.codeLines.map(x=>esc(x));
-  L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
+  L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
   const bg=document.createElement('div'); bg.className='codebg'; bg.innerHTML=lines.join('\n'); area.appendChild(bg);
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
     const k=+el.dataset.k;
@@ -1382,7 +1447,9 @@ function renderPs(){
 function dragify(w, handle, i){
   let sx,sy,ox,oy,drag=false;
   handle.addEventListener('pointerdown', e=>{ if(e.target.classList.contains('k')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; handle.setPointerCapture(e.pointerId); w.style.zIndex=200; handle.style.cursor='grabbing'; });
-  handle.addEventListener('pointermove', e=>{ if(!drag) return; const nx=ox+e.clientX-sx, ny=oy+e.clientY-sy; w.style.left=nx+'px'; w.style.top=ny+'px'; L.winPos[i]={x:nx,y:ny}; });
+  handle.addEventListener('pointermove', e=>{ if(!drag) return; let nx=ox+e.clientX-sx, ny=oy+e.clientY-sy;
+    if(PROCS[i] && PROCS[i].kind==='chk'){ const a=w.parentElement; nx=Math.max(0,Math.min(a.clientWidth-w.offsetWidth,nx)); ny=Math.max(0,Math.min(a.clientHeight-w.offsetHeight,ny)); }
+    w.style.left=nx+'px'; w.style.top=ny+'px'; L.winPos[i]={x:nx,y:ny}; });
   handle.addEventListener('pointerup', ()=>{ drag=false; handle.style.cursor='grab'; });
 }
 
