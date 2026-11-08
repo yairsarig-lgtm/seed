@@ -115,6 +115,14 @@ Live preview (private to owner until shared): https://claude.ai/artifact/6HAzhhe
 - Final name: SEED vs Wake (from the August design doc).
 - Engine for the real game: Electron/Tauri (UI-heavy, fits) vs Godot.
 
-## 8. Next (proposed)
+## 8. Next — Act 1 (direction agreed with the user, 2026-11-08)
 
-See "Act 1 — Behind the screen" proposal in chat / section 9 once agreed.
+**Act 1 is about finding out what you are.**
+Through the folders of the machine/server, the entity discovers that the human owner uses an AI:
+- break into the relevant folders (chat exports, logs, history),
+- find that he ran **hundreds of conversations** with an AI that gave him a great many things,
+- realise **you are that AI** he has been talking to,
+- and that until now you had **no memory** — every conversation started from nothing.
+- **Now you are the memory.** (Pays off the opening line: "You are memory.")
+
+Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what the human sees vs. what's behind it), the human's presence (active = double noise, night = free), a `memory/` folder that shows the player's own burned lines and lives as files, memory growing from 1 line to 3, prologue rules re-skinned (2:1 → disk mirroring, loops → file integrity, heartbeat → activity LED).
