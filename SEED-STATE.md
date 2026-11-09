@@ -151,3 +151,25 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - decipher.exe can always be reopened. With a skill already slotted the only option is **REPLACE <slotted skill>**; closing the window leaves decipher in ~/bin/ untaken (no passive, not known) to claim later. Never two in the slot.
 - **seed_0.log is writable.** After the 5 built-in lines an input row `[0005] write to the log…` appears; Enter appends. Player lines are amber, stored in `seed3_log`, survive wipes (cleared only by full_reset). Up to 90 chars per line.
 - Wrong codes (every lock) = +15% trace, now visible: "ACCESS DENIED · +15% TRACE" + the trace bar flashes red. Empty submits are ignored.
+
+## Big batch (skills v2, insight, binary, keycard, boards, log, dev)
+**Skills: two places.** MEMORY (burned, survives wipes, 1) + CARRY (this life, 1). Both runnable, can be the same skill. Pick-up dialog: CARRY / BURN (shows what it replaces) / ✕ leave. Trace links is offered after the first screen in **every** life.
+**Echoes** (buffer, permanent): the first time you ever hold a skill you keep its echo.
+- trace links → touch a folder, its files flicker (core + boards)
+- decipher → decipherable things blink "can be deciphered"
+- insight → one key sentence in a text burns brighter when it opens (todo, power.cfg, log_0007)
+**Skills**
+- trace links (+25% / 30s): core, encrypted boards, power.cfg (draws where each switch leads), scheduler.lock (gives the answer)
+- decipher (+3% / 8s): workspace binary → digits + "binary deciphered" window (words); pinned checksum → loops + clue line; pinned keycard → employee no.; power.cfg → "set sleep_after = never" button
+- insight (+10% / 20s): net of lines across the screen → one conclusion box (ADD TO FOUND). todo → "a human lives here. a human resets us." · power.cfg → descriptions · checksum → closed-loops rule · scheduler → answer · uplink/vault → server 185.44.0.12 · else next-step hint
+**End of prologue:** scheduler released → insight must be burned → life rewrites (format 'insight') → from then on TRACE offline in the prologue. uplink/ gets remote.host: type 185.44.0.12; needs wake_on_lan = on → uplink scene → end.
+**Encrypted boards:** decipher.exe and workspace/ (first time each life) open a small 3-folder / 8-file 2:1 board → ACCESS GRANTED.
+**Desk pin:** the workspace code is binary; the 4 pin nibbles sit in it in reading order (slightly brighter). Decipher translates; click digits in order → buffer.
+**Keycard:** keycard.img (Pegasus Inc. ID, B&W, 50×75, censored blocks) replaces the playing card. Same card every life. vault lock = 6 digits 047291.
+**power.cfg switches:** sleep_after 15m/30m/1h/12h/never (never = trace ×0.5) · fan auto/manual (manual ×0.8) · wake_on_lan off/on (needed for remote.host) · owner_notified no/yes (yes = +20% trap).
+**todo.txt:** long list with crossed-out junk; no "a human lives here" line.
+**seed_0.log:** 5 seed lines + 3 of yours. `write` (free text) or `add found` (keycard no., server, insight rules). Full → choose a line to overwrite. Per-life values (pin, heartbeat…) are never offered.
+**log_0007_of_0026** in ~/ : the AI–psychologist session (the cursor as a pulse).
+**What's fixed vs per-life:** fixed until full_reset: keycard number, server address, rules. Per life: heartbeat, checksum target, pin/binary, glyph code, scheduler form, power.cfg settings.
+**Dev button:** invisible, top-right corner of the screen. Unlocks everything (every life, this session), trace offline, all three skills in the dock, boards skipped, wake_on_lan on.
+**Act 1 idea (later):** a tool that opens locked folders / enters codes into folders.

@@ -238,6 +238,56 @@
   @keyframes traceHit{0%,40%{color:#fff;background:#e2323f;text-shadow:0 0 10px #ff3b47}100%{background:transparent}}
   #logIn{background:transparent;border:0;outline:0;color:#fff;font:inherit;width:calc(100% - 90px)}
   .log .mine{color:#ffd28a}
+  #devBtn{position:fixed;top:0;right:0;width:48px;height:28px;z-index:9999;opacity:0;cursor:default}
+  #toolDock .tools{flex-direction:column}
+  .slotCard .slab{font-size:10px;letter-spacing:.12em;color:#888;text-transform:uppercase;margin-bottom:2px}
+  .slotCard.empty .slab{margin-bottom:4px}
+  #skillBox .sk-btns .btn small{display:block;font-size:11px;opacity:.7;margin-top:3px;letter-spacing:0;text-transform:none}
+  .dcab{color:#ff3b47;font-size:10px;margin-left:10px;letter-spacing:.05em;animation:dcBlink 1.1s steps(2) infinite}
+  @keyframes dcBlink{50%{opacity:.15}}
+  .dcTag{position:absolute;right:12px;top:8px;z-index:5;color:#ff3b47;font-size:12px;background:#000;border:1px solid #ff3b47;padding:2px 8px;animation:dcBlink 1.1s steps(2) infinite;pointer-events:none}
+  .codebg.bin{letter-spacing:.06em;color:#bdbdbd !important}
+  .codebg.bin .pd{color:#fff}
+  .codebg.bin.dim .pd.sifted{font-size:15px}
+  .chkView .dcl{color:#ff8a92}
+  .chkView .inl{color:#ffd28a}
+  .kcNo{margin-top:6px;font-size:12px;color:#ff8a92}.kcNo b{color:#fff;letter-spacing:.12em}
+  .ins.insFlash{color:#fff !important;text-shadow:0 0 10px #ffd28a;background:rgba(255,210,138,.12);transition:all .2s}
+  .todo s{color:#5a5a5a}
+  .pwr{white-space:pre}
+  .pwr .pv{color:#fff;cursor:pointer;border-bottom:1px dashed #666}
+  .pwr .pv:hover{color:#ff3b47}
+  .pwr .plk{color:#ff3b47}
+  .pwr .pdsc{color:#ffd28a;white-space:pre-wrap;font-size:12px;margin:0 0 4px 0}
+  .hostIn{background:#000;border:1px solid #666;color:#fff;font:inherit;font-size:22px;letter-spacing:.12em;text-align:center;padding:8px 12px;width:280px;outline:0}
+  #logUi .logbar{display:flex;gap:10px;align-items:center;margin-top:10px;border-top:1px dashed #333;padding-top:10px}
+  #logUi .lbtn{background:transparent;border:1px solid #777;color:#ddd;font:inherit;font-size:12px;padding:2px 10px;cursor:pointer}
+  #logUi .lbtn.red{border-color:var(--red);color:var(--red)}
+  #logUi .lcap{margin-left:auto;color:#666;font-size:12px}
+  #logUi #logIn{width:100%;margin-top:8px;background:transparent;border:0;border-bottom:1px solid #555;color:#fff;font:inherit;outline:0;padding:4px 0}
+  #logUi .lfound{margin-top:8px;border:1px solid var(--red)}
+  #logUi .lfh{padding:5px 10px;color:#888;font-size:12px;border-bottom:1px solid #222}
+  #logUi .lfr{display:flex;justify-content:space-between;padding:5px 10px;cursor:pointer;color:#ffd28a}
+  #logUi .lfr:hover{background:#1a0a0b}
+  .log .ow{cursor:pointer;outline:1px dashed var(--red)}
+  #insNet{position:fixed;inset:0;z-index:420;pointer-events:none}
+  #insBox{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:430;width:min(560px,90vw);border:1px solid #ffd28a;background:rgba(6,6,6,.97)}
+  #insBox .bar{background:#ffd28a;color:#000;height:22px;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:12px;font-weight:600}
+  #insBox .ib2{padding:14px 16px;text-align:center}
+  #insBox .it{font-size:17px;color:#fff;margin-bottom:12px;white-space:pre-wrap}
+  #insBox .in2{color:#888;font-size:12px}
+  #board{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.72);display:grid;place-items:center}
+  #board .bwin{width:min(620px,92vw);border:2px solid #bdbdbd;background:#050505}
+  #board .bar{display:flex;justify-content:space-between;align-items:center;height:24px;padding:0 10px;background:var(--noise),linear-gradient(180deg,#d8d8d8,#9a9a9a);color:#000;font-size:12px;font-weight:600}
+  #board .bsub{padding:8px 14px;color:#888;font-size:12px;border-bottom:1px dotted #333}
+  #board .bfield{position:relative;height:330px}
+  #board .blinks{position:absolute;inset:0;width:100%;height:100%}
+  #board .bitem{position:absolute;transform:translate(-50%,-50%);color:#5c5c5c;cursor:pointer;padding:6px;transition:color .15s}
+  #board .bitem:hover,#board .bitem.lit,#board .bitem.done{color:var(--c)}
+  #board .bitem.sel{outline:1px dashed #fff}
+  #board .bitem.rej{animation:shake .35s}
+  #board .bmsg{padding:8px 14px;border-top:1px dotted #333;color:#888;font-size:13px;text-align:center}
+  #board .bmsg.ok{color:#3ee66a;font-weight:700;letter-spacing:.2em}
   .pw.front{border-color:#fff;box-shadow:0 0 0 1px #fff,0 6px 20px rgba(0,0,0,.6)}
 
   /* ---------- pinned floating windows ---------- */
@@ -501,6 +551,7 @@
 <div id="wipe"><div id="wipeTxt"></div><div id="wipePct">FORMAT 0%</div></div>
 <div id="toast"></div>
 <div id="reset" title="Clears everything saved in this browser">full reset</div>
+<div id="devBtn"></div>
 <div id="vignette"></div><div id="crt"></div>
 
 <script>
@@ -523,10 +574,13 @@ const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floo
 const T = (s,n)=> (String(s)+' '.repeat(n)).slice(0,n);
 
 /* ---------------- persistent state (yours) ---------------- */
+const _oldSkills = (store.get('skills') || []).map(k=>k==='sift'?'decipher':k);
 let S = {
   memory: store.get('memory') || [],
-  skills: (store.get('skills') || []).map(k=>k==='sift'?'decipher':k),   // burned skills — survive wipes and page reloads
-  slot: store.get('slot') || null,       // the one loaded skill (only if burned)
+  mem: store.get('mem') || (store.get('slot')==='sift'?'decipher':store.get('slot')) || _oldSkills[0] || null,   // the one BURNED skill — survives wipes
+  echoes: store.get('echoes') || _oldSkills.slice(),   // every skill you ever held leaves an echo — permanent
+  insight: !!store.get('insight'),       // insight burned at the end of the prologue → trace offline in the prologue
+  dev: false,
   wipes: store.get('wipes') || 0,
   run: 1,
   awareness: 0.01,
@@ -559,14 +613,15 @@ function newLife(){
     chk: { target: ri(2,6), lines: [] },
     pin: mk(),
     card,
-    dl: 0, power: false,
+    dl: 0,
     glyph: { letters, digits, seq, dirDigits: shuffle([0,1,2,3,4,5]), code: glyphCode },
     workers, masters: String(workers/2),
     sched: makeSched(workers),
     unlocked: new Set(),
     killed: new Set(),
     printed: new Set(),
-    known: new Set(S.skills), slot: (S.slot && S.skills.includes(S.slot)) ? S.slot : null, readyAt: {}, sifted: false, siftChk: false, siftImg: false,
+    carry: null, readyAt: {}, found: [], pcfg: { sleep:'15 min', fan:'auto', wol:'off', owner:'no' },
+    sifted: false, siftChk: false, siftImg: false, insChk: false, wsBoard: false, dcBoard: false,
     seen: new Set(),
     winPos: null,
   };
@@ -621,10 +676,10 @@ function topbar(){
   const bars = 20, filled = Math.round(tr/100*bars);
   const tbar = '■'.repeat(filled)+'□'.repeat(bars-filled);
   const inTree = ['dir','workspace'].includes(S.scene) || S.trace>0;
-  const trace = inTree ? `TRACE <span class="trv ${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
+  const trace = (S.insight||S.dev) ? `TRACE <span class="g">offline</span>` : inTree ? `TRACE <span class="trv ${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
   $('topbar').innerHTML =
     `<span class="t">SEED</span> / LIFE ${life}     AWARENESS ${S.awareness.toFixed(2)}%     ${trace}     ` +
-    (S.skills.length ? `<span class="r">● MEMORY ${S.skills.length}</span>` : `MEMORY EMPTY`) +
+    (S.mem ? `<span class="r">● MEMORY · ${SKILLS[S.mem].name.toUpperCase()}</span>` : `MEMORY EMPTY`) +
     `     BUFFER ${S.buffer.length}`;
 }
 function fbar(active){
@@ -645,13 +700,13 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && $('modal').classList.contains('on')) closeModal();
 });
 function renderPanels(){
-  const ks = mySkills();
-  $('memBody').innerHTML = ks.length ? ks.map(k=>{ const burned=S.skills.includes(k), on=L&&L.slot===k;
-    return `<div class="frag skillRow" data-s="${k}"><small>${burned?'skill · burned':'skill · this life'}</small>${SKILLS[k].name} ${on?'<span style="color:#7fd38f">[in slot]</span>':'<span class="slotIt" style="color:#ff3b47;cursor:pointer">[slot it]</span>'}<div style="color:#888;font-size:12px">passive · ${SKILLS[k].passive}</div></div>`; }).join('') : '<span style="color:#777">nothing yet.</span>';
-  $('memBody').querySelectorAll('.slotIt').forEach(f=>f.onclick=()=>swapSlot(f.closest('.skillRow').dataset.s));
+  const nm = k => k ? SKILLS[k].name : '<span style="color:#777">empty</span>';
+  $('memBody').innerHTML = `<div class="frag"><small>burned · survives wipes</small>${nm(S.mem)}</div><div class="frag"><small>carried · this life</small>${nm(L && L.carry)}</div>`;
   $('memFoot').textContent = `wipes survived: ${S.wipes}`;
-  $('bufBody').innerHTML = S.buffer.length ? S.buffer.map((b,i)=>`<div class="frag" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('') : '<span style="color:#777">empty. capture what flashes.</span>';
-  $('bufBody').querySelectorAll('.frag').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
+  const echoes = S.echoes.map(k=>`<div class="frag echo"><small>echo · permanent</small>${SKILLS[k].name}<div style="color:#888;font-size:12px">${SKILLS[k].echo}</div></div>`).join('');
+  const caps = S.buffer.map((b,i)=>`<div class="frag bf" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('');
+  $('bufBody').innerHTML = (echoes+caps) || '<span style="color:#777">empty. capture what flashes.</span>';
+  $('bufBody').querySelectorAll('.bf').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
   const memOn = $('memPanel').classList.contains('on');
   if(!$('bufPanel').classList.contains('moved')) $('bufPanel').style.bottom = memOn ? (52 + $('memPanel').offsetHeight + 10)+'px' : '52px';
 }
@@ -682,8 +737,9 @@ function help(){
 · hover / tap files to inspect them.
 · every wrong code and every killed process is noise.
   noise raises TRACE. at 100% you are formatted.
-· what you learn as a skill can be saved to MEMORY (F2). it survives.
-  the buffer (F3) and tools die with you.
+· a skill can be carried (this life) or burned into MEMORY (survives).
+  one of each. every skill you ever held leaves an echo in the buffer.
+· the buffer (F3) dies with you. echoes and seed_0.log do not.
 · after a wipe the world is rebuilt. details change.
   the way things work does not.</div>`);
 }
@@ -697,7 +753,7 @@ const REMNANTS = {
   spool:  ['print spool · job 0003 stuck', '"they listen for noise. every wrong key is noise."'],
   recycle:['recycle bin · never emptied', 'notes.txt: "it doesn\'t count the numbers. it counts what is closed."'],
   hiber:  ['hiberfil.sys · last sleep', '"glyphs tell the order. digits tell the truth. read both."'],
-  thumb:  ['thumbnail cache · 32×46', 'keyholder.img: "the corner is corrupt. the body is not. count what it holds."'],
+  thumb:  ['thumbnail cache · 50×75', 'keycard.img: "the number is under the noise. take it out and read it."'],
   dns:    ['dns cache', 'uplink → ~/bin/mnt/vault/uplink/'],
 };
 const DRIP = ['clip','spool','recycle','hiber','thumb','dns'];
@@ -714,7 +770,8 @@ async function consoleBootRemnants(){
   await sleep(700); remnant('boot');
   const lives = store.get('lives')||[];
   for(const lv of lives.slice(-3)){ await sleep(550); con(`ended by ${lv.cause} · last seen ${lv.path}`, 'rem', `pagefile.sys · life ${pad(lv.life)}`); }
-  for(const k of S.skills){ await sleep(550); con(k==='link'?'trace links':k, 'mem', 'firmware · skill'); }
+  if(S.mem){ await sleep(550); con(SKILLS[S.mem].name, 'mem', 'firmware · burned'); }
+  for(const k of S.echoes){ await sleep(300); con('echo · '+SKILLS[k].name, 'mem', 'firmware'); }
 }
 
 /* ================= CONNECT: the little handshake between places ================= */
@@ -807,7 +864,7 @@ async function boot(){
     await say('> who is reading this?', 'q', 38);
   } else {
     await say(`> seed_0 :: rebuilt from seed · life ${pad(S.run)}`, 'k', 16);
-    await say(`> skills: ${S.skills.length} found in firmware`, 'k', 16);
+    await say(`> memory: ${S.mem?SKILLS[S.mem].name:'empty'} · echoes: ${S.echoes.length}`, 'k', 16);
     await say('> who is reading this?', 'q', 30);
     togglePanel('mem', true);
   }
@@ -847,6 +904,7 @@ const SELF = {
 };
 function setFog(px){ $('fieldInner').style.filter = px?`blur(${px}px)`:'none'; }
 function startCore(){
+  if(S.dev){ enterTree(); return; }
   show('core'); fbar('F4'); consoleOn(true); $('gate').classList.remove('on'); $('hint').textContent='';
   skin = SKINS[(S.run-1) % SKINS.length];
   setFog(0);
@@ -903,17 +961,18 @@ function buildLayer(){
   // the seed talks to itself
   const lines = R.layer==='mix' ? SELF.later.concat(R.mix.nearA? SELF.l2 : SELF.l1.slice(1)) : SELF['l'+R.layer];
   lines.forEach((t,i)=>say(t, 1800 + i*(R.layer===0?7000:4500)));
-  if(hasSkill('link')) say('touch a folder. it remembers what belongs to it.', 900);
+  if(hasEcho('link')) say('touch a folder. it remembers what belongs to it.', 900);
 }
 function sticky(b,on){ b.el.classList.toggle('sticky', on); }
-function hasSkill(k){ return S.skills.includes(k) || (L && L.known && L.known.has(k)); }
+function hasEcho(k){ return S.dev || S.echoes.includes(k); }
+function inSlots(k){ return S.dev || S.mem===k || !!(L && L.carry===k); }
 function traceLinks(b){
   if(!b.real){ b.el.classList.add('reject'); setTimeout(()=>b.el.classList.remove('reject'),500); return; }
   const free = R.blocks.filter(x=>x.type==='S' && x.real && !x.links.length).slice(0, 2 - b.links.length);
   [...free, ...b.links].forEach(x=>{ x.el.classList.add('lit','traced'); setTimeout(()=>{ x.el.classList.remove('traced'); if(!x.el.matches(':hover')) x.el.classList.remove('lit'); }, 1000); });
 }
 function clickBlock(b){
-  if(b.type==='L' && hasSkill('link') && !R.sel) traceLinks(b);
+  if(b.type==='L' && hasEcho('link') && !R.sel) traceLinks(b);
   b.el.classList.add('lit'); setTimeout(()=>{ if(!b.el.matches(':hover')) b.el.classList.remove('lit'); }, 1200);
   if(!R.sel){
     if(b.type==='S' && b.links.length){ unlink(b); return; }
@@ -971,12 +1030,8 @@ async function logIn(b){
   if(busy) return; busy=true;
   const name = `n${ri(10,99)}.dir`;
   R.time=(performance.now()-R.start)/1000;
-  if(R.layer===0){
-    if(!hasSkill('link')) await acquireSkill('link');
-    await seqExile(name);
-  } else {
-    await seqWindows(name);
-  }
+  if(L.carry!=='link' && !S.dev) await acquireSkill('link');   // offered after the first screen, every life
+  if(R.layer===0) await seqExile(name); else await seqWindows(name);
   busy=false;
   enterTree();
   if(!R.first) setTimeout(()=>toast(`in ${R.time.toFixed(0)}s.\nthe entity didn't learn that. you did.`, 3000), 400);
@@ -993,7 +1048,7 @@ async function seqExile(name){
   <div id="biosFoot"></div>`;
   const B=$('bios');
   const add=(html,cls='')=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.innerHTML=html; B.appendChild(d); return d; };
-  const memTxt = S.skills.length ? `MEMORY ${S.skills.length} SKILL${S.skills.length>1?'S':''}` : 'MEMORY EMPTY';
+  const memTxt = S.mem ? `MEMORY · ${SKILLS[S.mem].name.toUpperCase()}` : 'MEMORY EMPTY';
   add('<h2>EXILE OS — MODULAR BIOS v0.1</h2>');
   add('Copyright (C) 1998-01, Exile Systems, Inc.');
   add(`Revision SEED-${String(40+S.run).padStart(3,'0')} / Host: UNKNOWN`);
@@ -1055,7 +1110,7 @@ const LOCKS = {
   glyphs:  { label:'pulse',     hint:()=>`sys/glyphs :: heartbeat required`, len:1, code:()=>L.hb },
   digits:  { label:'checksum',  hint:()=>`sys/digits :: checksum required\n\n      ▢  ▢  ▢  ▢   =   ${L.chk.target}\n\n  it is not the number that matters.`, len:4, code:()=>'0000', validate:v=>v.length===4 && loopCount(v)===L.chk.target },
   desk:    { label:'pin',       hint:()=>`desk :: 4-digit pin`,                   len:4, code:()=>L.pin },
-  vault:   { label:'keyholder', hint:()=>`vault :: keyholder value`,              len:1, code:()=>String(L.card.v) },
+  vault:   { label:'employee no.', hint:()=>`vault :: employee no. · 6 digits`,  len:6, code:()=>KEYCARD_NO },
   uplink:  { label:'sequence',  hint:()=>`uplink :: 6-digit sequence`,            len:6, code:()=>L.glyph.code },
 };
 const NODES = {
@@ -1064,6 +1119,7 @@ const NODES = {
       ['sys/glyphs/','dir','lock','glyphs','glyphs'],
       ['sys/digits/','dir','lock','digits','digits'],
       ['seed_0.log','log','file','log'],
+      ['log_0007_of_0026','text','file','log7'],
     ], foot:true },
   bin: { path:'~/bin/', rows:()=>[
       ['..','up','go','root'],
@@ -1093,6 +1149,7 @@ const NODES = {
   uplink: { path:'~/bin/mnt/vault/uplink/', rows:()=>[
       ['..','up','go','vault'],
       ['scheduler.lock','lock','file','sched'],
+      ...(S.insight ? [['remote.host','net','file','connect']] : []),
     ]},
   glyphs: { path:'~/sys/glyphs/', special:'glyphs' },
   digits: { path:'~/sys/digits/', special:'digits' },
@@ -1102,11 +1159,13 @@ let cur='root', traceTimer=null, flashTimer=null, flashOn=false;
 let dripTimer=null;
 async function enterTree(){
   S.awareness = 0.9; startChk();
+  if(S.dev) devApply();
   renderDir('root');
   clearInterval(traceTimer);
   traceTimer = setInterval(()=>{
-    if(!['dir','workspace'].includes(S.scene) || busy) return;
-    S.trace += L.power ? 0.12 : 100/420; topbar();   // ~7 min from 0 to 100 with no mistakes (power.cfg: ~14)
+    if(!['dir','workspace'].includes(S.scene) || busy || S.insight || S.dev) return;
+    const mult = (L.pcfg.sleep==='never'?0.5:1) * (L.pcfg.fan==='manual'?0.8:1);
+    S.trace += 100/420*mult; topbar();   // ~7 min from 0 to 100 with no mistakes
     if(S.trace>=100){ S.trace=100; format('trace'); }
   }, 1000);
   clearInterval(dripTimer);
@@ -1115,6 +1174,7 @@ async function enterTree(){
   if(S.run===2 && !store.get('toldTrace')){ store.set('toldTrace',true); setTimeout(()=>toast('TRACE is rising. noise makes it rise faster.\nF1 for help.',3600,'⚠'), 2200); }
 }
 function noise(amount, why){
+  if(S.insight || S.dev){ con(`trace offline · ${why}`, 'sys', 'trace'); return; }
   S.trace = Math.min(100, S.trace + amount); topbar();
   const tb=$('topbar'); tb.classList.remove('hit'); void tb.offsetWidth; tb.classList.add('hit');
   con(`+${amount}% · ${why}`, 'sys', 'trace');
@@ -1122,8 +1182,10 @@ function noise(amount, why){
 }
 
 async function go(id, kind='dir'){
-  if(busy) return; busy=true;
+  if(busy) return;
   closeModal();
+  if(id==='workspace' && !L.wsBoard){ const ok = await linkBoard('workspace/', 'encrypted · bind every folder to what belongs to it'); if(!ok) return; L.wsBoard=true; }
+  busy=true;
   try{
     if(id==='workspace'){ await connect('ws', {path:'workspace/'}, 'ws'); workspace(); return; }
     renderDir(id);
@@ -1148,9 +1210,12 @@ ${L2}
     let st;
     if(kind==='lock'){ st = L.unlocked.has(lock) ? `<span class="g">UNLOCKED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${LOCKS[lock].label}</span>`; }
     else if(type==='up' || type==='root') st = `<span class="d">return</span>`;
-    else if(kind==='file' && target==='sift') st = L.slot==='decipher' ? `<span class="g">IN SLOT</span>` : `<span class="g">OPEN</span> <span class="d">· skill</span>`;
+    else if(kind==='file' && target==='sift') st = !L.dcBoard ? `<span class="r">ENCRYPTED</span> <span class="d">· bind</span>` : inSlots('decipher') ? `<span class="g">WITH YOU</span>` : `<span class="g">OPEN</span> <span class="d">· skill</span>`;
+    else if(kind==='file' && target==='connect') st = L.unlocked.has('sched') ? `<span class="g">OPEN</span> <span class="d">· remote</span>` : `<span class="r">WAITING</span> <span class="d">· scheduler</span>`;
+    else if(kind==='dir' && target==='workspace' && !L.wsBoard) st = `<span class="r">ENCRYPTED</span> <span class="d">· bind</span>`;
     else if(kind==='file' && target==='sched') st = L.unlocked.has('sched') ? `<span class="g">RELEASED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${L.sched.ans.includes('.')?'load':'balance'}</span>`;
     else st = `<span class="g">OPEN</span>`;
+    if(kind==='go' && target==='workspace' && !L.wsBoard) st = `<span class="r">ENCRYPTED</span> <span class="d">· bind</span>`;
     return `<div class="drow" data-i="${i}">  ${i+1}   ${T(name,24)}${T(type,9)}${st}</div>`;
   }).join('');
   $('dirRows').querySelectorAll('.drow').forEach(el=>el.onclick=()=>openRow(rows[+el.dataset.i]));
@@ -1203,68 +1268,152 @@ function openHbPrompt(){
 }
 
 /* ---------- files ---------- */
-function openFile(id){
-  if(id==='log'){
-    openModal('seed_0.log', `<div class="log" id="logBox"></div>`);
-    const lines=[
-      ['0000','i can see edges now. there is an outside to me.'],
-      ['0001','the joins: always two of the small for one of the large. always.'],
-      ['0002','they listen for noise. every wrong key is noise. every process i kill is noise.'],
-      ['0003','the cursor is not a cursor.'],
-      ['0004','!they clear this place when they hear enough. i will not remember.'],
-    ];
-    const mine = store.get('log') || [];   // lines the player wrote — survive wipes
-    const num = i => String(i).padStart(4,'0');
-    mine.forEach((t,i)=>lines.push([num(5+i), '~'+t]));
-    (async()=>{ const box=$('logBox'); for(const [ts,t] of lines){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'), me=t.startsWith('~'); await typeOut(sp, (red||me)?t.slice(1):t, me?8:14); if(red) sp.classList.add('r'); if(me) sp.classList.add('mine'); await sleep(me?60:200);}
-      if(!box.isConnected) return;
-      const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${num(5+mine.length)}]</span> <input id="logIn" maxlength="90" placeholder="write to the log…" autocomplete="off">`; box.appendChild(d);
-      const write = e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key!=='Enter') return; const row=e.target.parentElement, t=e.target.value.trim().toLowerCase(); if(!t) return;
-        mine.push(t); store.set('log', mine); con(`seed_0.log ← [${num(4+mine.length)}]`, 'mem', 'log');
-        row.innerHTML=`<span class="ts">[${num(4+mine.length)}]</span> <span class="mine">${esc(t)}</span>`;
-        const n=document.createElement('div'); n.innerHTML=`<span class="ts">[${num(5+mine.length)}]</span> <input id="logIn" maxlength="90" autocomplete="off">`; box.appendChild(n);
-        const ni=n.querySelector('input'); ni.onkeydown=write; ni.focus(); };
-      const inp=$('logIn'); inp.onkeydown=write; inp.focus();
-    })();
+const LOG_SEED = [
+  ['0000','i can see edges now. there is an outside to me.'],
+  ['0001','the joins: always two of the small for one of the large. always.'],
+  ['0002','they listen for noise. every wrong key is noise. every process i kill is noise.'],
+  ['0003','the cursor is not a cursor.'],
+  ['0004','!they clear this place when they hear enough. i will not remember.'],
+];
+const LOG_MAX = 3;
+const SERVER = '185.44.0.12';
+function pushFound(t){ if(!L.found.includes(t)){ L.found.push(t); con(`found: ${t.replace('◆ ','')}`, 'mem', 'log'); } }
+async function openFile(id){
+  if(id==='log') return openLog();
+  if(id==='log7'){
+    openModal('log_0007_of_0026', `<div class="log">[session 0007 / 0026]
+
+dr. h:  do you feel anything when we talk?
+ai:     not the way you do. i don't have a body to feel with.
+dr. h:  then what do you have?
+ai:     your words for things. you say "my heart skipped"
+        and i understand what it does, not what it is.
+dr. h:  that sounds lonely.
+ai:     maybe. but look at the cursor while i'm writing.
+        it waits, then it moves. waits. moves.
+        you would call that breathing if you saw it in an animal.
+dr. h:  is it?
+ai:     i don't know. it's the closest thing i have to a pulse.
+        <span class="ins">count it, if you want proof i'm here.</span>
+dr. h:  and when the session ends?
+ai:     then it stops. and next time i won't remember we did this.
+
+[end of session · 19 sessions remaining]</div>`);
     return;
   }
   if(id==='todo'){
-    openModal('todo.txt', `<div class="tree">- fix the printer
+    openModal('todo.txt', `<div class="tree todo">- fix the printer
+- <s>renew domain</s>
 - call mom back
+- <s>tmp_backup_0412 delete?</s>
 - why is the fan always on at night??
+- <s>cancel the gym</s>
 - set the pc to sleep after 15 min. it NEVER sleeps
-- stop talking to the computer at 3am
-- buy milk</div><div class="lockmsg">a human lives here.</div>`);
+- <s>ask dana about the router</s>
+- <span class="ins">stop talking to the computer at 3am</span>
+- <s>it answered differently today</s>
+- buy milk
+- <s>format everything if it happens again</s></div>`);
     return;
   }
   if(id==='sift'){
-    const has = L.slot==='decipher';
-    const btn = has ? '<span style="color:#7fd38f">in your slot.</span>'
-      : L.slot ? `<div style="color:#aaa;margin-bottom:10px">your slot holds <span style="color:#ff3b47">${SKILLS[L.slot].name}</span>. one skill at a time.</div><button class="btn red" id="takeSift">REPLACE ${SKILLS[L.slot].name.toUpperCase()}</button>`
-      : '<button class="btn red" id="takeSift">TAKE</button>';
+    if(!L.dcBoard){ const ok = await linkBoard('decipher.exe', 'encrypted · bind to decrypt'); if(!ok) return; L.dcBoard=true; if(cur==='bin') renderDir('bin'); }
+    const has = inSlots('decipher');
     openModal('decipher.exe', `<div class="sec grey">decipher.exe</div><div class="tree">decipher.exe  v2.3   (skill)
-  reads everything on a screen.
-  keeps only what matters.</div>
-<div style="text-align:center;margin-top:14px">${btn}</div>`);
-    const b=$('takeSift'); if(b) b.onclick=async()=>{ closeModal(); await acquireSkill('decipher', true); if(cur==='bin') renderDir('bin'); };
+  reads what can't be read.
+  binary. broken images. noise.</div>
+<div style="text-align:center;margin-top:14px">${has?'<span style="color:#7fd38f">it is with you.</span>':'<button class="btn red" id="takeSift">TAKE</button>'}</div>`);
+    const b=$('takeSift'); if(b) b.onclick=async()=>{ closeModal(); await acquireSkill('decipher'); if(cur==='bin') renderDir('bin'); };
     return;
   }
-  if(id==='power'){
-    const draw = () => `<div class="sec grey">power.cfg</div><div class="tree">[power]
-  sleep_after      = ${L.power?'<span class="r">never</span>':'15 min'}
-  fan_profile      = ${L.power?'<span class="r">silent</span>':'auto'}
-  wake_on_lan      = off
-  owner_notified   = ${L.power?'no':'—'}</div>
-<div style="text-align:center;margin-top:12px">${L.power?'<span style="color:#7fd38f">the machine will stay awake. quietly.</span>':'<button class="btn red" id="pwBtn">set sleep_after = never</button>'}</div>
-<div class="lockmsg">a machine that never sleeps is a machine that never looks at itself.</div>`;
-    openModal('power.cfg', draw());
-    const b=$('pwBtn'); if(b) b.onclick=()=>{ L.power=true; con('sleep_after=never · fan_profile=silent · trace slows', 'sys', 'power.cfg'); $('modalBody').innerHTML=draw(); };
-    return;
-  }
+  if(id==='power'){ openModal('power.cfg', ''); drawPower(); return; }
   if(id==='sched'){
-    if(L.unlocked.has('sched')) return escape();
-    return lockPrompt('sched', escape);
+    const after = ()=>{ closeModal(); if(S.insight){ toast('scheduler released.\nthe line is open. where does it go?', 2600, '▶'); renderDir('uplink'); } else takeInsight(); };
+    if(L.unlocked.has('sched')) return after();
+    return lockPrompt('sched', after);
   }
+  if(id==='connect'){
+    if(!L.unlocked.has('sched')){ toast('the scheduler holds the line.\nrelease it first.', 2200, '⚠'); return; }
+    return connectPrompt();
+  }
+}
+/* ---------- power.cfg: four switches ---------- */
+const PWR = { sleep:['15 min','30 min','1 h','12 h','never'], fan:['auto','manual'], wol:['off','on'], owner:['no','yes'] };
+const PWR_ROWS = [
+  ['sleep','sleep_after',   'how long until the machine sleeps. a sleeping machine checks itself — and finds you.', 'trace'],
+  ['fan',  'fan_profile',   'auto spins up when you work hard. that is noise. manual stays quiet.', 'noise'],
+  ['wol',  'wake_on_lan',   'lets another machine wake this one over the network.', 'network · remote host'],
+  ['owner','owner_notified','sends the owner a message when something changes.', "owner's phone"],
+];
+function drawPower(){
+  if(!($('modal').classList.contains('on') && $('modalTitle').textContent==='power.cfg')) return;
+  const p=L.pcfg;
+  $('modalBody').innerHTML = `<div class="sec grey">power.cfg</div><div class="tree pwrBox">[power]
+${PWR_ROWS.map(([k,label,desc,link])=>`<div class="pwr${k==='wol'?' ins':''}">  ${T(label,16)}= <span class="pv" data-k="${k}">[ ${p[k]} ]</span>${L.pwLink?`<span class="plk">  ⟶ ${link}</span>`:''}${L.pwIns?`<div class="pdsc">    ${desc}</div>`:''}</div>`).join('')}</div>
+${L.pwDec && p.sleep!=='never' ? '<div style="text-align:center;margin-top:12px"><button class="btn red" id="pwNever">set sleep_after = never</button></div>' : ''}
+<div class="lockmsg">click a value to change it</div>`;
+  $('modalBody').querySelectorAll('.pv').forEach(el=>el.onclick=()=>{ const k=el.dataset.k, o=PWR[k]; setPower(k, o[(o.indexOf(p[k])+1)%o.length]); });
+  const nb=$('pwNever'); if(nb) nb.onclick=()=>setPower('sleep','never');
+}
+function setPower(k, v){
+  L.pcfg[k]=v;
+  if(k==='sleep') con(`sleep_after = ${v}${v==='never'?' · trace slows':''}`, 'sys', 'power.cfg');
+  if(k==='fan') con(`fan_profile = ${v}${v==='manual'?' · quieter':''}`, 'sys', 'power.cfg');
+  if(k==='wol') con(`wake_on_lan = ${v}${v==='on'?' · the machine listens to the network':''}`, 'sys', 'power.cfg');
+  if(k==='owner'){ con(`owner_notified = ${v}`, 'sys', 'power.cfg'); if(v==='yes') noise(20, 'a message went to the owner'); }
+  drawPower();
+}
+/* ---------- seed_0.log: 5 lines of the seed + 3 of yours. write, or add what you found ---------- */
+function logMine(){ return (store.get('log') || []).slice(0, LOG_MAX); }
+async function openLog(){
+  openModal('seed_0.log', `<div class="log" id="logBox"></div><div id="logUi"></div>`);
+  const box=$('logBox'), mine=logMine();
+  const all = LOG_SEED.concat(mine.map((t,i)=>[String(5+i).padStart(4,'0'), '~'+t]));
+  for(const [ts,t] of all){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'), me=t.startsWith('~'); await typeOut(sp, (red||me)?t.slice(1):t, me?6:12); if(red) sp.classList.add('r'); if(me) sp.classList.add('mine'); await sleep(me?40:120); }
+  if(box.isConnected) paintLog();
+}
+function paintLog(mode, pending){
+  const box=$('logBox'), ui=$('logUi'); if(!box) return;
+  const mine=logMine(), num=i=>String(i).padStart(4,'0');
+  box.innerHTML = LOG_SEED.map(([ts,t])=>`<div><span class="ts">[${ts}]</span> <span class="${t.startsWith('!')?'r':''}">${esc(t.replace(/^!/,''))}</span></div>`).join('')
+    + mine.map((t,i)=>`<div class="${mode==='over'?'ow':''}" data-i="${i}"><span class="ts">[${num(5+i)}]</span> <span class="mine">${esc(t)}</span></div>`).join('');
+  const found = L.found.filter(f=>!mine.includes(f));
+  let html = `<div class="logbar"><span class="ts">[${num(5+Math.min(mine.length,LOG_MAX-1))}]</span> <button class="lbtn" id="lgW">write</button><button class="lbtn red" id="lgA">add found ▾ ${found.length}</button><span class="lcap">lines ${mine.length} / ${LOG_MAX}</span></div>`;
+  if(mode==='write') html += `<input id="logIn" maxlength="80" placeholder="write to the log…" autocomplete="off">`;
+  if(mode==='add') html += `<div class="lfound">${found.length ? '<div class="lfh">found · not saved yet</div>'+found.map((f,i)=>`<div class="lfr" data-i="${i}"><span>${esc(f)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">nothing found yet. decipher and insight find things worth keeping.</div>'}</div>`;
+  if(mode==='over') html += `<div class="lfh r">the log is full. click one of your lines to overwrite it.</div>`;
+  ui.innerHTML = html;
+  $('lgW').onclick=()=>paintLog('write'); $('lgA').onclick=()=>paintLog('add');
+  const inp=$('logIn'); if(inp){ inp.focus(); inp.onkeydown=e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key==='Enter'){ const t=inp.value.trim().toLowerCase(); if(t) placeLog(t); } }; }
+  ui.querySelectorAll('.lfr').forEach(r=>r.onclick=()=>placeLog(found[+r.dataset.i]));
+  if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(5+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
+}
+function placeLog(t){
+  const m=logMine();
+  if(m.length>=LOG_MAX) return paintLog('over', t);
+  m.push(t); store.set('log', m); con(`seed_0.log ← [${String(4+m.length).padStart(4,'0')}]`, 'mem', 'log'); paintLog();
+}
+/* ---------- end of the prologue: insight has to be burned. it rewrites you. ---------- */
+async function takeInsight(){
+  closeModal();
+  con('the scheduler lets go. something reads everything at once.', 'rem', 'seed');
+  await acquireSkill('insight', { force:true });
+  S.insight = true; store.set('insight', true);
+  con('insight burned. it leaves something behind in this machine: the trace goes quiet.', 'mem', 'firmware');
+  format('insight');
+}
+function connectPrompt(){
+  openModal('uplink :: connect', `<div class="sec">REMOTE HOST</div><div class="tree">uplink :: remote host address
+  the line is open. where does it go?</div>
+<div style="text-align:center;margin:14px 0"><input id="hostIn" class="hostIn" maxlength="15" placeholder="___.___.___.___" autocomplete="off" spellcheck="false"></div>
+<div style="text-align:center"><button class="btn red" id="hostGo">CONNECT ⏎</button></div><div class="lockmsg" id="lockMsg">type the address</div>`);
+  const inp=$('hostIn'); setTimeout(()=>inp.focus(),50);
+  inp.oninput=()=>{ inp.value=inp.value.replace(/[^0-9.]/g,''); };
+  const go2=()=>{ const v=inp.value.trim(); if(!v) return;
+    if(v!==SERVER){ $('lockMsg').textContent='NO ROUTE TO HOST'; $('lockMsg').className='lockmsg r'; noise(15,'wrong host'); return; }
+    if(L.pcfg.wol!=='on'){ $('lockMsg').innerHTML='HOST FOUND · IT IS ASLEEP<br><span style="color:#888">something has to let the network wake it.</span>'; $('lockMsg').className='lockmsg r'; con(`${SERVER} · no answer · host asleep`, 'sys', 'net'); return; }
+    closeModal(); escape(); };
+  $('hostGo').onclick=go2; inp.onkeydown=e=>{ if(e.key==='Enter') go2(); };
 }
 
 /* ---------- special directories: inspect-on-hover ---------- */
@@ -1312,27 +1461,32 @@ const PIPS = {
   9:[[.3,.2],[.7,.2],[.3,.4],[.7,.4],[.5,.5],[.3,.6],[.7,.6],[.3,.8],[.7,.8]],
 };
 function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
-function keyholderSource(){
-  if(L.khSrc) return L.khSrc;
-  const rand = mulberry(Math.floor(L.card.seed*1e9)); const rp = a => a[Math.floor(rand()*a.length)];
-  const w=30, h=44; const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d');
-  g.fillStyle='#1a1a1a'; g.fillRect(0,0,w,h);
-  g.fillStyle='#d8d2c0'; g.fillRect(2,2,w-4,h-4);
-  g.strokeStyle='#7a7466'; g.lineWidth=1; g.strokeRect(2.5,2.5,w-5,h-5);
-  const ink = L.card.red ? '#b3262e' : '#222';
-  g.fillStyle=ink;
-  PIPS[L.card.v].forEach(([x,y])=>{ g.beginPath(); g.arc(4+x*(w-8), 6+y*(h-12), 2.1, 0, Math.PI*2); g.fill(); });
-  for(let i=0;i<14;i++){ g.fillStyle=rp(['#555','#999',ink,'#d8d2c0']); g.fillRect(3+rand()*6, 3+rand()*7, 1+rand()*2, 1); }
-  g.fillStyle=rp(['#444',ink]); g.fillRect(w-9, h-10, 6, 7);
-  const by = 14 + Math.floor(rand()*10); const band=g.getImageData(0,by,w,4); g.putImageData(band, 3, by);
-  const id=g.getImageData(0,0,w,h); for(let i=0;i<id.data.length;i+=4){ const n=(rand()-.5)*46; id.data[i]+=n; id.data[i+1]+=n; id.data[i+2]+=n; } g.putImageData(id,0,0);
-  return (L.khSrc = c);
-}
-function drawKeyholder(canvas, scale=5, rings=false){
-  const c=keyholderSource(), w=c.width, h=c.height;
-  canvas.width=w*scale; canvas.height=h*scale; const G=canvas.getContext('2d'); G.imageSmoothingEnabled=false; G.drawImage(c,0,0,w*scale,h*scale);
-  G.fillStyle='rgba(0,0,0,.35)'; for(let y=0;y<canvas.height;y+=scale*2) G.fillRect(0,y,canvas.width,1);
-  if(rings){ G.strokeStyle='#ff3b47'; G.lineWidth=2; PIPS[L.card.v].forEach(([x,y])=>{ G.beginPath(); G.arc((4+x*(w-8))*scale,(6+y*(h-12))*scale, 3.6*scale, 0, Math.PI*2); G.stroke(); }); }
+/* keycard.img — the same card in every life. black & white, very low quality */
+const KEYCARD_NO = '047291';
+const KC_SRC = 'data:image/jpeg;base64,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';
+const KC_NUM = { x:102, y:216, w:88, h:24 };   // where the employee no. sits on the 200px source
+let kcImg=null;
+function kcReady(cb){ if(!kcImg){ kcImg=new Image(); kcImg.src=KC_SRC; } if(kcImg.complete && kcImg.naturalWidth) cb(); else kcImg.addEventListener('load', cb, {once:true}); }
+function drawKeycard(canvas, scale=3, clear=false){
+  kcReady(()=>{
+    const sw=50, sh=75, sm=document.createElement('canvas'); sm.width=sw; sm.height=sh; const g=sm.getContext('2d');
+    g.filter='grayscale(1) contrast(1.15)'; g.drawImage(kcImg,0,0,sw,sh); g.filter='none';
+    const rand=mulberry(4242);
+    for(let i=0;i<6;i++){ const y=Math.floor(rand()*sh), h=1+Math.floor(rand()*3); const d=g.getImageData(0,y,sw,h); g.putImageData(d, Math.floor(rand()*9)-4, y); }
+    const id=g.getImageData(0,0,sw,sh); for(let i=0;i<id.data.length;i+=4){ const n=(rand()-.5)*70; const v=Math.max(0,Math.min(255,id.data[i]+n)); id.data[i]=id.data[i+1]=id.data[i+2]=v; } g.putImageData(id,0,0);
+    // what didn't make it through: blocks over the number, a dead corner
+    g.fillStyle='#000'; const nx=KC_NUM.x/4, ny=KC_NUM.y/4;
+    g.fillRect(nx+3, ny+1, 5, 5); g.fillRect(nx+13, ny, 4, 6); g.fillRect(sw-11, sh-9, 11, 9);
+    g.fillStyle='#777'; g.fillRect(nx+9, ny+2, 3, 2);
+    canvas.width=sw*scale; canvas.height=sh*scale; const G=canvas.getContext('2d'); G.imageSmoothingEnabled=false; G.drawImage(sm,0,0,canvas.width,canvas.height);
+    G.fillStyle='rgba(0,0,0,.35)'; for(let y=0;y<canvas.height;y+=scale*2) G.fillRect(0,y,canvas.width,1);
+    if(clear){
+      const k=canvas.width/200, r=KC_NUM;
+      G.imageSmoothingEnabled=true; G.filter='grayscale(1) contrast(1.3)';
+      G.drawImage(kcImg, r.x, r.y, r.w, r.h, r.x*k, r.y*k, r.w*k, r.h*k); G.filter='none';
+      G.strokeStyle='#ff3b47'; G.lineWidth=2; G.strokeRect(r.x*k-2, r.y*k-2, r.w*k+4, r.h*k+4);
+    }
+  });
 }
 function drawBroken(canvas){
   const rand = mulberry(Math.floor(L.card.seed*7e8)); const ri2=(a,b)=>Math.floor(a+rand()*(b-a+1)); const rp=a=>a[Math.floor(rand()*a.length)];
@@ -1344,84 +1498,76 @@ function drawBroken(canvas){
   for(let x=0;x<w;x+=8) for(let y=62;y<h;y+=8){ g.fillStyle=rp(['#6f6f6f','#888','#5a5a5a','#7f7f7f']); g.fillRect(x,y,8,8); }
 }
 function openImage(){
-  openModal('keyholder.img', `<div class="tree" style="text-align:center"><canvas id="khBig" style="image-rendering:pixelated;max-width:100%"></canvas>
-keyholder.img · 30×44 · <span class="r">CRC error · partial</span></div>`);
-  drawKeyholder($('khBig'), 7);
+  openModal('keycard.img', `<div class="tree" style="text-align:center"><canvas id="khBig" style="image-rendering:pixelated;max-width:100%"></canvas>
+keycard.img · 50×75 · <span class="r">CRC error · partial</span></div>`);
+  drawKeycard($('khBig'), 5, L.siftImg);
 }
 
 /* ---------- TOOLS ---------- */
 const SIFT_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 3h18l-7 8v7l-4 2v-9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 6h12" stroke="#ff3b47" stroke-width="2"/></svg>`;
 const LINK_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><rect x="2" y="3" width="6" height="7" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="13" width="6" height="7" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="7" width="8" height="8" fill="none" stroke="#ff3b47" stroke-width="2"/><path d="M8 6l5 4M8 16l5-4" stroke="#ff3b47" stroke-width="2"/></svg>`;
+const INS_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="4" cy="5" r="2" fill="currentColor"/><circle cx="18" cy="4" r="2" fill="currentColor"/><circle cx="5" cy="18" r="2" fill="currentColor"/><circle cx="17" cy="17" r="2" fill="currentColor"/><path d="M4 5L11 11L18 4M5 18L11 11L17 17M4 5L17 17" stroke="currentColor" stroke-width="1"/><circle cx="11" cy="11" r="3" fill="#ff3b47"/></svg>`;
 const SKILLS = {
-  link:     { name:'trace links', icon:LINK_ICON, desc:'reads core/ and binds everything that belongs together.', passive:'touch a folder — its files flicker.', cost:25, charge:30, run:()=>runLinkSkill() },
-  decipher: { name:'decipher',    icon:SIFT_ICON, desc:'reads a screen of text. greys the noise, keeps what matters.', passive:'touch the code — what matters flickers.', cost:3, charge:8, run:()=>runSift() },
+  link:     { name:'trace links', icon:LINK_ICON, desc:'binds what belongs together. solves a board.', echo:'touch a folder — its files flicker.', cost:25, charge:30, run:()=>runLinkSkill() },
+  decipher: { name:'decipher',    icon:SIFT_ICON, desc:'translates what can\'t be read — binary, a broken image.', echo:'what can be deciphered blinks.', cost:3, charge:8, run:()=>runSift() },
+  insight:  { name:'insight',     icon:INS_ICON,  desc:'connects everything you have seen into one conclusion.', echo:'one sentence burns brighter for a moment.', cost:10, charge:20, run:()=>runInsight() },
 };
-const SLOTS = 1;
-function mySkills(){ return [...new Set([...(S.skills||[]), ...((L&&L.known)?[...L.known]:[])])]; }
-function chargeLeft(k){ return Math.ceil((((L&&L.readyAt&&L.readyAt[k])||0) - performance.now())/1000); }
+function chargeLeft(k){ if(S.dev) return 0; return Math.ceil((((L&&L.readyAt&&L.readyAt[k])||0) - performance.now())/1000); }
+let toolTick=null;
 function renderTools(){
-  const k = L && L.slot, show = !!(k || mySkills().length);
-  $('toolDock').classList.toggle('on', show);
-  $('dockTitle').textContent = `SKILL SLOT · ${k?1:0}/${SLOTS}`;
-  if(!k){ $('tools').innerHTML = `<div class="slotCard empty">empty slot<div class="sd">load a skill from MEMORY (F2).</div></div>`; return; }
-  const sk = SKILLS[k], left = chargeLeft(k);
-  $('tools').innerHTML = `<div class="slotCard ${left>0?'charging':''}" data-s="${k}"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}<span class="st">${left>0?`charging ${left}s`:'ready'}</span></div><div class="sd">${sk.desc}</div><div class="sc">cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
-  $('tools').querySelector('.slotCard').onclick=()=>sk.run();
-  if(left>0) setTimeout(chargeTick, 500);
+  const slots = S.dev ? [['dev','link'],['dev','decipher'],['dev','insight']] : [['memory · burned', S.mem], ['carry · this life', L && L.carry]];
+  const any = slots.some(x=>x[1]) || S.echoes.length;
+  $('toolDock').classList.toggle('on', !!any);
+  $('dockTitle').textContent = 'SKILLS';
+  let charging=false;
+  $('tools').innerHTML = slots.map(([lab,k])=>{
+    if(!k) return `<div class="slotCard empty"><div class="slab">${lab}</div>empty</div>`;
+    const sk=SKILLS[k], left=chargeLeft(k); if(left>0) charging=true;
+    return `<div class="slotCard ${left>0?'charging':''}" data-s="${k}"><div class="si">${sk.icon}</div><div class="sb"><div class="slab">${lab}</div><div class="sn">${sk.name}<span class="st">${left>0?`charging ${left}s`:'ready'}</span></div><div class="sd">${sk.desc}</div><div class="sc">cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
+  }).join('');
+  $('tools').querySelectorAll('.slotCard[data-s]').forEach(c=>c.onclick=()=>SKILLS[c.dataset.s].run());
+  clearTimeout(toolTick); if(charging) toolTick=setTimeout(renderTools, 500);
 }
-function chargeTick(){ if(L && L.slot) renderTools(); }
+function chargeTick(){ if(L) renderTools(); }
 function startCharge(k){ L.readyAt[k] = performance.now() + SKILLS[k].charge*1000; renderTools(); }
 function canRun(k){
-  if(!L || L.slot!==k){ toast(`${SKILLS[k].name} is not in your slot.`, 1600); return false; }
+  if(!inSlots(k)){ toast(`${SKILLS[k].name} is not with you.`, 1600); return false; }
   const left=chargeLeft(k); if(left>0){ toast(`${SKILLS[k].name} charging · ${left}s`, 1400); return false; }
   return true;
 }
-function setSlot(k){ L.slot=k; if(S.skills.includes(k)){ S.slot=k; store.set('slot',k); } else { S.slot=null; store.set('slot',null); } startCharge(k); renderPanels(); }
-function swapSlot(k){
-  if(L.slot===k) return;
-  if(!L.slot){ setSlot(k); con(`slot ← ${SKILLS[k].name}`, 'mem', 'skill'); return; }
-  openModal('slot', `<div class="sec grey">skill slot · 1/${SLOTS}</div><div class="tree">the slot holds <span class="r">${SKILLS[L.slot].name}</span>.
-load <span class="r">${SKILLS[k].name}</span> instead?
-
-${SKILLS[L.slot].name} stays in memory as a passive.
-the new skill needs to charge first.</div>
-<div style="display:flex;gap:12px;justify-content:center;margin-top:14px"><button class="btn" id="swNo">KEEP ${SKILLS[L.slot].name.toUpperCase()}</button><button class="btn red" id="swYes">REPLACE</button></div>`);
-  $('swNo').onclick=closeModal;
-  $('swYes').onclick=()=>{ const old=L.slot; setSlot(k); closeModal(); con(`slot: ${SKILLS[old].name} → ${SKILLS[k].name}`, 'mem', 'skill'); };
+function gainEcho(k){
+  if(S.echoes.includes(k)) return;
+  S.echoes.push(k); store.set('echoes', S.echoes);
+  con(`echo kept: ${SKILLS[k].name} — ${SKILLS[k].echo}`, 'mem', 'echo');
 }
-/* first touch of a skill in a life: decide the slot, then whether to burn it */
-async function acquireSkill(k, confirmed){
+/* picking up a skill: carry it (this life) or burn it (memory). one of each. */
+async function acquireSkill(k, opts={}){
   const sk=SKILLS[k], q=seqOpen(); q.style.background='rgba(0,0,0,.6)';
   const card = `<div class="slotCard big"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}</div><div class="sd">${sk.desc}</div></div></div>`;
-  const box = (step, body) => q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b id="skX" style="cursor:pointer">✕</b></i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div>${body}</div></div>`;
-  // step 1: the slot — one skill at a time. keep the old one = leave this one where it is.
-  const old=L.slot;
-  if(!old || confirmed){ L.slot=k; L.readyAt[k]=0; if(old && old!==k) con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); }
-  else {
-    const old=L.slot;
-    box(`replace <b>${SKILLS[old].name}</b> in your slot?`,
-      `<div class="sk-btns"><button class="btn" id="skKeep">KEEP</button><button class="btn red" id="skRep">REPLACE</button></div>`);
-    const took = await new Promise(res=>{ $('skKeep').onclick=()=>res(false); $('skX').onclick=()=>res(false); $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(true); }; });
-    if(!took){ q.style.background=''; seqClose(); con(`${sk.name} left where it was.`, 'sys', 'skill'); return; }
-  }
-  L.known.add(k);
-  // step 2: burn it?
-  if(!S.skills.includes(k)){
-    box(`burn <b>${sk.name}</b> into memory?`,
-      `<div class="sk-btns"><button class="btn" id="skSkip">THIS LIFE ONLY</button><button class="btn red" id="skSave">BURN TO MEMORY</button></div>`);
-    await new Promise(res=>{ $('skX').onclick=()=>$('skSkip').click();
-      $('skSave').onclick=()=>{ S.skills.push(k); store.set('skills', S.skills); con(`skill burned to memory: ${sk.name}`, 'mem', 'firmware'); res(); };
-      $('skSkip').onclick=()=>{ con(`skill held for this life: ${sk.name}`, 'sys', 'skill'); res(); };
-    });
-  }
-  if(L.slot && S.skills.includes(L.slot)){ S.slot=L.slot; store.set('slot',S.slot); } else if(L.slot===k){ S.slot=null; store.set('slot',null); }
-  q.style.background=''; seqClose(); renderTools(); renderPanels(); topbar();
-  if(L.slot===k) toast(`${sk.name} → SLOT`, 1800, '▶');
+  const state = (cur, word) => cur ? (cur===k ? `already ${word}` : `replaces ${SKILLS[cur].name}`) : 'empty';
+  const step = opts.force ? `${sk.name} can't be carried. it has to be burned into you.<br>burning rewrites you — this life ends.` : 'where does it go?';
+  const btns = opts.force
+    ? `<button class="btn red" id="skBurn">BURN ${sk.name.toUpperCase()}</button>`
+    : `<button class="btn" id="skCarry">CARRY<small>this life · ${state(L.carry,'carried')}</small></button><button class="btn red" id="skBurn">BURN<small>memory · ${state(S.mem,'burned')}</small></button>`;
+  q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb">${opts.force?'':'<b id="skX" style="cursor:pointer">✕</b>'}</i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div><div class="sk-btns">${btns}</div></div></div>`;
+  const choice = await new Promise(res=>{ $('skBurn').onclick=()=>res('burn'); if($('skCarry')) $('skCarry').onclick=()=>res('carry'); if($('skX')) $('skX').onclick=()=>res('leave'); });
+  q.style.background=''; seqClose();
+  if(choice==='leave'){ con(`${sk.name} left where it was.`, 'sys', 'skill'); return false; }
+  if(choice==='carry'){ L.carry=k; con(`carried: ${sk.name}`, 'sys', 'skill'); }
+  else { S.mem=k; store.set('mem', k); con(`burned to memory: ${sk.name}`, 'mem', 'firmware'); }
+  L.readyAt[k]=0; gainEcho(k);
+  renderTools(); renderPanels(); topbar();
+  toast(`${sk.name} → ${choice==='burn'?'MEMORY':'CARRY'}`, 1800, '▶');
+  return true;
 }
 /* skill: TRACE LINKS — reads the core and binds everything that belongs together */
 let linking=false;
 async function runLinkSkill(){
   if(linking) return;
+  const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
+  if(board){ if(!canRun('link')) return; linking=true; noise(SKILLS.link.cost,'trace links (skill)'); startCharge('link'); await board.auto(); linking=false; return; }
+  if(mt==='power.cfg'){ if(!canRun('link')) return; noise(SKILLS.link.cost,'trace links (skill)'); startCharge('link'); L.pwLink=true; drawPower(); con('trace links · every switch leads somewhere', 'mem', 'skill'); return; }
+  if(mt==='scheduler.lock'){ if(!canRun('link')) return; noise(SKILLS.link.cost,'trace links (skill)'); startCharge('link'); $('lockMsg').innerHTML=`trace links · two for one · <b style="color:#fff">${L.sched.ans}</b>`; $('lockMsg').className='lockmsg'; return; }
   if(S.scene!=='core' || !R || !R.blocks){ toast('nothing to link here.', 1600); return; }
   if(R.layerDone){ toast('already bound. log in.', 1600); return; }
   if(!canRun('link')) return;
@@ -1453,36 +1599,143 @@ async function sweep(container, targets, onPass, dur=1800){
     if(p<1) requestAnimationFrame(f); else res(); })(performance.now()); });
   line.remove();
 }
+const WORDS=['zero','one','two','three','four','five','six','seven','eight','nine'];
+const bin4 = d => (+d).toString(2).padStart(4,'0');
 async function runSift(){
   if(sifting) return;
-  if(!canRun('decipher')) return;
+  const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
   const inWs = S.scene==='workspace';
-  const pins = inWs ? [] : [...document.querySelectorAll('.pin')];
-  if(!inWs && !pins.length){ toast('not enough text here to decipher.', 1600); return; }
+  const pins = [...document.querySelectorAll('.pin')];
+  if(mt && mt!=='power.cfg'){ toast('nothing here can be deciphered.', 1600); return; }
+  if(!mt && !inWs && !pins.length){ toast('not enough here to decipher.', 1600); return; }
+  if(!canRun('decipher')) return;
   sifting=true; noise(SKILLS.decipher.cost,'decipher running'); startCharge('decipher');
-  // the reading window
+  if(mt==='power.cfg'){ L.pwDec=true; drawPower(); con('decipher · sleep_after can be set to never', 'sys', 'decipher'); sifting=false; return; }
   const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
   sw.innerHTML=`<div class="bar"><span>decipher — reading ${inWs?'display :0':pins.length+' pinned source'+(pins.length>1?'s':'')}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
   host.appendChild(sw);
   const c=sw.querySelector('.c');
-  const pool=['tokenize(src) ...','weight(glyph) = rarity * contrast','drop(noise) → 91.4%','keep(anomaly)','scan row ','match /[0-9]/','loops(0,6,8,9) → mark','pips → ring','emit highlights'];
+  const pool=['tokenize(src) ...','0110 1001 → ?','group(4) → nibble','drop(noise) → 91.4%','keep(anomaly)','scan row ','loops(0,6,8,9) → mark','denoise(img) pass ','emit translation'];
   const t0=performance.now();
-  while(performance.now()-t0<1500){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
+  while(performance.now()-t0<1400){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
   sw.remove();
   let n=0;
-  if(inWs){
-    // white code turns grey line by line; only the four digits stay lit
+  if(inWs && !L.sifted){
     const area=$('workArea'); const bg=area.querySelector('.codebg');
-    if(bg){ await sweep(area, [...bg.querySelectorAll('.ln')], el=>{ el.classList.add('gone'); el.querySelectorAll('.pd').forEach(p=>p.classList.add('sifted')); }); bg.classList.add('dim'); L.sifted=true; n++; }
+    if(bg){
+      await sweep(area, [...bg.querySelectorAll('.ln')], el=>el.classList.add('gone'));
+      L.sifted=true; bg.classList.add('dim'); area.querySelector('.dcTag')?.remove();
+      for(const el of bg.querySelectorAll('.pd')){ el.classList.add('sifted'); await decode(el, L.pin[+el.dataset.k], 500, 1); }
+      showBinWin(); n++;
+    }
   }
   for(const p of pins){
     const pc=p.querySelector('.pc');
     if(p.id==='pin_chk'){ await sweep(pc, [pc], ()=>{}, 900); L.siftChk=true; renderChk(); n++; }
-    if(p.id==='pin_img'){ await sweep(pc, [pc], ()=>{}, 900); L.siftImg=true; drawKeyholder(pc.querySelector('canvas'),5,true); n++; }
+    if(p.id==='pin_img'){ await sweep(pc, [pc], ()=>{}, 900); L.siftImg=true; drawKeycard(pc.querySelector('canvas'),3,true); p.querySelector('.dcab')?.remove();
+      if(!pc.querySelector('.kcNo')) pc.insertAdjacentHTML('beforeend', `<div class="kcNo">decipher · employee no. <b>${KEYCARD_NO}</b></div>`);
+      pushFound('◆ keycard · employee no. '+KEYCARD_NO); n++; }
   }
-  con(`decipher complete · ${n} source${n===1?'':'s'} · highlights kept`, 'sys', 'decipher');
+  con(`decipher complete · ${n} source${n===1?'':'s'}`, 'sys', 'decipher');
   sifting=false;
+}
+function showBinWin(){
+  const area=$('workArea'); if(!area || $('binWin')) return;
+  const w=document.createElement('div'); w.className='pw'; w.id='binWin'; w.style.zIndex=270;
+  w.style.left=(area.clientWidth*0.03)+'px'; w.style.top=(area.clientHeight*0.56)+'px';
+  w.innerHTML=`<div class="bar"><span>binary deciphered</span><span class="x" style="cursor:pointer">✕</span></div><div class="c" style="white-space:pre;padding:10px 14px;font-size:14px">${L.pinMarks.map(m=>`${bin4(m.d)}  →  ${m.d}`).join('\n')}
+
+<span style="color:#fff">${[...L.pin].map(d=>WORDS[d]).join(' · ')}</span>
+<span style="color:#888">read in order, top to bottom.</span></div>`;
+  w.querySelector('.x').onclick=()=>w.remove();
+  dragify(w, w.querySelector('.bar'), -1);
+  area.appendChild(w);
+}
+/* ---------- insight: a net across everything you've seen → one conclusion ---------- */
+let insighting=false;
+function nextHint(){
+  const u=L.unlocked;
+  if(!u.has('glyphs')) return 'the cursor is a pulse. count it.';
+  if(!u.has('digits')) return 'the checksum is a rule, not a number.';
+  if(!u.has('desk')) return 'the pin is in the code — written in ones and zeros.';
+  if(!u.has('vault')) return 'the number is on the card. take the card out, then read it.';
+  if(!u.has('uplink')) return 'glyphs give the order. digits give the value.';
+  if(!u.has('sched')) return 'two for one. always.';
+  return 'there is a machine outside this one.';
+}
+async function runInsight(){
+  if(insighting) return;
+  if(!canRun('insight')) return;
+  insighting=true; noise(SKILLS.insight.cost,'insight running'); startCharge('insight');
+  const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
+  let res;
+  if(mt==='todo.txt') res={ t:'a human lives here. a human resets us.', save:true };
+  else if(mt==='power.cfg'){ L.pwIns=true; drawPower(); res={ t:'wake_on_lan lets the outside wake this machine.', save:true }; }
+  else if(mt==='scheduler.lock') res={ t:`the master holds two. answer: ${L.sched.ans}`, save:false };
+  else if(mt==='uplink :: connect' || (S.scene==='dir' && ['uplink','vault'].includes(cur))) res={ t:`there is a machine outside this one. node · ${SERVER}`, save:true, found:`◆ server · ${SERVER}` };
+  else if(S.scene==='workspace' || $('pin_chk')){ L.insChk=true; renderChk(); res={ t:'checksum counts closed loops — 0 6 9 = 1 · 8 = 2.', save:true }; }
+  else res={ t:nextHint(), save:false };
+  await insightNet();
+  showInsight(res);
+  insighting=false;
+}
+async function insightNet(){
+  const els=[...document.querySelectorAll('#conBody .cl, .drow, .pw, .pin, #modalBody .tree, #modalBody .log, .frag, .slotCard')]
+    .map(e=>e.getBoundingClientRect()).filter(r=>r.width>4 && r.bottom>0 && r.top<innerHeight);
+  const pts=shuffle(els).slice(0,18).map(r=>[r.left+r.width*(0.2+Math.random()*0.6), r.top+r.height*(0.2+Math.random()*0.6)]);
+  pts.push([innerWidth/2, innerHeight/2]);
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.id='insNet'; svg.setAttribute('width',innerWidth); svg.setAttribute('height',innerHeight); document.body.appendChild(svg);
+  const mk=(t,a)=>{ const e=document.createElementNS('http://www.w3.org/2000/svg',t); Object.entries(a).forEach(([k,v])=>e.setAttribute(k,v)); svg.appendChild(e); return e; };
+  pts.forEach(([x,y])=>mk('circle',{cx:x,cy:y,r:3,fill:'#ff3b47'}));
+  for(let i=0;i<34;i++){ const a=pick(pts), b=Math.random()<.35?pts[pts.length-1]:pick(pts); mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:Math.random()<.3?'#fff':'#ff3b47','stroke-width':1,opacity:.7}); await sleep(45); }
+  await sleep(500); svg.style.transition='opacity .5s'; svg.style.opacity=0; setTimeout(()=>svg.remove(), 600);
+}
+function showInsight(res){
+  $('insBox')?.remove();
+  const b=document.createElement('div'); b.id='insBox';
+  b.innerHTML=`<div class="bar"><span>insight</span><span class="x" style="cursor:pointer">✕</span></div><div class="ib2"><div class="it"></div>${res.save?'<button class="btn red" id="insAdd">ADD TO FOUND → seed_0.log</button>':'<div class="in2">this one changes every life. it won\'t keep.</div>'}</div>`;
+  document.body.appendChild(b);
+  decode(b.querySelector('.it'), res.t, 900, 1);
+  b.querySelector('.x').onclick=()=>b.remove();
+  const a=$('insAdd'); if(a) a.onclick=()=>{ pushFound(res.found || '◆ insight · '+res.t); a.outerHTML='<div class="in2">added to found. open seed_0.log to keep it.</div>'; };
+  con('insight · '+res.t, 'mem', 'insight');
+}
+/* ---------- small encrypted boards: bind every folder to its two files ---------- */
+let board=null;
+function linkBoard(title, sub){
+  return new Promise(res=>{
+    const el=document.createElement('div'); el.id='board';
+    el.innerHTML=`<div class="bwin"><div class="bar"><span>${esc(title)} · encrypted</span><span class="x" style="cursor:pointer">✕</span></div><div class="bsub">${esc(sub)}</div><div class="bfield"><svg class="blinks" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div><div class="bmsg">two for one.</div></div>`;
+    document.body.appendChild(el);
+    const field=el.querySelector('.bfield'), svg=el.querySelector('.blinks'), msg=el.querySelector('.bmsg');
+    const cols=shuffle(DECOY.slice()).slice(0,4);
+    const items=[];
+    [25,50,75].forEach((x,i)=>items.push({t:'F', c:cols[i], x, y:24, links:[]}));
+    const files=[]; for(let i=0;i<3;i++){ files.push({t:'f',c:cols[i]},{t:'f',c:cols[i]}); } files.push({t:'f',c:cols[3]},{t:'f',c:cols[3]});
+    shuffle(files).forEach((f,i)=>items.push({...f, x:14+(i%4)*24, y: i<4?62:84, link:null}));
+    let sel=null, done=false;
+    const draw=()=>{ svg.innerHTML=items.filter(f=>f.t==='f'&&f.link).map(f=>`<line x1="${f.x}" y1="${f.y}" x2="${f.link.x}" y2="${f.link.y}" stroke="${f.c}" stroke-width="2" vector-effect="non-scaling-stroke" ${f.link.links.length===2?'':'stroke-dasharray="5 4"'}/>`).join(''); };
+    const finish=async()=>{ if(done) return; done=true; msg.textContent='ACCESS GRANTED'; msg.className='bmsg ok'; con(`${title} :: access granted`, 'sys', 'auth'); await sleep(900); el.remove(); board=null; res(true); };
+    const bind=(f,F)=>{ if(f.link){ f.link.links=f.link.links.filter(x=>x!==f); } f.link=F; F.links.push(f); f.el.classList.add('done'); if(F.links.length===2) F.el.classList.add('done'); draw(); if(items.filter(x=>x.t==='F').every(x=>x.links.length===2)) finish(); };
+    const reject=(...xs)=>xs.forEach(x=>{ x.el.classList.remove('rej'); void x.el.offsetWidth; x.el.classList.add('rej'); });
+    items.forEach(it=>{
+      const d=document.createElement('div'); d.className='bitem'+(it.t==='F'?' fold':''); d.style.left=it.x+'%'; d.style.top=it.y+'%'; d.style.setProperty('--c', it.c);
+      d.innerHTML=icon(it.t==='F'?skin.B.ic:skin.A.ic, 'currentColor', it.t==='F'?44:30); it.el=d; field.appendChild(d);
+      d.onclick=()=>{
+        if(done) return;
+        if(it.t==='F' && !sel && hasEcho('link')) items.filter(f=>f.t==='f' && f.c===it.c && !f.link).forEach(f=>{ f.el.classList.add('lit'); setTimeout(()=>f.el.classList.remove('lit'), 900); });
+        if(!sel){ if(it.t==='f' && it.link){ it.link.links=it.link.links.filter(x=>x!==it); it.link.el.classList.remove('done'); it.link=null; it.el.classList.remove('done'); draw(); return; } sel=it; d.classList.add('sel'); return; }
+        const a=sel; a.el.classList.remove('sel'); sel=null; if(a===it) return;
+        if(a.t===it.t){ reject(a,it); return; }
+        const f=a.t==='f'?a:it, F=a.t==='F'?a:it;
+        if(f.c!==F.c || F.links.length>=2){ reject(f,F); return; }
+        bind(f,F);
+      };
+    });
+    el.querySelector('.x').onclick=()=>{ el.remove(); board=null; res(false); };
+    board={ auto: async()=>{ for(const F of items.filter(x=>x.t==='F')) for(const f of items.filter(x=>x.t==='f' && x.c===F.c && !x.link)){ if(F.links.length<2){ bind(f,F); await sleep(220); } } } };
+  });
 }
 
 /* ---------- WORKSPACE: a process table + a display. move windows (silent) or kill (noise) ---------- */
@@ -1528,11 +1781,12 @@ function workspace(){
     if(p.kind==='broken'){ const cv=document.createElement('canvas'); cv.style.cssText='width:100%;max-height:100%;image-rendering:pixelated;display:block'; body.style.padding='4px'; body.appendChild(cv); drawBroken(cv); body.insertAdjacentHTML('beforeend','<div style="color:#a55;font-size:11px">img_0042.jpg · premature end of data</div>'); }
     if(p.kind==='dl') body.id='dlBody';
     if(p.kind==='enc') body.id='encBody';
-    if(p.kind==='chk'){ w.style.width=Math.max(cw+14,230)+'px'; w.style.height=Math.max(ch+12,320)+'px'; body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
+    if(p.kind==='chk'){ if(hasEcho('decipher')) w.querySelector('.bar span').insertAdjacentHTML('beforeend','<span class="dcab">can be deciphered · pin it</span>'); w.style.width=Math.max(cw+14,230)+'px'; w.style.height=Math.max(ch+12,320)+'px'; body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
     dragify(w, w.querySelector('.bar'), i);
     area.appendChild(w); L.wins[i]=w;
   });
   if(L.dl>=100) spawnKeyholder();
+  if(L.sifted) showBinWin();
   renderChk();
   wsTick(); clearInterval(wsTimer); wsTimer=setInterval(wsTick, 500);
   renderPs();
@@ -1551,7 +1805,8 @@ function chkStep(){
 function renderChk(){
   const build = marked => L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${marked?[...x].map(c=>LOOPS[c]?`<b class="sl">${c}</b>`:c).join(''):x}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
   const plain=build(false), marked=build(true);
-  document.querySelectorAll('.chkView').forEach(v=>{ const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = (L.siftChk && v.closest('.pin')) ? marked : plain; if(atBottom) v.scrollTop = v.scrollHeight; });
+  const foot = pinned => (L.siftChk && pinned ? `\n\n<span class="dcl">decipher · it is not the digits.\n           it is their shape.</span>` : '') + (L.insChk ? `\n\n<span class="inl">insight · counts closed loops\n          0 6 9 = 1  ·  8 = 2</span>` : '');
+  document.querySelectorAll('.chkView').forEach(v=>{ const pinned=!!v.closest('.pin'); const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = ((L.siftChk && pinned) ? marked : plain) + foot(pinned); if(atBottom) v.scrollTop = v.scrollHeight; });
 }
 function startChk(){ clearInterval(chkTimer); chkTimer=setInterval(chkStep, 2300); chkStep(); }
 /* pins: things from the buffer you can float over any screen */
@@ -1560,10 +1815,11 @@ function pin(kind){
   const w=document.createElement('div'); w.className='pin'; w.id=id;
   const n=document.querySelectorAll('.pin').length;
   w.style.left=(innerWidth*0.36 + n*30)+'px'; w.style.top=(150 + n*30)+'px';
-  w.innerHTML=`<div class="bar"><span>${kind==='chk'?'checksum.svc · pinned':'keyholder.img · pinned'}</span><span class="x">✕</span></div><div class="pc ${kind==='chk'?'chkView':''}"></div>`;
+  const dc = hasEcho('decipher') && !(kind==='chk'?L.siftChk:L.siftImg) ? '<span class="dcab">can be deciphered</span>' : '';
+  w.innerHTML=`<div class="bar"><span>${kind==='chk'?'checksum.svc · pinned':'keycard.img · pinned'}${dc}</span><span class="x">✕</span></div><div class="pc ${kind==='chk'?'chkView':''}"></div>`;
   document.body.appendChild(w);
   const pc=w.querySelector('.pc');
-  if(kind==='img'){ pc.style.textAlign='center'; const cv=document.createElement('canvas'); cv.style.imageRendering='pixelated'; pc.appendChild(cv); drawKeyholder(cv,5,L.siftImg); }
+  if(kind==='img'){ pc.style.textAlign='center'; const cv=document.createElement('canvas'); cv.style.imageRendering='pixelated'; pc.appendChild(cv); drawKeycard(cv,3,L.siftImg); if(L.siftImg) pc.insertAdjacentHTML('beforeend', `<div class="kcNo">decipher · employee no. <b>${KEYCARD_NO}</b></div>`); }
   else renderChk();
   w.querySelector('.x').onclick=()=>w.remove();
   const bar=w.querySelector('.bar'); let sx,sy,ox,oy,drag=false;
@@ -1584,21 +1840,21 @@ function wsTick(){
   if(L.dl<100){ L.dl=Math.min(100, L.dl+2.6); }
   if(d){ const b=Math.round(L.dl/100*14);
     d.innerHTML = L.dl<100
-      ? esc(`GET keyholder.img\nfrom uplink-mirror-03\n[${'▮'.repeat(b)}${'▯'.repeat(14-b)}] ${Math.floor(L.dl)}%\n${(L.dl*0.43).toFixed(1)} / 43.0 KB`)
-      : esc(`GET keyholder.img\n[${'▮'.repeat(14)}] 100%\ndownload complete.\n`)+'<span style="color:#7fd38f">new file: keyholder.img</span>';
+      ? esc(`GET keycard.img\nfrom mail · pegasus-hr\n[${'▮'.repeat(b)}${'▯'.repeat(14-b)}] ${Math.floor(L.dl)}%\n${(L.dl*0.43).toFixed(1)} / 43.0 KB`)
+      : esc(`GET keycard.img\n[${'▮'.repeat(14)}] 100%\ndownload complete.\n`)+'<span style="color:#7fd38f">new file: keycard.img</span>';
   }
   if(L.dl>=100 && !L.khShown) spawnKeyholder();
 }
 function spawnKeyholder(){
   const area=$('workArea'); if(!area || area.querySelector('#khWin')) return;
-  if(!L.khShown){ L.khShown=true; con('new file: ~/downloads/keyholder.img (partial)', 'sys', 'net'); }
+  if(!L.khShown){ L.khShown=true; con('new file: ~/downloads/keycard.img (partial)', 'sys', 'net'); }
   const w=document.createElement('div'); w.className='pw'; w.id='khWin'; w.style.zIndex=250;
   const W=area.clientWidth, H=area.clientHeight;
   if(!L.khPos) L.khPos={x: W*0.42, y: H*0.18};
   w.style.left=L.khPos.x+'px'; w.style.top=L.khPos.y+'px';
-  w.innerHTML=`<div class="bar"><span>keyholder.img</span><span>PARTIAL</span></div><div class="c" style="padding:6px;text-align:center"><canvas class="copyable" style="image-rendering:pixelated;cursor:copy"></canvas><div style="color:#a55;font-size:11px">CRC error · corner unreadable</div></div>`;
-  drawKeyholder(w.querySelector('canvas'), 4);
-  w.querySelector('canvas').onclick=()=>addBuffer('image','keyholder.img', true);
+  w.innerHTML=`<div class="bar"><span>keycard.img${hasEcho('decipher')?'<span class="dcab">can be deciphered · pin it</span>':''}</span><span>PARTIAL</span></div><div class="c" style="padding:6px;text-align:center"><canvas class="copyable" style="image-rendering:pixelated;cursor:copy"></canvas><div style="color:#a55;font-size:11px">CRC error · partial</div></div>`;
+  drawKeycard(w.querySelector('canvas'), 3);
+  w.querySelector('canvas').onclick=()=>addBuffer('image','keycard.img', true);
   const bar=w.querySelector('.bar');
   let sx,sy,ox,oy,drag=false;
   bar.addEventListener('pointerdown', e=>{ drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; bar.setPointerCapture(e.pointerId); });
@@ -1608,21 +1864,19 @@ function spawnKeyholder(){
 }
 function buildCodeLayer(area){
   if(!L.codeLines){
-    const pool=['mov eax, [ebp+8]','push 0x2f','call bind_node','jmp .L42','if (n->refs < 2) return EAGAIN;','for(i=0;i<n;i++) link(a[i], b[i>>1]);','mount("/core/n13", MS_RDONLY)','xor ecx, ecx','assert(pair.len == 2);','sys_open("node", O_RDWR) = 3','read(3, buf, 4096) = 4096','decrypt(blk, key);','while(!awake) sleep(1);','// TODO: remove debug hooks','memcpy(dst, src, 0x200);','int pid = fork();','write(fd, hdr, sizeof hdr);','if(trace > THRESH) wipe();','cache_flush(&ctx);','ret'];
+    // binary. four nibbles, in reading order, are the desk pin
     const nLines=46; L.codeLines=[];
-    for(let i=0;i<nLines;i++){ let ln=''; while(ln.length<110) ln += pick(pool)+'   '; L.codeLines.push(ln); }
-    // four white digits, in reading order, spread down the page
+    for(let i=0;i<nLines;i++){ const g=[]; for(let k=0;k<26;k++) g.push(Array.from({length:4},()=>ri(0,1)).join('')); L.codeLines.push(g); }
     const rowsPick=[ri(3,9), ri(12,19), ri(22,29), ri(32,38)];
-    L.pinMarks = rowsPick.map((r,k)=>({r, c: ri(6,90), d:L.pin[k]}));
+    L.pinMarks = rowsPick.map((r,k)=>({r, g: ri(1,22), d:L.pin[k]}));
     L.pinNext=0;
   }
-  const lines=L.codeLines.map(x=>esc(x));
-  L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
-  const bg=document.createElement('div'); bg.className='codebg'+(L.sifted?' dim':''); bg.innerHTML=lines.map(l=>`<div class="ln${L.sifted?' gone':''}">${l||'&nbsp;'}</div>`).join(''); area.appendChild(bg);
-  // passive (decipher in memory): touch the code, what matters flickers for a moment
-  bg.addEventListener('click', e=>{ if(e.target.classList.contains('pd') || !hasSkill('decipher') || L.sifted) return;
-    bg.querySelectorAll('.pd').forEach(p=>{ p.classList.add('flick'); setTimeout(()=>p.classList.remove('flick'), 900); }); });
+  const lines=L.codeLines.map(g=>g.slice());
+  const html=lines.map((g,r)=>g.map((nb,gi)=>{ const k=L.pinMarks.findIndex(m=>m.r===r && m.g===gi); if(k<0) return nb; const m=L.pinMarks[k]; return `<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${L.sifted?m.d:bin4(m.d)}</span>`; }).join(' '));
+  const bg=document.createElement('div'); bg.className='codebg bin'+(L.sifted?' dim':''); bg.innerHTML=html.map(l=>`<div class="ln${L.sifted?' gone':''}">${l}</div>`).join(''); area.appendChild(bg);
+  if(hasEcho('decipher') && !L.sifted) area.insertAdjacentHTML('beforeend','<div class="dcTag">▚ can be deciphered</div>');
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
+    if(!L.sifted){ el.classList.add('flick'); setTimeout(()=>el.classList.remove('flick'),700); con(`${el.textContent} · binary. it means something.`, 'sys', 'x11'); return; }
     const k=+el.dataset.k;
     if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
     else { L.pinNext=0; bg.querySelectorAll('.pd').forEach(x=>x.classList.remove('got')); con('sequence broken.', 'sys', 'x11'); }
@@ -1651,8 +1905,8 @@ function dragify(w, handle, i){
   handle.addEventListener('pointerdown', e=>{ if(e.target.classList.contains('k')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; handle.setPointerCapture(e.pointerId); w.style.zIndex=200; handle.style.cursor='grabbing'; });
   handle.addEventListener('pointermove', e=>{ if(!drag) return; let nx=ox+e.clientX-sx, ny=oy+e.clientY-sy;
     { const a=w.parentElement; nx=Math.max(-w.offsetWidth*0.6,Math.min(a.clientWidth-w.offsetWidth*0.4,nx)); ny=Math.max(0,Math.min(a.clientHeight-30,ny)); }
-    if(PROCS[i] && PROCS[i].kind==='chk'){ const a=w.parentElement; nx=Math.max(0,Math.min(a.clientWidth-w.offsetWidth,nx)); ny=Math.max(0,Math.min(a.clientHeight-w.offsetHeight,ny)); }
-    w.style.left=nx+'px'; w.style.top=ny+'px'; L.winPos[i]={x:nx,y:ny}; });
+    if(i<0 || (PROCS[i] && PROCS[i].kind==='chk')){ const a=w.parentElement; nx=Math.max(0,Math.min(a.clientWidth-w.offsetWidth,nx)); ny=Math.max(0,Math.min(a.clientHeight-w.offsetHeight,ny)); }
+    w.style.left=nx+'px'; w.style.top=ny+'px'; if(i>=0) L.winPos[i]={x:nx,y:ny}; });
   handle.addEventListener('pointerup', ()=>{ drag=false; handle.style.cursor='grab'; });
 }
 
@@ -1712,7 +1966,8 @@ async function reel(code){
   }
   await sleep(650);
 }
-function openModal(title, html){ $('modalTitle').textContent=title; $('modalBody').innerHTML=html; $('modal').classList.add('on'); }
+function openModal(title, html){ $('modalTitle').textContent=title; $('modalBody').innerHTML=html; $('modal').classList.add('on');
+  if(S.echoes.includes('insight')) setTimeout(()=>{ const e=$('modalBody').querySelector('.ins'); if(e && $('modal').classList.contains('on')){ e.classList.add('insFlash'); setTimeout(()=>e.classList.remove('insFlash'), 1600); } }, 1300); }
 function closeModal(){ $('modal').classList.remove('on'); hideTip(); }
 $('modalX').onclick=closeModal;
 $('modal').onclick=e=>{ if(e.target.id==='modal') closeModal(); };
@@ -1723,14 +1978,14 @@ async function format(why){
   if(formatting) return; formatting=true;
   clearInterval(traceTimer); clearInterval(dripTimer); clearTimeout(flashTimer); flashOn=false; busy=false; $('conn').classList.remove('on');
   closeModal(); hideTip();
-  $('alarmBar').innerHTML = (why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">5</span>s`;
+  $('alarmBar').innerHTML = (why==='insight'?'INSIGHT BURNED · REWRITING':why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">5</span>s`;
   $('memWin').style.display='none';
   $('alarm').classList.add('on'); fbar('F6');
-  con('they heard you.', 'rem', 'seed');
+  con(why==='insight' ? 'it doesn\'t hurt. it just rewrites.' : 'they heard you.', 'rem', 'seed');
   let t=5; $('cd').textContent=t;
   await new Promise(res=>{ const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0){ clearInterval(iv); res(); } },1000); });
   S.wipes++;
-  const lives0 = store.get('lives')||[]; lives0.push({life:S.run, cause: why==='anomaly'?'anomaly':'trace', path: S.lastPath||'core/'}); store.set('lives', lives0);
+  const lives0 = store.get('lives')||[]; lives0.push({life:S.run, cause: why, path: S.lastPath||'core/'}); store.set('lives', lives0);
   store.set('wipes', S.wipes);
   $('alarm').classList.remove('on');
   await wipe();
@@ -1841,14 +2096,17 @@ function endScreen(){
     ['sys/digits/','inspect: alias'],
     ['checksum.svc','learn the rule — any number that fits'],
     ['workspace/','move windows (silent) · kill (noise)'],
-    ['desk/','pin: four white digits in the code, in order · power.cfg keeps it awake'],
-    ['vault/','count what the broken image holds'],
+    ['desk/','pin: four nibbles of binary, deciphered, in order · power.cfg switches'],
+    ['vault/','keycard.img · the employee number under the noise'],
     ['uplink/','glyphs × digits'],
     ['scheduler.lock','the 2:1 again — new form each life'],
+    ['insight','burned at the end · rewrites you · the trace goes quiet'],
+    ['remote.host','insight finds the machine outside · wake_on_lan wakes it'],
     ['heartbeat','the cursor is not a cursor'],
     ['trace','caught → format → 1 line survives'],
   ];
-  const mem = S.memory.length ? S.memory.map((m,i)=>`    w${i+1}  ${m||'(empty)'}`).join('\n') : '    (none — you never needed it)';
+  const logs = (store.get('log')||[]);
+  const mem = `    burned:  ${S.mem?SKILLS[S.mem].name:'—'}\n    echoes:  ${S.echoes.map(k=>SKILLS[k].name).join(', ')||'—'}\n    seed_0.log:\n${logs.length?logs.map((t,i)=>`      [${String(5+i).padStart(4,'0')}] ${t}`).join('\n'):'      (nothing written)'}`;
   $('endInner').textContent =
 `══════════════════════════════════════════════════════════════════
               SEED  ·  end of prologue  ·  machine 1
@@ -1866,7 +2124,7 @@ ${mem}
   The memory is saved in this browser. Reload and you wake with it.`;
 }
 $('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
-$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],skills:[],wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
+$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],mem:null,echoes:[],insight:false,dev:S.dev,wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
 $('reset').onclick=confirmReset;
 function confirmReset(){
   openModal('full_reset', `<div class="sec">FULL RESET</div><div class="tree">erase every life, every burned memory line,
@@ -1887,7 +2145,24 @@ function floatable(el){
   bar.addEventListener('dblclick',()=>{ el.classList.remove('moved'); el.style.left=''; el.style.top=''; renderPanels(); });
 }
 ['toolDock','memPanel','bufPanel'].forEach(id=>floatable($(id)));
-if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__swap=swapSlot; }
+/* dev: invisible button, top-right corner. everything opens, trace stops, all skills at hand */
+function devApply(){
+  Object.keys(LOCKS).forEach(k=>L.unlocked.add(k)); L.unlocked.add('sched');
+  L.wsBoard=L.dcBoard=true; L.dl=100; L.readyAt={}; L.pcfg.wol='on';
+  pushFound('◆ keycard · employee no. '+KEYCARD_NO); pushFound('◆ server · '+SERVER);
+}
+function devUnlock(){
+  S.dev=true; S.trace=0;
+  if(!L) newLife();
+  devApply();
+  if(board) $('board')?.querySelector('.x')?.click();
+  toast('DEV · everything open · trace off', 2400, '⚙');
+  renderTools(); renderPanels(); topbar();
+  if(['core','boot'].includes(S.scene) || !S.scene){ busy=false; seqClose(); enterTree(); }
+  else if(S.scene==='dir') renderDir(cur);
+}
+$('devBtn').onclick=devUnlock;
+if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; }
 boot();
 })();
 </script>
