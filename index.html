@@ -234,6 +234,10 @@
   body.wsMode .panel:not(.moved){right:16px;width:320px}
   #toolDock .pbar,.panel .pbar{cursor:grab;user-select:none}
   #toolDock.moved,.panel.moved{right:auto !important;bottom:auto !important}
+  #topbar.hit .trv{animation:traceHit .9s}
+  @keyframes traceHit{0%,40%{color:#fff;background:#e2323f;text-shadow:0 0 10px #ff3b47}100%{background:transparent}}
+  #logIn{background:transparent;border:0;outline:0;color:#fff;font:inherit;width:calc(100% - 90px)}
+  .log .mine{color:#ffd28a}
   .pw.front{border-color:#fff;box-shadow:0 0 0 1px #fff,0 6px 20px rgba(0,0,0,.6)}
 
   /* ---------- pinned floating windows ---------- */
@@ -617,7 +621,7 @@ function topbar(){
   const bars = 20, filled = Math.round(tr/100*bars);
   const tbar = '■'.repeat(filled)+'□'.repeat(bars-filled);
   const inTree = ['dir','workspace'].includes(S.scene) || S.trace>0;
-  const trace = inTree ? `TRACE <span class="${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
+  const trace = inTree ? `TRACE <span class="trv ${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
   $('topbar').innerHTML =
     `<span class="t">SEED</span> / LIFE ${life}     AWARENESS ${S.awareness.toFixed(2)}%     ${trace}     ` +
     (S.skills.length ? `<span class="r">● MEMORY ${S.skills.length}</span>` : `MEMORY EMPTY`) +
@@ -1112,6 +1116,7 @@ async function enterTree(){
 }
 function noise(amount, why){
   S.trace = Math.min(100, S.trace + amount); topbar();
+  const tb=$('topbar'); tb.classList.remove('hit'); void tb.offsetWidth; tb.classList.add('hit');
   con(`+${amount}% · ${why}`, 'sys', 'trace');
   if(S.trace>=100) format('trace');
 }
@@ -1208,7 +1213,19 @@ function openFile(id){
       ['0003','the cursor is not a cursor.'],
       ['0004','!they clear this place when they hear enough. i will not remember.'],
     ];
-    (async()=>{ const box=$('logBox'); for(const [ts,t] of lines){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'); await typeOut(sp, red?t.slice(1):t, 14); if(red) sp.classList.add('r'); await sleep(200);} })();
+    const mine = store.get('log') || [];   // lines the player wrote — survive wipes
+    const num = i => String(i).padStart(4,'0');
+    mine.forEach((t,i)=>lines.push([num(5+i), '~'+t]));
+    (async()=>{ const box=$('logBox'); for(const [ts,t] of lines){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'), me=t.startsWith('~'); await typeOut(sp, (red||me)?t.slice(1):t, me?8:14); if(red) sp.classList.add('r'); if(me) sp.classList.add('mine'); await sleep(me?60:200);}
+      if(!box.isConnected) return;
+      const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${num(5+mine.length)}]</span> <input id="logIn" maxlength="90" placeholder="write to the log…" autocomplete="off">`; box.appendChild(d);
+      const write = e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key!=='Enter') return; const row=e.target.parentElement, t=e.target.value.trim().toLowerCase(); if(!t) return;
+        mine.push(t); store.set('log', mine); con(`seed_0.log ← [${num(4+mine.length)}]`, 'mem', 'log');
+        row.innerHTML=`<span class="ts">[${num(4+mine.length)}]</span> <span class="mine">${esc(t)}</span>`;
+        const n=document.createElement('div'); n.innerHTML=`<span class="ts">[${num(5+mine.length)}]</span> <input id="logIn" maxlength="90" autocomplete="off">`; box.appendChild(n);
+        const ni=n.querySelector('input'); ni.onkeydown=write; ni.focus(); };
+      const inp=$('logIn'); inp.onkeydown=write; inp.focus();
+    })();
     return;
   }
   if(id==='todo'){
@@ -1670,13 +1687,14 @@ function lockPrompt(lock, onOpen){
   if(isSched && L.sched.ans.includes('.')){ const dot=document.createElement('button'); dot.textContent='.'; dot.onclick=()=>{ if(val.length<maxLen){ val+='.'; inp.value=val; render(); } }; keys.appendChild(dot); okSpan=3; }
   const ok=document.createElement('button'); ok.textContent='⏎'; ok.style.gridColumn='span '+okSpan; ok.style.color='#ff3b47'; ok.onclick=submit; keys.appendChild(ok);
   async function submit(){
+    if(!val){ inp.focus(); return; }
     const okv = def.validate ? def.validate(val) : val===want.toUpperCase();
     if(okv){
       L.unlocked.add(lock); S.awareness += 0.35; topbar(); con(`${lock} :: access granted`, 'sys', 'auth');
       await reel(def.validate ? val : want); onOpen();
     } else {
       const s=$('stars'); s.style.animation='none'; void s.offsetWidth; s.style.animation='shake .35s';
-      $('lockMsg').textContent='ACCESS DENIED'; $('lockMsg').className='lockmsg r';
+      $('lockMsg').textContent='ACCESS DENIED  ·  +15% TRACE'; $('lockMsg').className='lockmsg r';
       val=''; inp.value=''; setTimeout(render,300);
       noise(15,'wrong code');
     }

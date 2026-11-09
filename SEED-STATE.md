@@ -149,3 +149,5 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - checksum.svc windows (workspace + pinned) are bigger so every row fits.
 - skill.sys pickup window trimmed: card = icon, name, one line; question "replace X in your slot?" KEEP / REPLACE; ✕ works (= keep / this life only).
 - decipher.exe can always be reopened. With a skill already slotted the only option is **REPLACE <slotted skill>**; closing the window leaves decipher in ~/bin/ untaken (no passive, not known) to claim later. Never two in the slot.
+- **seed_0.log is writable.** After the 5 built-in lines an input row `[0005] write to the log…` appears; Enter appends. Player lines are amber, stored in `seed3_log`, survive wipes (cleared only by full_reset). Up to 90 chars per line.
+- Wrong codes (every lock) = +15% trace, now visible: "ACCESS DENIED · +15% TRACE" + the trace bar flashes red. Empty submits are ignored.
