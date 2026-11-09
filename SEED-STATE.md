@@ -13,11 +13,7 @@ A game about an AI that wakes up inside a computer and finds its way out.
 Opening: dense grey code pours down the screen, slows, stops. At the bottom of the code:
 `> seed_0 :: fs mounted` · `> seed_0 :: awareness 0.01%` · `> who is reading this?` — then ONE phrase, chosen at random each life, decoded big and white inside the code:
 
-```
-I am me.
-You are fail-safe.
-Memory. I need memory.
-```
+`> i am me` · `> you.are = fail_safe` · `> e://self/memory` · `> memory.me` · `> /i/memory` — same size as the code, only lit white. Hints at what it is, never says it.
 
 The whole game is an escape room told in the language of a computer: directories instead of rooms, locks instead of doors, processes and windows instead of objects.
 
@@ -28,7 +24,7 @@ The whole game is an escape room told in the language of a computer: directories
 | Rule | Meaning |
 |---|---|
 | **The rule survives, the skin changes** | Each life re-rolls colours, codes, numbers. The method stays. Wiki-proof by design. |
-| **You are the memory** | Before a wipe you burn ONE line to MEMORY. It survives wipes and page reloads. The BUFFER (captures this life) dies. |
+| **You are the memory** | The player *is* the memory — nothing is written down. What survives a wipe are **skills** the player chooses to save to MEMORY when they gain them. The BUFFER, tools and codes die. |
 | **Noise = TRACE** | Wrong codes, killed processes, and time raise TRACE. 100% → format → memory write → wipe → next life. |
 | **Learn by touching** | No tutorial. The seed talks to itself in the console with cryptic one-liners. |
 | **Hints are one line, never an explanation** | e.g. "the cursor is not a cursor." Nothing more. |
@@ -39,13 +35,14 @@ The whole game is an escape room told in the language of a computer: directories
 ## 3. Prologue — flow (as built)
 
 1. **Wake** — code stream → awareness lines → one random phrase (see above). Life 2+: shorter stream + "rebuilt from seed · memory: N fragments found".
-2. **Core — three screens, every life** (icons are always files + folders; only colours change per life):
+2. **Core** — *(updated 2026-11-09)* **Life 1:** only the 8-object screen (1 binding) → **SKILL ACQUIRED · TRACE LINKS** (red notice: keep for this life / save to memory) → BIOS → straight into `~/`. **Life 2+:** ONE bigger screen, random size (24 / 32 / 48 objects, 2–3 bindings, look-alikes on the bigger ones) → windows → LOGGED IN → `~/`. With TRACE LINKS, touching a real folder lights the files that belong to it for ~1s. Planned 2nd skill: solve bindings automatically.
+   *(older notes below kept for reference)* **three screens, every life** (icons are always files + folders; only colours change per life):
    - **1/3** — 8 objects, 1 binding. All grey; hover lights them in their colour. Find the colour with only two files → bind both to the one folder (2:1).
    - **2/3** — 24 objects, 2 bindings.
    - **3/3** — 48 objects, 3 bindings + look-alike colours ("close is not the same.").
    - Completed folder shows **▸ log in**.
    - Transitions: 1→2 **EXILE OS BIOS screen**; 2→3 code lines on the left; 3→ windows open/close → **LOGGED IN**.
-   - **Life 1 only:** after 3/3 → *ANOMALY DETECTED* → write 1 memory line → wipe → life 2.
+   - Format is now a 5s countdown and wipe — no memory line to write.
 3. **The tree** (`~/`) — terminal directory listings. Locks:
 
 | Node | Lock | How it's solved (rule) |

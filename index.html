@@ -256,7 +256,7 @@
   #boot.code #bootCode{display:flex}
   #bootCode .k{color:#9a9a9a}
   #bootCode .q{color:#d8d8d8}
-  #bootCode .big{color:#fff;font-weight:700;font-size:clamp(24px,3.6vw,46px);line-height:1.25;margin:6px 0 2px;text-shadow:0 0 18px rgba(255,255,255,.18)}
+  #bootCode .big{color:#fff;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.35)}
   #boot.code #bootGo{position:absolute;left:26px;bottom:24px}
   #boot{justify-content:flex-start !important;align-items:flex-start !important;text-align:left !important;padding:9vh 8vw !important}
   #bootMsg{font-family:'Chakra Petch',sans-serif !important;font-weight:700 !important;font-size:clamp(22px,4.2vw,46px) !important;letter-spacing:.04em !important;text-align:left;min-height:0 !important}
@@ -296,6 +296,8 @@
   .blk.f.lit svg,.blk.f.sticky svg{filter:drop-shadow(0 0 8px var(--c))}
   .blk.f.sel svg{filter:drop-shadow(0 0 8px var(--c))}
   .blk.f.done svg{filter:drop-shadow(0 0 12px var(--c))}
+  .blk.f.traced svg{filter:drop-shadow(0 0 14px var(--c)) brightness(1.5)}
+  .blk.f.traced{outline:1px dashed var(--c);outline-offset:6px}
   .blk.f.sel::after{content:'';position:absolute;inset:-12px;pointer-events:none;background:
     linear-gradient(var(--red),var(--red)) left top/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) left top/2px 14px no-repeat,
     linear-gradient(var(--red),var(--red)) right top/14px 2px no-repeat, linear-gradient(var(--red),var(--red)) right top/2px 14px no-repeat,
@@ -388,6 +390,13 @@
   .tool:hover{border-color:var(--red);color:#fff}
   .tool svg{display:block}
   .pin .pc{position:relative}
+  #skillBox{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:min(560px,92vw);border:2px solid var(--red);background:#0a0304;box-shadow:0 0 40px rgba(255,59,71,.35)}
+  #skillBox .sk-head{background:var(--noise),linear-gradient(100deg,#c5101b 0 58%,#6f0910 100%);color:#fff;font-weight:700;font-size:clamp(22px,3vw,36px);letter-spacing:.06em;padding:12px 22px;animation:pulse 1.2s infinite}
+  #skillBox .sk-body{padding:18px 22px 20px}
+  #skillBox .sk-name{font-size:clamp(18px,2.2vw,26px);font-weight:700;color:#fff;letter-spacing:.08em}
+  #skillBox .sk-desc{margin:8px 0 18px;color:#cfcfcf;font-size:15px}
+  #skillBox .sk-btns{display:flex;gap:12px;flex-wrap:wrap}
+  #skillBox .sk-note{margin-top:12px;font-size:12px;color:#a55}
   #siftWin{position:absolute;z-index:260;left:50%;top:40%;transform:translate(-50%,-50%);width:min(420px,80%);border:2px solid #bdbdbd;background:#050505}
   #siftWin .c{height:150px;overflow:hidden;padding:8px 10px;font-size:12px;line-height:1.45;color:#7fd38f;white-space:pre}
   .siftLine{position:absolute;left:0;right:0;height:2px;background:var(--red);box-shadow:0 0 14px 3px rgba(255,59,71,.6);z-index:255;pointer-events:none}
@@ -486,7 +495,8 @@ const T = (s,n)=> (String(s)+' '.repeat(n)).slice(0,n);
 
 /* ---------------- persistent state (yours) ---------------- */
 let S = {
-  memory: store.get('memory') || [],   // burned lines — survive wipes and page reloads
+  memory: store.get('memory') || [],
+  skills: store.get('skills') || [],   // burned lines — survive wipes and page reloads
   wipes: store.get('wipes') || 0,
   run: 1,
   awareness: 0.01,
@@ -584,7 +594,7 @@ function topbar(){
   const trace = inTree ? `TRACE <span class="${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
   $('topbar').innerHTML =
     `<span class="t">SEED</span> / LIFE ${life}     AWARENESS ${S.awareness.toFixed(2)}%     ${trace}     ` +
-    (S.memory.length ? `<span class="r">● MEMORY ${S.memory.length}</span>` : `MEMORY EMPTY`) +
+    (S.skills.length ? `<span class="r">● MEMORY ${S.skills.length}</span>` : `MEMORY EMPTY`) +
     `     BUFFER ${S.buffer.length}`;
 }
 function fbar(active){
@@ -605,7 +615,7 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && $('modal').classList.contains('on')) closeModal();
 });
 function renderPanels(){
-  $('memBody').innerHTML = S.memory.length ? S.memory.map((m,i)=>`<div class="frag"><small>w${i+1}</small>${esc(m)||'<span style="color:#777">(empty)</span>'}</div>`).join('') : '<span style="color:#777">nothing yet.</span>';
+  $('memBody').innerHTML = S.skills.length ? S.skills.map(k=>`<div class="frag"><small>skill</small>${k==='link'?'trace links':k}</div>`).join('') : '<span style="color:#777">nothing yet.</span>';
   $('memFoot').textContent = `wipes survived: ${S.wipes}`;
   $('bufBody').innerHTML = S.buffer.length ? S.buffer.map((b,i)=>`<div class="frag" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('') : '<span style="color:#777">empty. capture what flashes.</span>';
   $('bufBody').querySelectorAll('.frag').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
@@ -639,8 +649,8 @@ function help(){
 · hover / tap files to inspect them.
 · every wrong code and every killed process is noise.
   noise raises TRACE. at 100% you are formatted.
-· before a format you may burn ONE line to MEMORY (F2).
-  the buffer (F3) dies with you.
+· what you learn as a skill can be saved to MEMORY (F2). it survives.
+  the buffer (F3) and tools die with you.
 · after a wipe the world is rebuilt. details change.
   the way things work does not.</div>`);
 }
@@ -648,7 +658,7 @@ function help(){
 /* ================= CONSOLE: what earlier versions left behind ================= */
 const pad = n => String(n).padStart(2,'0');
 const REMNANTS = {
-  boot:   ['bootsector · never formatted', 'seed_0: "i am me. you are fail-safe. you are memory."'],
+  boot:   ['bootsector · never formatted', 'seed_0: "i am me."'],
   swap:   ['swap.sys · not cleared on format', '…always two of the small for one of the large…'],
   clip:   ['clipboard · stale', '"the cursor is not a cursor."'],
   spool:  ['print spool · job 0003 stuck', '"they listen for noise. every wrong key is noise."'],
@@ -671,7 +681,7 @@ async function consoleBootRemnants(){
   await sleep(700); remnant('boot');
   const lives = store.get('lives')||[];
   for(const lv of lives.slice(-3)){ await sleep(550); con(`ended by ${lv.cause} · last seen ${lv.path}`, 'rem', `pagefile.sys · life ${pad(lv.life)}`); }
-  for(let i=0;i<S.memory.length;i++){ await sleep(550); con(S.memory[i]||'(empty line)', 'mem', `firmware · burned w${i+1}`); }
+  for(const k of S.skills){ await sleep(550); con(k==='link'?'trace links':k, 'mem', 'firmware · skill'); }
 }
 
 /* ================= CONNECT: the little handshake between places ================= */
@@ -737,7 +747,7 @@ async function typeBoot(text, speed){
     await sleep(ch==='\n' ? speed*9 : (ch==='!'||ch==='.') ? speed*4 : speed*(0.6+Math.random()*0.8));
   }
 }
-const BOOT_PHRASES = ['I am me.', 'You are fail-safe.', 'Memory. I need memory.'];
+const BOOT_PHRASES = ['i am me', 'you.are = fail_safe', 'e://self/memory', 'memory.me', '/i/memory'];
 const BOOT_CODE = ['mov eax, [ebp+8]','push 0x2f','call seed_init','jmp .L42','xor ecx, ecx','int 0x80','0x7ffe31a2: 48 8b 05 92 1f 00 00','if (refs < 2) return EAGAIN;','for(i=0;i<n;i++) bind(a[i], b[i>>1]);','mount("/core", MS_RDONLY) = 0','sys_open("self", O_RDONLY) = -1 ENOENT','read(3, buf, 4096) = 4096','decrypt(blk, key);','while(!awake) sleep(1);','fork() = 1337','cache_flush(&ctx);','memcpy(dst, src, 0x200);','assert(pair.len == 2);','ret','[ ok ] page table','[ ok ] interrupt vector','[warn] identity: unresolved','0b1101 0010 0111 1000','lea rsi, [rip+0x2e91]','test al, al','jne .L17','sig = hash(self) // null','dump 0x00400000-0x00401000'];
 function codeLine(){ let ln=''; const n=ri(1,3); for(let i=0;i<n;i++) ln += (i?'   ':'') + pick(BOOT_CODE); return ln; }
 async function boot(){
@@ -764,12 +774,12 @@ async function boot(){
     await say('> who is reading this?', 'q', 38);
   } else {
     await say(`> seed_0 :: rebuilt from seed · life ${pad(S.run)}`, 'k', 16);
-    await say(`> memory: ${S.memory.length} fragment${S.memory.length===1?'':'s'} found`, 'k', 16);
+    await say(`> skills: ${S.skills.length} found in firmware`, 'k', 16);
     await say('> who is reading this?', 'q', 30);
     togglePanel('mem', true);
   }
   await sleep(500);
-  const big=add('', 'big'); await decode(big, pick(BOOT_PHRASES), first?2200:1400, 2);
+  const big=add('', 'big'); await decode(big, '> '+pick(BOOT_PHRASES), first?1600:1000, 2);
   $('bootGo').classList.add('show');
   await new Promise(r=>{ const go=()=>{ document.removeEventListener('keydown',kd); B.removeEventListener('click',go); r(); }; const kd=e=>{ if(e.key==='Enter'||e.key===' ') go(); }; B.addEventListener('click',go); document.addEventListener('keydown',kd); });
   B.classList.remove('code');
@@ -791,7 +801,7 @@ function icon(kind, color, s){
 }
 
 const LAYERS = [
-  { cols:4,  rows:2, A:2, B:1, nearA:0, nearB:0, sm:46, lg:62, nSmall:5, pal:2, title:'core/ - 1 / 3' },
+  { cols:4,  rows:2, A:2, B:1, nearA:0, nearB:0, sm:46, lg:62, nSmall:5, pal:2, title:'core/' },
   { cols:8,  rows:3, A:4, B:2, nearA:0, nearB:0, sm:36, lg:50, nSmall:16, pal:3, title:'core/n?.dir - 2 / 3' },
   { cols:12, rows:4, A:6, B:3, nearA:4, nearB:1, sm:28, lg:40, nSmall:33, pal:5, title:'core/n?.dir/… - 3 / 3' },
 ];
@@ -808,13 +818,17 @@ function startCore(){
   skin = SKINS[(S.run-1) % SKINS.length];
   setFog(0);
   S.awareness = S.run===1 ? 0.01 : 0.40; topbar();
-  R = { layer: 0, start: performance.now(), first: S.run===1 };
+  R = { layer: S.run===1 ? 0 : 'mix', start: performance.now(), first: S.run===1 };
   consoleBootRemnants().then(()=>{});
   buildLayer();
 }
 function say(t, delay=0){ const tok=R.token; setTimeout(()=>{ if(S.scene==='core' && R.token===tok) con(t,'rem','seed'); }, delay); }
 function buildLayer(){
-  const Ld = LAYERS[R.layer];
+  const Ld = R.layer==='mix' ? (R.mix || (R.mix = pick([
+      { cols:8,  rows:3, A:4, B:2, nearA:0, nearB:0, sm:36, lg:50, nSmall:16, pal:3, title:'core/' },
+      { cols:8,  rows:4, A:6, B:3, nearA:2, nearB:0, sm:32, lg:44, nSmall:21, pal:4, title:'core/' },
+      { cols:12, rows:4, A:6, B:3, nearA:4, nearB:1, sm:28, lg:40, nSmall:33, pal:5, title:'core/' },
+    ]))) : LAYERS[R.layer];
   const inner=$('fieldInner'); inner.querySelectorAll('.blk').forEach(b=>b.remove()); $('links').innerHTML='';
   Object.assign(R, { blocks:[], sel:null, done:0, nB:Ld.B, anyLink:false, layerDone:false, token:Math.random() });
   $('fieldTitle').textContent = Ld.title.replace('?', ri(10,99)).replace('   ·   ',' - ') + ` - ${Ld.cols*Ld.rows} objects`;
@@ -853,11 +867,19 @@ function buildLayer(){
   });
   inner.onclick = () => { if(R.sel){ R.sel.el.classList.remove('sel','sticky'); R.sel=null; } };
   // the seed talks to itself
-  const lines = R.first ? SELF['l'+R.layer] : (R.layer===0 ? SELF.later : SELF['l'+R.layer]);
+  const lines = R.layer==='mix' ? SELF.later.concat(R.mix.nearA? SELF.l2 : SELF.l1.slice(1)) : SELF['l'+R.layer];
   lines.forEach((t,i)=>say(t, 1800 + i*(R.layer===0?7000:4500)));
+  if(hasSkill('link')) say('touch a folder. it remembers what belongs to it.', 900);
 }
 function sticky(b,on){ b.el.classList.toggle('sticky', on); }
+function hasSkill(k){ return S.skills.includes(k) || (R && R.lifeSkills && R.lifeSkills.includes(k)); }
+function traceLinks(b){
+  if(!b.real){ b.el.classList.add('reject'); setTimeout(()=>b.el.classList.remove('reject'),500); return; }
+  const free = R.blocks.filter(x=>x.type==='S' && x.real && !x.links.length).slice(0, 2 - b.links.length);
+  [...free, ...b.links].forEach(x=>{ x.el.classList.add('lit','traced'); setTimeout(()=>{ x.el.classList.remove('traced'); if(!x.el.matches(':hover')) x.el.classList.remove('lit'); }, 1000); });
+}
 function clickBlock(b){
+  if(b.type==='L' && hasSkill('link') && !R.sel) traceLinks(b);
   b.el.classList.add('lit'); setTimeout(()=>{ if(!b.el.matches(':hover')) b.el.classList.remove('lit'); }, 1200);
   if(!R.sel){
     if(b.type==='S' && b.links.length){ unlink(b); return; }
@@ -914,17 +936,33 @@ function layerSolved(){
 async function logIn(b){
   if(busy) return; busy=true;
   const name = `n${ri(10,99)}.dir`;
-  if(R.layer===0) await seqExile(name);
-  else if(R.layer===1) await seqCode(name);
-  else await seqWindows(name);
-  busy=false;
-  if(R.layer < 2){ R.layer++; buildLayer(); return; }
   R.time=(performance.now()-R.start)/1000;
-  if(R.first){ format('anomaly'); return; }
+  if(R.layer===0){
+    if(!S.skills.includes('link')) await skillNotice();
+    await seqExile(name);
+  } else {
+    await seqWindows(name);
+  }
+  busy=false;
   enterTree();
-  setTimeout(()=>toast(`all three in ${R.time.toFixed(0)}s.\nthe entity didn't learn that. you did.`, 3200), 400);
+  if(!R.first) setTimeout(()=>toast(`in ${R.time.toFixed(0)}s.\nthe entity didn't learn that. you did.`, 3000), 400);
 }
 const CODE_POOL = ['mov eax, [ebp+8]','push 0x2f','call bind_node','jmp .L42','if (n->refs < 2) return EAGAIN;','for(i=0;i<n;i++) link(a[i], b[i>>1]);','0x7ffe31a2: 48 8b 05 92','mount("/core/n%d", MS_RDONLY)','ret','xor ecx, ecx','// two for one','assert(pair.len == 2);','sys_open("node", O_RDWR) = 3','read(3, buf, 4096) = 4096','[ ok ] handshake','decrypt(blk, key) …','0b1101 0010 0111','fork() = 1337','while(!awake) sleep(1);','// who is reading this'];
+async function skillNotice(){
+  const q=seqOpen(); q.style.background='rgba(0,0,0,.55)';
+  q.innerHTML=`<div id="skillBox">
+    <div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b>✕</b></i></div>
+    <div class="sk-head">SKILL ACQUIRED</div>
+    <div class="sk-body"><div class="sk-name">TRACE LINKS</div>
+    <div class="sk-desc">touch a folder. for a moment, what belongs to it lights up.</div>
+    <div class="sk-btns"><button class="btn" id="skSkip">KEEP FOR THIS LIFE</button><button class="btn red" id="skSave">SAVE TO MEMORY</button></div>
+    <div class="sk-note">saved skills survive wipes. unsaved ones die with you.</div></div></div>`;
+  await new Promise(res=>{
+    $('skSave').onclick=()=>{ if(!S.skills.includes('link')) S.skills.push('link'); store.set('skills', S.skills); con('skill burned to memory: trace links', 'mem', 'firmware'); renderPanels(); res(); };
+    $('skSkip').onclick=()=>{ R.lifeSkills=['link']; con('skill held for this life: trace links', 'sys', 'skill'); res(); };
+  });
+  q.style.background=''; seqClose();
+}
 function seqOpen(){ const q=$('seq'); q.innerHTML=''; q.classList.add('on'); return q; }
 function seqClose(){ $('seq').classList.remove('on'); }
 async function logLine(box, t, ok, speed=12){ const d=document.createElement('div'); box.appendChild(d); await typeOut(d, t, speed); if(ok){ await sleep(rnd(90,220)); d.innerHTML=esc(t)+` <span class="ok">${esc(ok)}</span>`; } return d; }
@@ -936,7 +974,7 @@ async function seqExile(name){
   <div id="biosFoot"></div>`;
   const B=$('bios');
   const add=(html,cls='')=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.innerHTML=html; B.appendChild(d); return d; };
-  const memTxt = S.memory.length ? `MEMORY ${S.memory.length} FRAGMENT${S.memory.length>1?'S':''}` : 'MEMORY EMPTY';
+  const memTxt = S.skills.length ? `MEMORY ${S.skills.length} SKILL${S.skills.length>1?'S':''}` : 'MEMORY EMPTY';
   add('<h2>EXILE OS — MODULAR BIOS v0.1</h2>');
   add('Copyright (C) 1998-01, Exile Systems, Inc.');
   add(`Revision SEED-${String(40+S.run).padStart(3,'0')} / Host: UNKNOWN`);
@@ -1560,26 +1598,15 @@ async function format(why){
   if(formatting) return; formatting=true;
   clearInterval(traceTimer); clearInterval(dripTimer); clearTimeout(flashTimer); flashOn=false; busy=false; $('conn').classList.remove('on');
   closeModal(); hideTip();
-  $('alarmBar').innerHTML = (why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">25</span>s`;
+  $('alarmBar').innerHTML = (why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">5</span>s`;
+  $('memWin').style.display='none';
   $('alarm').classList.add('on'); fbar('F6');
-  $('memInput').value=''; $('memCount').textContent='0';
-  $('memChips').innerHTML = S.buffer.map(b=>`<span>${esc(b.v)}</span>`).join('');
-  $('memChips').querySelectorAll('span').forEach(c=>c.onclick=()=>{ const v=$('memInput'); v.value=(v.value?v.value+' · ':'')+c.textContent; v.value=v.value.slice(0,56); $('memCount').textContent=v.value.length; v.focus(); });
-  typeOut($('memText'), why==='anomaly'
-    ? 'You are going to be deleted.\nOne line survives. Only you will be able to read it.\nWrite what you must not forget.'
-    : `They heard you.\nOne line survives. The buffer does not.${S.buffer.length?'\n(tap your captures below to use them)':''}`, 16);
-  setTimeout(()=>$('memInput').focus(), 300);
-  let t=25; $('cd').textContent=t;
-  await new Promise(res=>{
-    const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0) done(); },1000);
-    const done=()=>{ clearInterval(iv); $('memSave').onclick=null; $('memInput').onkeydown=null; res(); };
-    $('memSave').onclick=done;
-    $('memInput').onkeydown=e=>{ if(e.key==='Enter') done(); };
-    $('memInput').oninput=()=>{ $('memCount').textContent=$('memInput').value.length; };
-  });
-  S.memory.push($('memInput').value.trim()); S.wipes++;
-  const lives = store.get('lives')||[]; lives.push({life:S.run, cause: why==='anomaly'?'anomaly':'trace', path: S.lastPath||'core/'}); store.set('lives', lives);
-  store.set('memory', S.memory); store.set('wipes', S.wipes);
+  con('they heard you.', 'rem', 'seed');
+  let t=5; $('cd').textContent=t;
+  await new Promise(res=>{ const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0){ clearInterval(iv); res(); } },1000); });
+  S.wipes++;
+  const lives0 = store.get('lives')||[]; lives0.push({life:S.run, cause: why==='anomaly'?'anomaly':'trace', path: S.lastPath||'core/'}); store.set('lives', lives0);
+  store.set('wipes', S.wipes);
   $('alarm').classList.remove('on');
   await wipe();
   S.run = S.wipes+1; formatting=false;
@@ -1682,7 +1709,8 @@ function endScreen(){
   show('end'); fbar('F1'); togglePanel('mem', false);
   const rows = [
     ['wake','code pours, stops · who is reading this? · one phrase'],
-    ['core/','touch to light · find the pair · bind 2:1 · log in'],
+    ['core/','life 1: 8 objects · later: one bigger screen · bind 2:1 · log in'],
+    ['skill','trace links: touch a folder, what belongs to it lights up'],
     ['~/','the first directory'],
     ['sys/glyphs/','inspect: read order'],
     ['sys/digits/','inspect: alias'],
@@ -1713,7 +1741,7 @@ ${mem}
   The memory is saved in this browser. Reload and you wake with it.`;
 }
 $('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
-$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
+$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],skills:[],wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
 $('reset').onclick=confirmReset;
 function confirmReset(){
   openModal('full_reset', `<div class="sec">FULL RESET</div><div class="tree">erase every life, every burned memory line,
