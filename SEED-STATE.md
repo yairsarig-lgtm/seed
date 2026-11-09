@@ -185,3 +185,7 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - **Burned skills are silent:** running a skill that is in MEMORY costs no trace (recharge still applies). Only a CARRIED skill costs trace. The dock shows "burned · no trace" vs "cost +N% trace".
 - Encrypted boards use the exact same ordered grid as the intro screens (no scatter).
 - Workspace: a TIPS block at the bottom of the ps window — drag windows aside (silent, uncovers the code) · [kill] = noise +7% · images and important things must be picked up (click → buffer).
+- At the start of every tree: console "the windows move. drag them by their bars." + a one-time toast "windows can be moved".
+- **proc/buffer.txt** (next to workspace/): 7 rules; 1, 2, 4, 6 are pixel noise until decipher:
+  1 move windows, don't kill — a kill is a click, they listen for clicks · 2 to keep something, press it → buffer · 3 the buffer forgets when you do · 4 what is pinned outside can be read twice · 5 two for one. always · 6 the log remembers what the buffer forgets. sync them · 7 noise is a number. it only goes up.
+- With the BUFFER panel open, hovering anything capturable (keycard image, checksum, deciphered words) shows "▸ PRESS TO ADD TO BUFFER" + a yellow outline.

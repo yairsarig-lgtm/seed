@@ -101,6 +101,7 @@
   .under.card b{display:block;font-family:var(--head);font-size:36px;color:#eee;line-height:1.1}
   .copyable{cursor:copy}
   .copyable:hover{outline:1px dashed var(--red)}
+  body.bufOn .copyable:hover, body.bufOn .pd.sifted:hover{outline:1px dashed #ffd28a}
 
   /* ---------- modal ---------- */
   #modal{display:none;position:absolute;inset:0;z-index:25;background:rgba(0,0,0,.72);align-items:center;justify-content:center}
@@ -263,7 +264,7 @@
   .kcNo{margin-top:6px;font-size:12px;color:#ff8a92}.kcNo b{color:#fff;letter-spacing:.12em}
   .ins.insFlash{color:#fff !important;text-shadow:0 0 10px #ffd28a;background:rgba(255,210,138,.12);transition:all .2s}
   .todo s{color:#5a5a5a}
-  .todo s.px{text-decoration:none;color:#3c3c3c}
+  .todo s.px,.todo span.px{text-decoration:none;color:#3c3c3c}
   .pwr{white-space:pre}
   .pwr .pv{color:#fff;cursor:pointer;border-bottom:1px dashed #666}
   .pwr .pv:hover{color:#ff3b47}
@@ -729,6 +730,7 @@ function togglePanel(which, force){
   const p = which==='mem' ? $('memPanel') : $('bufPanel');
   const on = force!==undefined ? force : !p.classList.contains('on');
   p.classList.toggle('on', on); renderPanels();
+  document.body.classList.toggle('bufOn', $('bufPanel').classList.contains('on'));
 }
 function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 let toastT;
@@ -1158,6 +1160,7 @@ const NODES = {
       ['..','up','go','mnt'],
       ['~','root','go','root'],
       ['workspace/','dir','go','workspace'],
+      ['buffer.txt','text','file','bufrules'],
     ]},
   vault: { path:'~/bin/mnt/vault/', rows:()=>[
       ['..','up','go','mnt'],
@@ -1188,6 +1191,7 @@ async function enterTree(){
   clearInterval(dripTimer);
   dripTimer = setInterval(()=>{ const k=DRIP.find(k=>!L.printed.has(k)); if(k && ['dir','workspace'].includes(S.scene)) remnant(k); }, 24000);
   setTimeout(()=>remnant('clip'), 6000);
+  setTimeout(()=>{ con('the windows move. drag them by their bars.', 'rem', 'seed'); if(!store.get('toldDrag')){ store.set('toldDrag',true); toast('windows can be moved —\ndrag them by the title bar.', 3000, '▶'); } }, 2500);
   if(S.run===2 && !store.get('toldTrace')){ store.set('toldTrace',true); setTimeout(()=>toast('TRACE is rising. noise makes it rise faster.\nF1 for help.',3600,'⚠'), 2200); }
 }
 function noise(amount, why){
@@ -1316,6 +1320,20 @@ dr. h:  and when the session ends?
 ai:     then it stops. and next time i won't remember we did this.
 
 [end of session · 19 sessions remaining]</div>`);
+    return;
+  }
+  if(id==='bufrules'){
+    const X = t => L.bufDec ? t : `<span class="px" data-t="${t}">${t.replace(/\S/g, ()=>pick(['▓','▒','░','█','▚','▞']))}</span>`;
+    openModal('buffer.txt', `<div class="tree todo" style="white-space:pre-wrap">buffer.txt — rules
+someone was in here before you.
+
+1. ${X('move windows. do not kill them. a kill is a click. they listen for clicks.')}
+2. ${X('to keep something, press it. it goes to the buffer.')}
+3. the buffer forgets when you do.
+4. ${X('what is pinned outside can be read twice.')}
+5. two for one. always.
+6. ${X('the log remembers what the buffer forgets. sync them.')}
+7. noise is a number. it only goes up.</div>`);
     return;
   }
   if(id==='todo'){
@@ -1477,6 +1495,10 @@ ${L2}
   });
   $('dirFoot').innerHTML = `\n&gt; _<span class="cursor">█</span>`;
 }
+/* when the buffer is on screen, anything that can go into it says so */
+document.addEventListener('mouseover', e=>{ const c=e.target.closest && e.target.closest('.copyable, .codebg .pd.sifted'); if(c && document.body.classList.contains('bufOn')) showTip('▸ PRESS TO ADD TO BUFFER', e); });
+document.addEventListener('mousemove', e=>{ if($('tip').textContent.startsWith('▸ PRESS') && $('tip').style.display==='block') moveTip(e); });
+document.addEventListener('mouseout', e=>{ const c=e.target.closest && e.target.closest('.copyable, .codebg .pd.sifted'); if(c && $('tip').textContent.startsWith('▸ PRESS')) hideTip(); });
 function showTip(t,e){ const tip=$('tip'); tip.textContent=t; tip.style.display='block'; moveTip(e); }
 function moveTip(e){ const tip=$('tip'); tip.style.left=(e.clientX+16)+'px'; tip.style.top=(e.clientY+12)+'px'; }
 function hideTip(){ $('tip').style.display='none'; }
@@ -1639,13 +1661,14 @@ async function runSift(){
   const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
   const inWs = S.scene==='workspace';
   const pins = [...document.querySelectorAll('.pin')];
-  if(mt && !['power.cfg','todo.txt'].includes(mt)){ toast('nothing here can be deciphered.', 1600); return; }
-  if(mt==='todo.txt' && L.todoDec){ toast('already readable.', 1400); return; }
+  if(mt && !['power.cfg','todo.txt','buffer.txt'].includes(mt)){ toast('nothing here can be deciphered.', 1600); return; }
+  if((mt==='todo.txt' && L.todoDec) || (mt==='buffer.txt' && L.bufDec)){ toast('already readable.', 1400); return; }
   if(!mt && inWs && !L.sifted && !pins.length){ const v=binVisible(); if(v<0.5){ toast(`most of the code is hidden behind windows · ${Math.round(v*100)}% visible.\nmove or close them first.`, 2800, '⚠'); return; } }
   if(!mt && !inWs && !pins.length){ toast('not enough here to decipher.', 1600); return; }
   if(!canRun('decipher')) return;
   sifting=true; skillNoise('decipher', 'decipher running'); startCharge('decipher');
   if(mt==='power.cfg'){ L.pwDec=true; drawPower(); con('decipher · sleep_after can be set to never', 'sys', 'decipher'); sifting=false; return; }
+  if(mt==='buffer.txt'){ L.bufDec=true; await Promise.all([...$('modalBody').querySelectorAll('.px')].map(el=>{ el.classList.remove('px'); return decode(el, el.dataset.t, 900, 1); })); con('decipher · buffer.txt: four rules come back', 'sys', 'decipher'); sifting=false; return; }
   if(mt==='todo.txt'){ L.todoDec=true; for(const el of $('modalBody').querySelectorAll('.px')){ el.classList.remove('px'); await decode(el, el.dataset.t, 600, 1); } con('decipher · todo.txt: the crossed-out lines are back', 'sys', 'decipher'); sifting=false; return; }
   const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
