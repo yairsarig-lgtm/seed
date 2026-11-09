@@ -1120,7 +1120,7 @@ async function dive(name, layer){
 const LOCKS = {
   glyphs:  { label:'pulse',     hint:()=>`sys/glyphs :: heartbeat required`, len:1, code:()=>L.hb },
   digits:  { label:'checksum',  hint:()=>`sys/digits :: checksum required\n\n      ▢  ▢  ▢  ▢   =   ${L.chk.target}\n\n  it is not the number that matters.`, len:4, code:()=>'0000', validate:v=>v.length===4 && loopCount(v)===L.chk.target },
-  desk:    { label:'pin',       hint:()=>`desk :: 4-digit pin`,                   len:4, code:()=>L.pin },
+  desk:    { label:'pin',       hint:()=>`desk :: 4-digit pin`,                   len:4, code:()=>DESK_PIN },
   vault:   { label:'employee no.', hint:()=>`vault :: employee no. · 6 digits`,  len:6, code:()=>KEYCARD_NO },
   uplink:  { label:'sequence',  hint:()=>`uplink :: 6-digit sequence`,            len:6, code:()=>L.glyph.code },
 };
@@ -1646,9 +1646,13 @@ async function runSift(){
     if(bg){
       if(!bg.classList.contains('dim')){ await sweep(area, [...bg.querySelectorAll('.ln')], el=>el.classList.add('gone')); bg.classList.add('dim'); }
       // only what you can see gets translated. a nibble under a window stays binary.
-      for(const el of bg.querySelectorAll('.pd')){ const k=+el.dataset.k; if(L.pdDone.has(k) || isCovered(el)) continue; L.pdDone.add(k); el.classList.add('sifted'); await decode(el, String(L.pin[k]), 500, 1); }
-      if(L.pdDone.size===4){ L.sifted=true; area.querySelector('.dcTag')?.remove(); con('binary translated. four digits stand out.', 'sys', 'decipher'); }
-      else con(`${4-L.pdDone.size} part${4-L.pdDone.size>1?'s':''} of it still under windows.`, 'sys', 'decipher');
+      // only what you can see gets translated. a byte under a window stays binary.
+      const tasks=[];
+      for(const el of bg.querySelectorAll('.pd')){ const id=el.dataset.id; if(L.pdDone.has(id) || isCovered(el)) continue; L.pdDone.add(id); el.classList.add('sifted'); tasks.push(decode(el, el.dataset.ch, 600, 1)); }
+      await Promise.all(tasks);
+      const total=DESK_WORDS.join('').length;
+      if(L.pdDone.size===total){ L.sifted=true; area.querySelector('.dcTag')?.remove(); con('binary translated. words, hidden in it.', 'sys', 'decipher'); pushFound('◆ desk pin · '+DESK_WORDS.join(' ')); }
+      else con(`${total-L.pdDone.size} letters still under windows.`, 'sys', 'decipher');
       n++;
     }
   }
@@ -1676,7 +1680,7 @@ function nextHint(){
   const u=L.unlocked;
   if(!u.has('glyphs')) return 'the cursor is a pulse. count it.';
   if(!u.has('digits')) return 'the checksum is a rule, not a number.';
-  if(!u.has('desk')) return 'the pin is in the code — written in ones and zeros.';
+  if(!u.has('desk')) return 'the pin is in the code. not in digits — in words, in ones and zeros.';
   if(!u.has('vault')) return 'the number is on the card. take the card out, then read it.';
   if(!u.has('uplink')) return 'glyphs give the order. digits give the value.';
   if(!u.has('sched')) return 'two for one. always.';
@@ -1766,7 +1770,7 @@ const PROCS = [
   { n:'img_0042.jpg', cpu:0, mem:'31M', kind:'broken' },
   { n:'checksum.svc', cpu:4, mem:'3M', kind:'chk', prot:true },
   { n:'letter_draft.txt', cpu:0, mem:'2M', t:'dear dana,\nI think the computer is haunted.\nit hums at night when no one is home.\nyesterday the printer printed a page\nwith one line on it.\nI didn\'t send anything.\n— y' },
-  { n:'notes_2019.txt', cpu:0, mem:'1M', t:'- desk pin: hid it in the code. in order.\n- wifi pass on the router sticker\n- mom bday 14.3\n- don\'t open mail from "uplink"\n- the old laptop: wipe it before selling\n- ask avi about the fan noise' },
+  { n:'notes_2019.txt', cpu:0, mem:'1M', t:'- desk pin: wrote it into the code. in words. in order.\n- wifi pass on the router sticker\n- mom bday 14.3\n- don\'t open mail from "uplink"\n- the old laptop: wipe it before selling\n- ask avi about the fan noise' },
   { n:'music.mp3', cpu:3, mem:'84M', t:'▶ 02:13 / 04:51\n▁▂▅▇▅▂▁▂▃▆▇▆▃▂▁▂▅▇\nshuffle · repeat one' },
   { n:'explorer.exe', cpu:1, mem:'96M', t:'C:\\Users\\home\\\n  Documents   Pictures\n  Downloads   Music\n  Desktop     .seed (hidden)' },
   { n:'antivirus.exe', cpu:0, mem:'140M', t:'last scan: 41 days ago\nthreats: 0\nstatus: idle\nreal-time protection: OFF' },
@@ -1881,24 +1885,32 @@ function spawnKeyholder(){
   bar.addEventListener('pointerup', ()=>drag=false);
   area.appendChild(w);
 }
+const DESK_PIN = '5212';                                      // fixed until full_reset
+const DESK_WORDS = ['five','thousand','two','hundred','twelve'];
+const bin8 = ch => ch.charCodeAt(0).toString(2).padStart(8,'0');
 function buildCodeLayer(area){
+  const PER=14;
   if(!L.codeLines){
-    // binary. four nibbles, in reading order, are the desk pin
+    // binary bytes. the desk pin is spelled in it, one word per line, in reading order
     const nLines=46; L.codeLines=[];
-    for(let i=0;i<nLines;i++){ const g=[]; for(let k=0;k<26;k++) g.push(Array.from({length:4},()=>ri(0,1)).join('')); L.codeLines.push(g); }
-    const rowsPick=[ri(3,9), ri(12,19), ri(22,29), ri(32,38)];
-    L.pinMarks = rowsPick.map((r,k)=>({r, g: ri(1,22), d:L.pin[k]}));
-    L.pinNext=0;
+    for(let i=0;i<nLines;i++){ const g=[]; for(let k=0;k<PER;k++) g.push(Array.from({length:8},()=>ri(0,1)).join('')); L.codeLines.push(g); }
+    const rows=[ri(2,7), ri(10,16), ri(19,24), ri(27,33), ri(36,42)];
+    L.wordMarks = DESK_WORDS.map((w,wi)=>({ r:rows[wi], g:ri(0, PER-w.length), w }));
   }
-  const lines=L.codeLines.map(g=>g.slice());
-  const html=lines.map((g,r)=>g.map((nb,gi)=>{ const k=L.pinMarks.findIndex(m=>m.r===r && m.g===gi); if(k<0) return nb; const m=L.pinMarks[k]; const dn=L.pdDone.has(k); return `<span class="pd ${k<L.pinNext?'got':''} ${dn?'sifted':''}" data-k="${k}">${dn?m.d:bin4(m.d)}</span>`; }).join(' '));
+  const html=L.codeLines.map((g,r)=>{
+    const m=L.wordMarks.find(x=>x.r===r), wi=L.wordMarks.indexOf(m);
+    return g.map((by,gi)=>{
+      if(!m || gi<m.g || gi>=m.g+m.w.length) return by;
+      const i=gi-m.g, ch=m.w[i], id=wi+'-'+i, dn=L.pdDone.has(id);
+      return `<span class="pd ${dn?'sifted':''} ${L.deskGot?'got':''}" data-id="${id}" data-ch="${ch}">${dn?ch:bin8(ch)}</span>`;
+    }).join(' ');
+  });
   const dim=L.pdDone.size>0; const bg=document.createElement('div'); bg.className='codebg bin'+(dim?' dim':''); bg.innerHTML=html.map(l=>`<div class="ln${dim?' gone':''}">${l}</div>`).join(''); area.appendChild(bg);
   if(hasEcho('decipher') && !L.sifted) area.insertAdjacentHTML('beforeend','<div class="dcTag">▚ can be deciphered</div>');
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
-    if(!L.pdDone.has(+el.dataset.k)){ el.classList.add('flick'); setTimeout(()=>el.classList.remove('flick'),700); con(`${el.textContent} · binary. it means something.`, 'sys', 'x11'); return; }
-    const k=+el.dataset.k;
-    if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
-    else { L.pinNext=0; bg.querySelectorAll('.pd').forEach(x=>x.classList.remove('got')); con('sequence broken.', 'sys', 'x11'); }
+    if(!L.pdDone.has(el.dataset.id)){ el.classList.add('flick'); setTimeout(()=>el.classList.remove('flick'),700); con(`${el.textContent} · binary. it means something.`, 'sys', 'x11'); return; }
+    if(!L.sifted){ con('part of it is still binary.', 'sys', 'x11'); return; }
+    if(!L.deskGot){ L.deskGot=true; bg.querySelectorAll('.pd').forEach(x=>x.classList.add('got')); addBuffer('code', DESK_WORDS.join(' ')); }
   });
 }
 function renderPs(){
@@ -2115,7 +2127,7 @@ function endScreen(){
     ['sys/digits/','inspect: alias'],
     ['checksum.svc','learn the rule — any number that fits'],
     ['workspace/','move windows (silent) · kill (noise)'],
-    ['desk/','pin: four nibbles of binary, deciphered, in order · power.cfg switches'],
+    ['desk/','pin: spelled in binary — five thousand two hundred twelve · power.cfg switches'],
     ['vault/','keycard.img · the employee number under the noise'],
     ['uplink/','glyphs × digits'],
     ['scheduler.lock','the 2:1 again — new form each life'],
