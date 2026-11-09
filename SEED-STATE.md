@@ -35,7 +35,7 @@ The whole game is an escape room told in the language of a computer: directories
 ## 3. Prologue — flow (as built)
 
 1. **Wake** — code stream → awareness lines → one random phrase (see above). Life 2+: shorter stream + "rebuilt from seed · memory: N fragments found".
-2. **Core** — *(updated 2026-11-09)* **Life 1:** only the 8-object screen (1 binding) → **SKILL ACQUIRED · TRACE LINKS** (red notice: keep for this life / save to memory) → BIOS → straight into `~/`. **Life 2+:** ONE bigger screen, random size (24 / 32 / 48 objects, 2–3 bindings, look-alikes on the bigger ones) → windows → LOGGED IN → `~/`. With TRACE LINKS: (a) touching a real folder lights the files that belong to it for ~1s; (b) the skill is a **runnable button** in the SKILLS · TOOLS dock (and `[run]` in the MEMORY panel) — on a core screen it sweeps the grid and binds every pair automatically, then `log in` is ready. Elsewhere: "nothing to link here."
+2. **Core** — *(updated 2026-11-09)* **Life 1:** only the 8-object screen (1 binding) → **SKILL ACQUIRED · TRACE LINKS** (red notice: keep for this life / save to memory) → BIOS → straight into `~/`. **Life 2+:** ONE bigger screen, random size (24 / 32 / 48 objects, 2–3 bindings, look-alikes on the bigger ones) → windows → LOGGED IN → `~/`. With TRACE LINKS: (a) touching a real folder lights the files that belong to it for ~1s; (b) the skill is a **runnable button** in the SKILLS · TOOLS dock (and `[run]` in the MEMORY panel) — on a core screen it sweeps the grid and binds every pair automatically, then `log in` is ready. **Each run costs +25% trace and recharges for 30s** (button shows "charging Ns"). Elsewhere: "nothing to link here."
    *(older notes below kept for reference)* **three screens, every life** (icons are always files + folders; only colours change per life):
    - **1/3** — 8 objects, 1 binding. All grey; hover lights them in their colour. Find the colour with only two files → bind both to the one folder (2:1).
    - **2/3** — 24 objects, 2 bindings.
@@ -110,6 +110,8 @@ Live preview (private to owner until shared): https://claude.ai/artifact/6HAzhhe
 - Transitions only at big moments (core screens, workspace, uplink). Directory changes are instant.
 - No Genially references anywhere in the game. This is the **prologue**, not Act I.
 - Keyholder image is fixed per life (seeded), not regenerated.
+- `seed_0.log` ends at entry 0004 — the "you are the memory" line was removed as too revealing.
+- No window can be dragged off-screen (workspace windows keep at least part visible; pins stay inside the viewport).
 - `checksum.svc` and `keyholder.img` windows are clamped inside the display — they can't be dragged out and lost. Other windows can.
 
 ## 7. Open questions

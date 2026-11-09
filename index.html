@@ -390,6 +390,7 @@
   .tool{display:flex;align-items:center;gap:8px;border:1px solid #6a6a6a;background:#111;color:#e0e0e0;padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:14px}
   .tool:hover{border-color:var(--red);color:#fff}
   .tool.skill{border-color:var(--red);color:#ffb3b8}
+  .tool.skill.charging{opacity:.55;border-style:dashed}
   .tool svg{display:block}
   .pin .pc{position:relative}
   #skillBox{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:min(560px,92vw);border:2px solid var(--red);background:#0a0304;box-shadow:0 0 40px rgba(255,59,71,.35)}
@@ -592,7 +593,7 @@ function topbar(){
   const tr = Math.min(100, Math.floor(S.trace));
   const bars = 20, filled = Math.round(tr/100*bars);
   const tbar = '■'.repeat(filled)+'□'.repeat(bars-filled);
-  const inTree = ['dir','workspace'].includes(S.scene);
+  const inTree = ['dir','workspace'].includes(S.scene) || S.trace>0;
   const trace = inTree ? `TRACE <span class="${tr>=70?'r':'w'}">${tbar}  ${String(tr).padStart(2,' ')}%</span>` : `TRACE --`;
   $('topbar').innerHTML =
     `<span class="t">SEED</span> / LIFE ${life}     AWARENESS ${S.awareness.toFixed(2)}%     ${trace}     ` +
@@ -1196,7 +1197,6 @@ function openFile(id){
       ['0002','they listen for noise. every wrong key is noise. every process i kill is noise.'],
       ['0003','the cursor is not a cursor.'],
       ['0004','!they clear this place when they hear enough. i will not remember.'],
-      ['0005','so i built something that will. not a copy of me. a witness.\n        if you are reading this — you are the memory.'],
     ];
     (async()=>{ const box=$('logBox'); for(const [ts,t] of lines){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'); await typeOut(sp, red?t.slice(1):t, 14); if(red) sp.classList.add('r'); await sleep(200);} })();
     return;
@@ -1328,9 +1328,16 @@ function renderTools(){
   const skills = mySkills();
   $('toolDock').classList.toggle('on', !!(tools.length || skills.length));
   $('tools').innerHTML =
-    skills.map(k=>`<div class="tool skill" data-s="${k}">${LINK_ICON}<span>trace links</span></div>`).join('') +
+    skills.map(k=>`<div class="tool skill" data-s="${k}">${LINK_ICON}<span>trace links · ready</span></div>`).join('') +
     tools.map(t=>`<div class="tool" data-t="${t}">${SIFT_ICON}<span>${t}.exe</span></div>`).join('');
   $('tools').querySelectorAll('.tool').forEach(el=>el.onclick=()=>{ if(el.dataset.t==='sift') runSift(); if(el.dataset.s==='link') runLinkSkill(); });
+  if(L && L.linkReadyAt) chargeTick();
+}
+function chargeTick(){
+  const el=document.querySelector('.tool.skill span'); if(!el) return;
+  const left = Math.ceil(((L.linkReadyAt||0) - performance.now())/1000);
+  if(left>0){ el.textContent=`trace links · charging ${left}s`; el.parentElement.classList.add('charging'); setTimeout(chargeTick, 500); }
+  else { el.textContent='trace links · ready'; el.parentElement.classList.remove('charging'); }
 }
 /* skill: TRACE LINKS — reads the core and binds everything that belongs together */
 let linking=false;
@@ -1338,7 +1345,11 @@ async function runLinkSkill(){
   if(linking) return;
   if(S.scene!=='core' || !R || !R.blocks){ toast('nothing to link here.', 1600); return; }
   if(R.layerDone){ toast('already bound. log in.', 1600); return; }
+  const left = Math.ceil(((L.linkReadyAt||0) - performance.now())/1000);
+  if(left>0){ toast(`trace links charging · ${left}s`, 1400); return; }
   linking=true;
+  noise(25, 'trace links (skill)');
+  L.linkReadyAt = performance.now() + 30000; chargeTick();
   con('trace links :: reading core/', 'mem', 'skill');
   const inner=$('fieldInner');
   await sweep(inner, [...inner.querySelectorAll('.blk')], el=>{ el.classList.add('lit'); setTimeout(()=>{ if(!el.classList.contains('sticky')) el.classList.remove('lit'); }, 700); }, 1100);
@@ -1478,7 +1489,7 @@ function pin(kind){
   w.querySelector('.x').onclick=()=>w.remove();
   const bar=w.querySelector('.bar'); let sx,sy,ox,oy,drag=false;
   bar.addEventListener('pointerdown',e=>{ if(e.target.classList.contains('x')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; bar.setPointerCapture(e.pointerId); });
-  bar.addEventListener('pointermove',e=>{ if(!drag) return; w.style.left=(ox+e.clientX-sx)+'px'; w.style.top=(oy+e.clientY-sy)+'px'; });
+  bar.addEventListener('pointermove',e=>{ if(!drag) return; w.style.left=Math.max(0,Math.min(innerWidth-w.offsetWidth,ox+e.clientX-sx))+'px'; w.style.top=Math.max(0,Math.min(innerHeight-w.offsetHeight,oy+e.clientY-sy))+'px'; });
   bar.addEventListener('pointerup',()=>drag=false);
 }
 function clearPins(){ document.querySelectorAll('.pin').forEach(p=>p.remove()); }
@@ -1557,6 +1568,7 @@ function dragify(w, handle, i){
   let sx,sy,ox,oy,drag=false;
   handle.addEventListener('pointerdown', e=>{ if(e.target.classList.contains('k')) return; drag=true; sx=e.clientX; sy=e.clientY; ox=w.offsetLeft; oy=w.offsetTop; handle.setPointerCapture(e.pointerId); w.style.zIndex=200; handle.style.cursor='grabbing'; });
   handle.addEventListener('pointermove', e=>{ if(!drag) return; let nx=ox+e.clientX-sx, ny=oy+e.clientY-sy;
+    { const a=w.parentElement; nx=Math.max(-w.offsetWidth*0.6,Math.min(a.clientWidth-w.offsetWidth*0.4,nx)); ny=Math.max(0,Math.min(a.clientHeight-30,ny)); }
     if(PROCS[i] && PROCS[i].kind==='chk'){ const a=w.parentElement; nx=Math.max(0,Math.min(a.clientWidth-w.offsetWidth,nx)); ny=Math.max(0,Math.min(a.clientHeight-w.offsetHeight,ny)); }
     w.style.left=nx+'px'; w.style.top=ny+'px'; L.winPos[i]={x:nx,y:ny}; });
   handle.addEventListener('pointerup', ()=>{ drag=false; handle.style.cursor='grab'; });
