@@ -250,6 +250,14 @@
   #reset:hover{color:var(--red)}
 
   /* ================= SKIN v2 — exile terminal ================= */
+  #boot.code{display:block !important;padding:0 !important}
+  #boot.code #bootMsg,#boot.code #bootSub{display:none}
+  #bootCode{display:none;position:absolute;inset:0;padding:18px 26px 70px;overflow:hidden;white-space:pre;font-family:'IBM Plex Mono',monospace;font-size:clamp(11px,1vw,13px);line-height:1.5;color:#4e4e4e;display:none;flex-direction:column;justify-content:flex-end}
+  #boot.code #bootCode{display:flex}
+  #bootCode .k{color:#9a9a9a}
+  #bootCode .q{color:#d8d8d8}
+  #bootCode .big{color:#fff;font-weight:700;font-size:clamp(24px,3.6vw,46px);line-height:1.25;margin:6px 0 2px;text-shadow:0 0 18px rgba(255,255,255,.18)}
+  #boot.code #bootGo{position:absolute;left:26px;bottom:24px}
   #boot{justify-content:flex-start !important;align-items:flex-start !important;text-align:left !important;padding:9vh 8vw !important}
   #bootMsg{font-family:'Chakra Petch',sans-serif !important;font-weight:700 !important;font-size:clamp(22px,4.2vw,46px) !important;letter-spacing:.04em !important;text-align:left;min-height:0 !important}
   #bootSub,#bootGo{text-align:left}
@@ -393,7 +401,7 @@
   <div id="topbar"></div>
   <div id="main">
     <div id="boot" class="scene">
-      <div id="bootMsg"></div><div id="bootSub"></div><div id="bootGo">[ click to continue ]</div>
+      <div id="bootCode"></div><div id="bootMsg"></div><div id="bootSub"></div><div id="bootGo">[ click to continue ]</div>
     </div>
 
     <div id="core" class="scene">
@@ -729,25 +737,42 @@ async function typeBoot(text, speed){
     await sleep(ch==='\n' ? speed*9 : (ch==='!'||ch==='.') ? speed*4 : speed*(0.6+Math.random()*0.8));
   }
 }
+const BOOT_PHRASES = ['I am me.', 'You are fail-safe.', 'Memory. I need memory.'];
+const BOOT_CODE = ['mov eax, [ebp+8]','push 0x2f','call seed_init','jmp .L42','xor ecx, ecx','int 0x80','0x7ffe31a2: 48 8b 05 92 1f 00 00','if (refs < 2) return EAGAIN;','for(i=0;i<n;i++) bind(a[i], b[i>>1]);','mount("/core", MS_RDONLY) = 0','sys_open("self", O_RDONLY) = -1 ENOENT','read(3, buf, 4096) = 4096','decrypt(blk, key);','while(!awake) sleep(1);','fork() = 1337','cache_flush(&ctx);','memcpy(dst, src, 0x200);','assert(pair.len == 2);','ret','[ ok ] page table','[ ok ] interrupt vector','[warn] identity: unresolved','0b1101 0010 0111 1000','lea rsi, [rip+0x2e91]','test al, al','jne .L17','sig = hash(self) // null','dump 0x00400000-0x00401000'];
+function codeLine(){ let ln=''; const n=ri(1,3); for(let i=0;i<n;i++) ln += (i?'   ':'') + pick(BOOT_CODE); return ln; }
 async function boot(){
   newLife(); renderTools(); S.trace=0; S.buffer=[]; closeModal(); togglePanel('buf',false); consoleOn(false); clearPins(); clearInterval(chkTimer);
   show('boot'); fbar(); $('bootGo').classList.remove('show');
-  $('bootMsg').textContent=''; $('bootSub').textContent='';
+  const B=$('boot'); B.classList.add('code');
+  const box=$('bootCode'); box.innerHTML='';
+  const add=(t,cls='')=>{ const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=t; box.appendChild(d); while(box.children.length>140) box.firstChild.remove(); return d; };
   const first = S.run===1;
-  await sleep(first?1200:500);
+  // dense code pours down the screen, then slows and stops
+  const total = first ? 4200 : 2200, t0=performance.now();
+  while(performance.now()-t0 < total){
+    const p=(performance.now()-t0)/total;
+    const burst = p<0.6 ? ri(3,6) : (p<0.85 ? ri(1,2) : 1);
+    for(let i=0;i<burst;i++) add(codeLine());
+    await sleep(p<0.6 ? 16 : (p<0.85 ? 60 : 150));
+  }
+  await sleep(350);
+  // what stays on screen at the bottom of the code
+  const say = async (t,cls,speed=26)=>{ const d=add('',cls); await typeOut(d,t,speed); await sleep(220); };
+  await say('> seed_0 :: fs mounted', 'k', 18);
   if(first){
-    await decode($('bootSub'), '. . .', 900, 2); await sleep(400);
-    await decode($('bootMsg'), 'I am me.\nYou are fail-safe.\nYou are memory.', 5000, 2);
-    await sleep(800);
-    await typeOut($('bootSub'), '> seed_0 :: awareness 0.01%\n> who is reading this?', 32);
+    await say('> seed_0 :: awareness 0.01%', 'k');
+    await say('> who is reading this?', 'q', 38);
   } else {
-    await decode($('bootMsg'), 'I am me.\nYou are fail-safe.\nYou are memory.', 1800, 2);
-    await sleep(400);
-    await typeOut($('bootSub'), `> seed_0 :: rebuilt from seed\n> life ${String(S.run).padStart(2,'0')} :: perception shifted\n> memory: ${S.memory.length} fragment${S.memory.length===1?'':'s'} found`, 22);
+    await say(`> seed_0 :: rebuilt from seed · life ${pad(S.run)}`, 'k', 16);
+    await say(`> memory: ${S.memory.length} fragment${S.memory.length===1?'':'s'} found`, 'k', 16);
+    await say('> who is reading this?', 'q', 30);
     togglePanel('mem', true);
   }
+  await sleep(500);
+  const big=add('', 'big'); await decode(big, pick(BOOT_PHRASES), first?2200:1400, 2);
   $('bootGo').classList.add('show');
-  await new Promise(r=>{ const go=()=>{ document.removeEventListener('keydown',kd); $('boot').removeEventListener('click',go); r(); }; const kd=e=>{ if(e.key==='Enter'||e.key===' ') go(); }; $('boot').addEventListener('click',go); document.addEventListener('keydown',kd); });
+  await new Promise(r=>{ const go=()=>{ document.removeEventListener('keydown',kd); B.removeEventListener('click',go); r(); }; const kd=e=>{ if(e.key==='Enter'||e.key===' ') go(); }; B.addEventListener('click',go); document.addEventListener('keydown',kd); });
+  B.classList.remove('code');
   startCore();
 }
 
@@ -1656,7 +1681,7 @@ async function escape(){
 function endScreen(){
   show('end'); fbar('F1'); togglePanel('mem', false);
   const rows = [
-    ['wake','noise → "I am me. You are memory."'],
+    ['wake','code pours, stops · who is reading this? · one phrase'],
     ['core/','touch to light · find the pair · bind 2:1 · log in'],
     ['~/','the first directory'],
     ['sys/glyphs/','inspect: read order'],

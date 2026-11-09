@@ -10,12 +10,13 @@
 A game about an AI that wakes up inside a computer and finds its way out.
 **The player is the memory.** The entity is wiped again and again; the only thing that survives every wipe is the person playing. What survives is **understanding, not data**: the rules stay, the details (colours, codes, numbers) change every life.
 
-Opening line (decodes out of noise, top-left):
+Opening: dense grey code pours down the screen, slows, stops. At the bottom of the code:
+`> seed_0 :: fs mounted` · `> seed_0 :: awareness 0.01%` · `> who is reading this?` — then ONE phrase, chosen at random each life, decoded big and white inside the code:
 
 ```
 I am me.
 You are fail-safe.
-You are memory.
+Memory. I need memory.
 ```
 
 The whole game is an escape room told in the language of a computer: directories instead of rooms, locks instead of doors, processes and windows instead of objects.
@@ -37,7 +38,7 @@ The whole game is an escape room told in the language of a computer: directories
 
 ## 3. Prologue — flow (as built)
 
-1. **Wake** — the three lines decode from noise (Chakra Petch, top-left). Life 2+: faster.
+1. **Wake** — code stream → awareness lines → one random phrase (see above). Life 2+: shorter stream + "rebuilt from seed · memory: N fragments found".
 2. **Core — three screens, every life** (icons are always files + folders; only colours change per life):
    - **1/3** — 8 objects, 1 binding. All grey; hover lights them in their colour. Find the colour with only two files → bind both to the one folder (2:1).
    - **2/3** — 24 objects, 2 bindings.
