@@ -276,6 +276,9 @@
   #insBox .ib2{padding:14px 16px;text-align:center}
   #insBox .it{font-size:17px;color:#fff;margin-bottom:12px;white-space:pre-wrap}
   #insBox .in2{color:#888;font-size:12px}
+  body.boardOn #toolDock{z-index:320}
+  #board .brun{background:#000;border:1px solid var(--red);color:#ff5a63;font-weight:600;font:inherit;font-size:11px;padding:1px 8px;cursor:pointer;margin-left:auto;margin-right:10px}
+  #board .brun:hover{background:var(--red);color:#fff}
   #board{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.72);display:grid;place-items:center}
   #board .bwin{width:min(620px,92vw);border:2px solid #bdbdbd;background:#050505}
   #board .bar{display:flex;justify-content:space-between;align-items:center;height:24px;padding:0 10px;background:var(--noise),linear-gradient(180deg,#d8d8d8,#9a9a9a);color:#000;font-size:12px;font-weight:600}
@@ -1706,8 +1709,10 @@ let board=null;
 function linkBoard(title, sub){
   return new Promise(res=>{
     const el=document.createElement('div'); el.id='board';
-    el.innerHTML=`<div class="bwin"><div class="bar"><span>${esc(title)} · encrypted</span><span class="x" style="cursor:pointer">✕</span></div><div class="bsub">${esc(sub)}</div><div class="bfield"><svg class="blinks" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div><div class="bmsg">two for one.</div></div>`;
-    document.body.appendChild(el);
+    el.innerHTML=`<div class="bwin"><div class="bar"><span>${esc(title)} · encrypted</span>${inSlots('link')?'<button class="brun">run trace links</button>':''}<span class="x" style="cursor:pointer">✕</span></div><div class="bsub">${esc(sub)}</div><div class="bfield"><svg class="blinks" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div><div class="bmsg">two for one.</div></div>`;
+    document.body.appendChild(el); document.body.classList.add('boardOn');
+    const close=()=>{ el.remove(); board=null; document.body.classList.remove('boardOn'); };
+    const rb=el.querySelector('.brun'); if(rb) rb.onclick=()=>runLinkSkill();
     const field=el.querySelector('.bfield'), svg=el.querySelector('.blinks'), msg=el.querySelector('.bmsg');
     const cols=shuffle(DECOY.slice()).slice(0,4);
     const items=[];
@@ -1716,7 +1721,7 @@ function linkBoard(title, sub){
     shuffle(files).forEach((f,i)=>items.push({...f, x:14+(i%4)*24, y: i<4?62:84, link:null}));
     let sel=null, done=false;
     const draw=()=>{ svg.innerHTML=items.filter(f=>f.t==='f'&&f.link).map(f=>`<line x1="${f.x}" y1="${f.y}" x2="${f.link.x}" y2="${f.link.y}" stroke="${f.c}" stroke-width="2" vector-effect="non-scaling-stroke" ${f.link.links.length===2?'':'stroke-dasharray="5 4"'}/>`).join(''); };
-    const finish=async()=>{ if(done) return; done=true; msg.textContent='ACCESS GRANTED'; msg.className='bmsg ok'; con(`${title} :: access granted`, 'sys', 'auth'); await sleep(900); el.remove(); board=null; res(true); };
+    const finish=async()=>{ if(done) return; done=true; msg.textContent='ACCESS GRANTED'; msg.className='bmsg ok'; con(`${title} :: access granted`, 'sys', 'auth'); await sleep(900); close(); res(true); };
     const bind=(f,F)=>{ if(f.link){ f.link.links=f.link.links.filter(x=>x!==f); } f.link=F; F.links.push(f); f.el.classList.add('done'); if(F.links.length===2) F.el.classList.add('done'); draw(); if(items.filter(x=>x.t==='F').every(x=>x.links.length===2)) finish(); };
     const reject=(...xs)=>xs.forEach(x=>{ x.el.classList.remove('rej'); void x.el.offsetWidth; x.el.classList.add('rej'); });
     items.forEach(it=>{
@@ -1733,7 +1738,7 @@ function linkBoard(title, sub){
         bind(f,F);
       };
     });
-    el.querySelector('.x').onclick=()=>{ el.remove(); board=null; res(false); };
+    el.querySelector('.x').onclick=()=>{ close(); res(false); };
     board={ auto: async()=>{ for(const F of items.filter(x=>x.t==='F')) for(const f of items.filter(x=>x.t==='f' && x.c===F.c && !x.link)){ if(F.links.length<2){ bind(f,F); await sleep(220); } } } };
   });
 }

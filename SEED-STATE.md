@@ -173,3 +173,4 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 **What's fixed vs per-life:** fixed until full_reset: keycard number, server address, rules. Per life: heartbeat, checksum target, pin/binary, glyph code, scheduler form, power.cfg settings.
 **Dev button:** invisible, top-right corner of the screen. Unlocks everything (every life, this session), trace offline, all three skills in the dock, boards skipped, wake_on_lan on.
 **Act 1 idea (later):** a tool that opens locked folders / enters codes into folders.
+- Encrypted boards: the skill panel stays clickable above the board (z-index), plus a 'run trace links' button in the board's title bar when the skill is with you.
