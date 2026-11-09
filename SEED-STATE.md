@@ -142,3 +142,9 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - Slot persists across lives only if the slotted skill is burned (`seed3_slot`).
 - sift.exe renamed **decipher.exe** (a skill now). Costs: trace links +25% / 30s, decipher +3% / 8s.
 - Future: more slots = an Act 1 reward.
+
+## Layout pass (workspace)
+- Workspace: ps list narrowed to ~28% on the left, display in the middle, a free right column (320px) for SKILL SLOT (top) and BUFFER/MEMORY (bottom).
+- Skill slot, buffer and memory panels are draggable anywhere by their title bar (clamped on screen); double-click the title to snap back.
+- checksum.svc windows (workspace + pinned) are bigger so every row fits.
+- skill.sys pickup window trimmed: card = icon, name, one line; question "replace X in your slot?" KEEP / REPLACE; ✕ works (= keep / this life only).

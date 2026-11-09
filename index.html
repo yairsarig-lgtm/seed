@@ -227,13 +227,21 @@
   .psrow.dead{color:#444;cursor:default} .psrow.dead:hover{background:transparent;color:#444}
   #dispWin{right:16px;top:16px;width:calc(58% - 8px);bottom:16px}
   #workArea{position:absolute;left:0;right:0;top:22px;bottom:0;overflow:hidden;background:repeating-linear-gradient(0deg,#0a0a0a 0 1px,transparent 1px 32px),repeating-linear-gradient(90deg,#0a0a0a 0 1px,transparent 1px 32px),#060606}
+  /* right column: skill slot on top, buffer/memory at the bottom */
+  body.wsMode #psWin{width:calc(28% - 20px)}
+  body.wsMode #dispWin{left:28%;right:352px;width:auto}
+  body.wsMode #toolDock:not(.moved){right:16px;top:62px;width:320px}
+  body.wsMode .panel:not(.moved){right:16px;width:320px}
+  #toolDock .pbar,.panel .pbar{cursor:grab;user-select:none}
+  #toolDock.moved,.panel.moved{right:auto !important;bottom:auto !important}
   .pw.front{border-color:#fff;box-shadow:0 0 0 1px #fff,0 6px 20px rgba(0,0,0,.6)}
 
   /* ---------- pinned floating windows ---------- */
-  .pin{position:fixed;z-index:35;border:1px solid var(--red);background:rgba(6,6,6,.97);width:250px;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+  .pin{position:fixed;z-index:35;border:1px solid var(--red);background:rgba(6,6,6,.97);width:250px;min-width:max-content;box-shadow:0 8px 24px rgba(0,0,0,.7)}
   .pin .bar{cursor:grab;background:var(--red);color:#000;height:20px;font-size:11px}
   .pin .bar .x{color:#000}
-  .pin .pc{padding:8px 10px;font-size:13px;line-height:1.5;color:#cfcfcf;white-space:pre;max-height:270px;overflow:auto}
+  .pin .pc{padding:8px 14px 8px 10px;font-size:13px;line-height:1.5;color:#cfcfcf;white-space:pre;max-height:340px;overflow:auto}
+  .pin .pc.chkView{min-width:200px;min-height:300px}
   .chkView .new{color:#fff}
   /* ---------- end ---------- */
   #end{padding:24px;overflow:auto}
@@ -641,7 +649,7 @@ function renderPanels(){
   $('bufBody').innerHTML = S.buffer.length ? S.buffer.map((b,i)=>`<div class="frag" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('') : '<span style="color:#777">empty. capture what flashes.</span>';
   $('bufBody').querySelectorAll('.frag').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
   const memOn = $('memPanel').classList.contains('on');
-  $('bufPanel').style.bottom = memOn ? (52 + $('memPanel').offsetHeight + 10)+'px' : '52px';
+  if(!$('bufPanel').classList.contains('moved')) $('bufPanel').style.bottom = memOn ? (52 + $('memPanel').offsetHeight + 10)+'px' : '52px';
 }
 function togglePanel(which, force){
   const p = which==='mem' ? $('memPanel') : $('bufPanel');
@@ -653,7 +661,7 @@ let toastT;
 function toast(msg, ms=2600, ic){ const t=$('toast'); t.innerHTML=(ic?`<span class="ic">${ic}</span>`:'')+esc(msg); t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), ms); }
 function show(id){
   document.querySelectorAll('.scene').forEach(s=>s.classList.remove('on'));
-  $(id).classList.add('on'); S.scene=id; topbar();
+  $(id).classList.add('on'); S.scene=id; document.body.classList.toggle('wsMode', id==='workspace'); topbar();
 }
 function addBuffer(src, v, kind){
   if(S.buffer.some(b=>b.v===v && b.src===src)) { toast('already in buffer'); return; }
@@ -1364,22 +1372,22 @@ the new skill needs to charge first.</div>
 /* first touch of a skill in a life: decide the slot, then whether to burn it */
 async function acquireSkill(k){
   const sk=SKILLS[k], q=seqOpen(); q.style.background='rgba(0,0,0,.6)';
-  const card = `<div class="slotCard big"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}</div><div class="sd">${sk.desc}</div><div class="sc">passive · ${sk.passive}<br>cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
-  const box = (step, body) => q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b>✕</b></i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div>${body}</div></div>`;
+  const card = `<div class="slotCard big"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}</div><div class="sd">${sk.desc}</div></div></div>`;
+  const box = (step, body) => q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b id="skX" style="cursor:pointer">✕</b></i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div>${body}</div></div>`;
   L.known.add(k);
   // step 1: the slot
   if(!L.slot){ L.slot=k; L.readyAt[k]=0; }
   else {
     const old=L.slot;
-    box(`slot 1/${SLOTS} holds <b>${SKILLS[old].name}</b>. erase it from the slot and load ${sk.name}?`,
-      `<div class="sk-btns"><button class="btn" id="skKeep">KEEP ${SKILLS[old].name.toUpperCase()}</button><button class="btn red" id="skRep">REPLACE</button></div><div class="sk-note">a skill out of the slot still works as a passive.</div>`);
-    await new Promise(res=>{ $('skKeep').onclick=res; $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(); }; });
+    box(`replace <b>${SKILLS[old].name}</b> in your slot?`,
+      `<div class="sk-btns"><button class="btn" id="skKeep">KEEP</button><button class="btn red" id="skRep">REPLACE</button></div>`);
+    await new Promise(res=>{ $('skKeep').onclick=res; $('skX').onclick=res; $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(); }; });
   }
   // step 2: burn it?
   if(!S.skills.includes(k)){
     box(`burn <b>${sk.name}</b> into memory?`,
-      `<div class="sk-btns"><button class="btn" id="skSkip">THIS LIFE ONLY</button><button class="btn red" id="skSave">BURN TO MEMORY</button></div><div class="sk-note">burned skills survive wipes. unburned ones die with you.</div>`);
-    await new Promise(res=>{
+      `<div class="sk-btns"><button class="btn" id="skSkip">THIS LIFE ONLY</button><button class="btn red" id="skSave">BURN TO MEMORY</button></div>`);
+    await new Promise(res=>{ $('skX').onclick=()=>$('skSkip').click();
       $('skSave').onclick=()=>{ S.skills.push(k); store.set('skills', S.skills); con(`skill burned to memory: ${sk.name}`, 'mem', 'firmware'); res(); };
       $('skSkip').onclick=()=>{ con(`skill held for this life: ${sk.name}`, 'sys', 'skill'); res(); };
     });
@@ -1498,7 +1506,7 @@ function workspace(){
     if(p.kind==='broken'){ const cv=document.createElement('canvas'); cv.style.cssText='width:100%;max-height:100%;image-rendering:pixelated;display:block'; body.style.padding='4px'; body.appendChild(cv); drawBroken(cv); body.insertAdjacentHTML('beforeend','<div style="color:#a55;font-size:11px">img_0042.jpg · premature end of data</div>'); }
     if(p.kind==='dl') body.id='dlBody';
     if(p.kind==='enc') body.id='encBody';
-    if(p.kind==='chk'){ body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
+    if(p.kind==='chk'){ w.style.width=Math.max(cw+14,230)+'px'; w.style.height=Math.max(ch+12,320)+'px'; body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
     dragify(w, w.querySelector('.bar'), i);
     area.appendChild(w); L.wins[i]=w;
   });
@@ -1846,6 +1854,16 @@ and start again from life 01.</div>
 }
 
 heartbeatLoop();
+function floatable(el){
+  const bar=el.querySelector('.pbar'); let sx,sy,ox,oy,drag=false;
+  bar.addEventListener('pointerdown',e=>{ drag=true; const r=el.getBoundingClientRect(); sx=e.clientX; sy=e.clientY; ox=r.left; oy=r.top; bar.setPointerCapture(e.pointerId); bar.style.cursor='grabbing'; });
+  bar.addEventListener('pointermove',e=>{ if(!drag) return; el.classList.add('moved');
+    el.style.left=Math.max(0,Math.min(innerWidth-el.offsetWidth,ox+e.clientX-sx))+'px';
+    el.style.top=Math.max(0,Math.min(innerHeight-el.offsetHeight,oy+e.clientY-sy))+'px'; });
+  bar.addEventListener('pointerup',()=>{ drag=false; bar.style.cursor=''; });
+  bar.addEventListener('dblclick',()=>{ el.classList.remove('moved'); el.style.left=''; el.style.top=''; renderPanels(); });
+}
+['toolDock','memPanel','bufPanel'].forEach(id=>floatable($(id)));
 if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__swap=swapSlot; }
 boot();
 })();
