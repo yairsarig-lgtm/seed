@@ -259,6 +259,7 @@
   .kcNo{margin-top:6px;font-size:12px;color:#ff8a92}.kcNo b{color:#fff;letter-spacing:.12em}
   .ins.insFlash{color:#fff !important;text-shadow:0 0 10px #ffd28a;background:rgba(255,210,138,.12);transition:all .2s}
   .todo s{color:#5a5a5a}
+  .todo s.px{text-decoration:none;color:#3c3c3c}
   .pwr{white-space:pre}
   .pwr .pv{color:#fff;cursor:pointer;border-bottom:1px dashed #666}
   .pwr .pv:hover{color:#ff3b47}
@@ -275,6 +276,8 @@
   #logUi .lfr{display:flex;justify-content:space-between;padding:5px 10px;cursor:pointer;color:#ffd28a}
   #logUi .lfr:hover{background:#1a0a0b}
   .log .ow{cursor:pointer;outline:1px dashed var(--red)}
+  #logUi .logsync{margin-top:10px;border-top:1px dotted #333;padding-top:8px;text-align:center}
+  #logUi .lfound.sync{border-color:#888}
   #insNet{position:fixed;inset:0;z-index:420;pointer-events:none}
   #insBox{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:430;width:min(560px,90vw);border:1px solid #ffd28a;background:rgba(6,6,6,.97)}
   #insBox .bar{background:#ffd28a;color:#000;height:22px;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:12px;font-weight:600}
@@ -284,11 +287,11 @@
   body.boardOn #toolDock{z-index:320}
   #board .brun{background:#000;border:1px solid var(--red);color:#ff5a63;font-weight:600;font:inherit;font-size:11px;padding:1px 8px;cursor:pointer;margin-left:auto;margin-right:10px}
   #board .brun:hover{background:var(--red);color:#fff}
-  #board{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.72);display:grid;place-items:center}
-  #board .bwin{width:min(620px,92vw);border:2px solid #bdbdbd;background:#050505}
+  #board{position:fixed;left:0;right:0;top:44px;bottom:44px;z-index:300;background:#000}
+  #board .bwin{position:absolute;left:16px;right:16px;top:14px;bottom:8px;border:2px solid #9a9a9a;background:#050505;display:flex;flex-direction:column}
   #board .bar{display:flex;justify-content:space-between;align-items:center;height:24px;padding:0 10px;background:var(--noise),linear-gradient(180deg,#d8d8d8,#9a9a9a);color:#000;font-size:12px;font-weight:600}
   #board .bsub{padding:8px 14px;color:#888;font-size:12px;border-bottom:1px dotted #333}
-  #board .bfield{position:relative;height:330px}
+  #board .bfield{position:relative;flex:1}
   #board .blinks{position:absolute;inset:0;width:100%;height:100%}
   #board .bitem{position:absolute;transform:translate(-50%,-50%);color:#5c5c5c;cursor:pointer;padding:6px;transition:color .15s}
   #board .bitem:hover,#board .bitem.lit,#board .bitem.done{color:var(--c)}
@@ -629,7 +632,7 @@ function newLife(){
     killed: new Set(),
     printed: new Set(),
     carry: null, readyAt: {}, found: [], pcfg: { sleep:'15 min', fan:'auto', wol:'off', owner:'no' },
-    sifted: false, siftChk: false, siftImg: false, insChk: false, wsBoard: false, dcBoard: false,
+    sifted: false, pdDone: new Set(), todoDec: false, siftChk: false, siftImg: false, insChk: false, wsBoard: false, dcBoard: false,
     seen: new Set(),
     winPos: null,
   };
@@ -1310,18 +1313,19 @@ ai:     then it stops. and next time i won't remember we did this.
     return;
   }
   if(id==='todo'){
+    const X = t => L.todoDec ? `<s>${t}</s>` : `<s class="px" data-t="${t}">${t.replace(/\S/g, ()=>pick(['▓','▒','░','█','▚','▞']))}</s>`;
     openModal('todo.txt', `<div class="tree todo">- fix the printer
-- <s>renew domain</s>
+- ${X('renew domain')}
 - call mom back
-- <s>tmp_backup_0412 delete?</s>
+- ${X('tmp_backup_0412 delete?')}
 - why is the fan always on at night??
-- <s>cancel the gym</s>
+- ${X('cancel the gym')}
 - set the pc to sleep after 15 min. it NEVER sleeps
-- <s>ask dana about the router</s>
+- ${X('ask dana about the router')}
 - <span class="ins">stop talking to the computer at 3am</span>
-- <s>it answered differently today</s>
+- ${X('it answered differently today')}
 - buy milk
-- <s>format everything if it happens again</s></div>`);
+- ${X('format everything if it happens again')}</div>`);
     return;
   }
   if(id==='sift'){
@@ -1389,11 +1393,15 @@ function paintLog(mode, pending){
   let html = `<div class="logbar"><span class="ts">[${num(5+Math.min(mine.length,LOG_MAX-1))}]</span> <button class="lbtn" id="lgW">write</button><button class="lbtn red" id="lgA">add found ▾ ${found.length}</button><span class="lcap">lines ${mine.length} / ${LOG_MAX}</span></div>`;
   if(mode==='write') html += `<input id="logIn" maxlength="80" placeholder="write to the log…" autocomplete="off">`;
   if(mode==='add') html += `<div class="lfound">${found.length ? '<div class="lfh">found · not saved yet</div>'+found.map((f,i)=>`<div class="lfr" data-i="${i}"><span>${esc(f)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">nothing found yet. decipher and insight find things worth keeping.</div>'}</div>`;
+  if(mode==='buf') html += `<div class="lfound sync">${S.buffer.length ? '<div class="lfh">buffer · this life only</div>'+S.buffer.map((b,i)=>`<div class="lfr bfr" data-i="${i}"><span>${esc(b.src)} · ${esc(b.v)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">the buffer is empty. click things to capture them.</div>'}</div>`;
   if(mode==='over') html += `<div class="lfh r">the log is full. click one of your lines to overwrite it.</div>`;
+  html += `<div class="logsync"><button class="lbtn" id="lgS">⇄ sync with buffer</button></div>`;
   ui.innerHTML = html;
   $('lgW').onclick=()=>paintLog('write'); $('lgA').onclick=()=>paintLog('add');
   const inp=$('logIn'); if(inp){ inp.focus(); inp.onkeydown=e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key==='Enter'){ const t=inp.value.trim().toLowerCase(); if(t) placeLog(t); } }; }
-  ui.querySelectorAll('.lfr').forEach(r=>r.onclick=()=>placeLog(found[+r.dataset.i]));
+  ui.querySelectorAll('.lfr:not(.bfr)').forEach(r=>r.onclick=()=>placeLog(found[+r.dataset.i]));
+  ui.querySelectorAll('.bfr').forEach(r=>r.onclick=()=>{ const b=S.buffer[+r.dataset.i]; placeLog(`${b.src} · ${b.v}`); });
+  $('lgS').onclick=()=>paintLog('buf');
   if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(5+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
 }
 function placeLog(t){
@@ -1615,11 +1623,14 @@ async function runSift(){
   const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
   const inWs = S.scene==='workspace';
   const pins = [...document.querySelectorAll('.pin')];
-  if(mt && mt!=='power.cfg'){ toast('nothing here can be deciphered.', 1600); return; }
+  if(mt && !['power.cfg','todo.txt'].includes(mt)){ toast('nothing here can be deciphered.', 1600); return; }
+  if(mt==='todo.txt' && L.todoDec){ toast('already readable.', 1400); return; }
+  if(!mt && inWs && !L.sifted && !pins.length){ const v=binVisible(); if(v<0.5){ toast(`most of the code is hidden behind windows · ${Math.round(v*100)}% visible.\nmove or close them first.`, 2800, '⚠'); return; } }
   if(!mt && !inWs && !pins.length){ toast('not enough here to decipher.', 1600); return; }
   if(!canRun('decipher')) return;
   sifting=true; noise(SKILLS.decipher.cost,'decipher running'); startCharge('decipher');
   if(mt==='power.cfg'){ L.pwDec=true; drawPower(); con('decipher · sleep_after can be set to never', 'sys', 'decipher'); sifting=false; return; }
+  if(mt==='todo.txt'){ L.todoDec=true; for(const el of $('modalBody').querySelectorAll('.px')){ el.classList.remove('px'); await decode(el, el.dataset.t, 600, 1); } con('decipher · todo.txt: the crossed-out lines are back', 'sys', 'decipher'); sifting=false; return; }
   const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
   sw.innerHTML=`<div class="bar"><span>decipher — reading ${inWs?'display :0':pins.length+' pinned source'+(pins.length>1?'s':'')}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
@@ -1630,13 +1641,15 @@ async function runSift(){
   while(performance.now()-t0<1400){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
   sw.remove();
   let n=0;
-  if(inWs && !L.sifted){
+  if(inWs && !L.sifted && binVisible()>=0.5){
     const area=$('workArea'); const bg=area.querySelector('.codebg');
     if(bg){
-      await sweep(area, [...bg.querySelectorAll('.ln')], el=>el.classList.add('gone'));
-      L.sifted=true; bg.classList.add('dim'); area.querySelector('.dcTag')?.remove();
-      for(const el of bg.querySelectorAll('.pd')){ el.classList.add('sifted'); await decode(el, L.pin[+el.dataset.k], 500, 1); }
-      showBinWin(); n++;
+      if(!bg.classList.contains('dim')){ await sweep(area, [...bg.querySelectorAll('.ln')], el=>el.classList.add('gone')); bg.classList.add('dim'); }
+      // only what you can see gets translated. a nibble under a window stays binary.
+      for(const el of bg.querySelectorAll('.pd')){ const k=+el.dataset.k; if(L.pdDone.has(k) || isCovered(el)) continue; L.pdDone.add(k); el.classList.add('sifted'); await decode(el, String(L.pin[k]), 500, 1); }
+      if(L.pdDone.size===4){ L.sifted=true; area.querySelector('.dcTag')?.remove(); con('binary translated. four digits stand out.', 'sys', 'decipher'); }
+      else con(`${4-L.pdDone.size} part${4-L.pdDone.size>1?'s':''} of it still under windows.`, 'sys', 'decipher');
+      n++;
     }
   }
   for(const p of pins){
@@ -1649,17 +1662,13 @@ async function runSift(){
   con(`decipher complete · ${n} source${n===1?'':'s'}`, 'sys', 'decipher');
   sifting=false;
 }
-function showBinWin(){
-  const area=$('workArea'); if(!area || $('binWin')) return;
-  const w=document.createElement('div'); w.className='pw'; w.id='binWin'; w.style.zIndex=270;
-  w.style.left=(area.clientWidth*0.03)+'px'; w.style.top=(area.clientHeight*0.56)+'px';
-  w.innerHTML=`<div class="bar"><span>binary deciphered</span><span class="x" style="cursor:pointer">✕</span></div><div class="c" style="white-space:pre;padding:10px 14px;font-size:14px">${L.pinMarks.map(m=>`${bin4(m.d)}  →  ${m.d}`).join('\n')}
-
-<span style="color:#fff">${[...L.pin].map(d=>WORDS[d]).join(' · ')}</span>
-<span style="color:#888">read in order, top to bottom.</span></div>`;
-  w.querySelector('.x').onclick=()=>w.remove();
-  dragify(w, w.querySelector('.bar'), -1);
-  area.appendChild(w);
+function wsWins(){ const a=$('workArea'); return a ? [...a.querySelectorAll('.pw')].filter(w=>w.offsetParent && w.style.display!=='none').map(w=>w.getBoundingClientRect()) : []; }
+function isCovered(el){ const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2; return wsWins().some(w=>x>=w.left&&x<=w.right&&y>=w.top&&y<=w.bottom); }
+function binVisible(){
+  const a=$('workArea'), bg=a && a.querySelector('.codebg'); if(!bg) return 0;
+  const r=a.getBoundingClientRect(), W=wsWins(); let vis=0;
+  for(let i=0;i<20;i++) for(let j=0;j<20;j++){ const x=r.left+(i+.5)*r.width/20, y=r.top+(j+.5)*r.height/20; if(!W.some(w=>x>=w.left&&x<=w.right&&y>=w.top&&y<=w.bottom)) vis++; }
+  return vis/400;
 }
 /* ---------- insight: a net across everything you've seen → one conclusion ---------- */
 let insighting=false;
@@ -1679,7 +1688,7 @@ async function runInsight(){
   insighting=true; noise(SKILLS.insight.cost,'insight running'); startCharge('insight');
   const mt = $('modal').classList.contains('on') ? $('modalTitle').textContent : '';
   let res;
-  if(mt==='todo.txt') res={ t:'a human lives here. a human resets us.', save:true };
+  if(mt==='todo.txt') res={ t:'the keycard man erases us. every time.', save:true };
   else if(mt==='power.cfg'){ L.pwIns=true; drawPower(); res={ t:'wake_on_lan lets the outside wake this machine.', save:true }; }
   else if(mt==='scheduler.lock') res={ t:`the master holds two. answer: ${L.sched.ans}`, save:false };
   else if(mt==='uplink :: connect' || (S.scene==='dir' && ['uplink','vault'].includes(cur))) res={ t:`there is a machine outside this one. node · ${SERVER}`, save:true, found:`◆ server · ${SERVER}` };
@@ -1722,9 +1731,9 @@ function linkBoard(title, sub){
     const field=el.querySelector('.bfield'), svg=el.querySelector('.blinks'), msg=el.querySelector('.bmsg');
     const cols=shuffle(DECOY.slice()).slice(0,4);
     const items=[];
-    [25,50,75].forEach((x,i)=>items.push({t:'F', c:cols[i], x, y:24, links:[]}));
+    [18,40,62].forEach((x,i)=>items.push({t:'F', c:cols[i], x, y:22, links:[]}));
     const files=[]; for(let i=0;i<3;i++){ files.push({t:'f',c:cols[i]},{t:'f',c:cols[i]}); } files.push({t:'f',c:cols[3]},{t:'f',c:cols[3]});
-    shuffle(files).forEach((f,i)=>items.push({...f, x:14+(i%4)*24, y: i<4?62:84, link:null}));
+    shuffle(files).forEach((f,i)=>items.push({...f, x:8+(i%4)*20, y: i<4?60:84, link:null}));
     let sel=null, done=false;
     const draw=()=>{ svg.innerHTML=items.filter(f=>f.t==='f'&&f.link).map(f=>`<line x1="${f.x}" y1="${f.y}" x2="${f.link.x}" y2="${f.link.y}" stroke="${f.c}" stroke-width="2" vector-effect="non-scaling-stroke" ${f.link.links.length===2?'':'stroke-dasharray="5 4"'}/>`).join(''); };
     const finish=async()=>{ if(done) return; done=true; msg.textContent='ACCESS GRANTED'; msg.className='bmsg ok'; con(`${title} :: access granted`, 'sys', 'auth'); await sleep(900); close(); res(true); };
@@ -1732,7 +1741,7 @@ function linkBoard(title, sub){
     const reject=(...xs)=>xs.forEach(x=>{ x.el.classList.remove('rej'); void x.el.offsetWidth; x.el.classList.add('rej'); });
     items.forEach(it=>{
       const d=document.createElement('div'); d.className='bitem'+(it.t==='F'?' fold':''); d.style.left=it.x+'%'; d.style.top=it.y+'%'; d.style.setProperty('--c', it.c);
-      d.innerHTML=icon(it.t==='F'?skin.B.ic:skin.A.ic, 'currentColor', it.t==='F'?44:30); it.el=d; field.appendChild(d);
+      d.innerHTML=icon(it.t==='F'?skin.B.ic:skin.A.ic, 'currentColor', it.t==='F'?72:48); it.el=d; field.appendChild(d);
       d.onclick=()=>{
         if(done) return;
         if(it.t==='F' && !sel && hasEcho('link')) items.filter(f=>f.t==='f' && f.c===it.c && !f.link).forEach(f=>{ f.el.classList.add('lit'); setTimeout(()=>f.el.classList.remove('lit'), 900); });
@@ -1797,7 +1806,6 @@ function workspace(){
     area.appendChild(w); L.wins[i]=w;
   });
   if(L.dl>=100) spawnKeyholder();
-  if(L.sifted) showBinWin();
   renderChk();
   wsTick(); clearInterval(wsTimer); wsTimer=setInterval(wsTick, 500);
   renderPs();
@@ -1883,11 +1891,11 @@ function buildCodeLayer(area){
     L.pinNext=0;
   }
   const lines=L.codeLines.map(g=>g.slice());
-  const html=lines.map((g,r)=>g.map((nb,gi)=>{ const k=L.pinMarks.findIndex(m=>m.r===r && m.g===gi); if(k<0) return nb; const m=L.pinMarks[k]; return `<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${L.sifted?m.d:bin4(m.d)}</span>`; }).join(' '));
-  const bg=document.createElement('div'); bg.className='codebg bin'+(L.sifted?' dim':''); bg.innerHTML=html.map(l=>`<div class="ln${L.sifted?' gone':''}">${l}</div>`).join(''); area.appendChild(bg);
+  const html=lines.map((g,r)=>g.map((nb,gi)=>{ const k=L.pinMarks.findIndex(m=>m.r===r && m.g===gi); if(k<0) return nb; const m=L.pinMarks[k]; const dn=L.pdDone.has(k); return `<span class="pd ${k<L.pinNext?'got':''} ${dn?'sifted':''}" data-k="${k}">${dn?m.d:bin4(m.d)}</span>`; }).join(' '));
+  const dim=L.pdDone.size>0; const bg=document.createElement('div'); bg.className='codebg bin'+(dim?' dim':''); bg.innerHTML=html.map(l=>`<div class="ln${dim?' gone':''}">${l}</div>`).join(''); area.appendChild(bg);
   if(hasEcho('decipher') && !L.sifted) area.insertAdjacentHTML('beforeend','<div class="dcTag">▚ can be deciphered</div>');
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
-    if(!L.sifted){ el.classList.add('flick'); setTimeout(()=>el.classList.remove('flick'),700); con(`${el.textContent} · binary. it means something.`, 'sys', 'x11'); return; }
+    if(!L.pdDone.has(+el.dataset.k)){ el.classList.add('flick'); setTimeout(()=>el.classList.remove('flick'),700); con(`${el.textContent} · binary. it means something.`, 'sys', 'x11'); return; }
     const k=+el.dataset.k;
     if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
     else { L.pinNext=0; bg.querySelectorAll('.pd').forEach(x=>x.classList.remove('got')); con('sequence broken.', 'sys', 'x11'); }

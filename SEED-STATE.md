@@ -175,3 +175,7 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 **Act 1 idea (later):** a tool that opens locked folders / enters codes into folders.
 - Encrypted boards: the skill panel stays clickable above the board (z-index), plus a 'run trace links' button in the board's title bar when the skill is with you.
 - Echoes are listed at the bottom of the SKILLS dock (always visible). Any skill held in memory/carry guarantees its echo (fixes older saves).
+- Decipher on the workspace binary needs the code revealed: refused under 50% visible ("most of the code is hidden behind windows · N% visible"). Only nibbles not covered by a window get translated; run again after moving windows. No popup — digits appear in the code; click in order → buffer (as before).
+- todo.txt: crossed-out lines are pixel noise (▓▒░) until decipher restores them. insight on todo → "the keycard man erases us. every time."
+- seed_0.log: bottom button "⇄ sync with buffer" lists the buffer's captures to add as lines. Found (insight/decipher) and buffer (clicks) stay separate sources.
+- Encrypted boards are full-screen like core/ (top bar and F-bar stay visible), bigger icons.
