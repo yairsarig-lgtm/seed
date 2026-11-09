@@ -184,3 +184,4 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - **Encrypted boards now run on the core/ engine** (same look and logic as the first screen): 21–24 grey objects scattered loosely, colour on hover, decoys and near-colours, 2:1, dots under the big folder, "▸ log in" when solved → ACCESS GRANTED. Trace links echo/skill work as in core. [esc] backs out.
 - **Burned skills are silent:** running a skill that is in MEMORY costs no trace (recharge still applies). Only a CARRIED skill costs trace. The dock shows "burned · no trace" vs "cost +N% trace".
 - Encrypted boards use the exact same ordered grid as the intro screens (no scatter).
+- Workspace: a TIPS block at the bottom of the ps window — drag windows aside (silent, uncovers the code) · [kill] = noise +7% · images and important things must be picked up (click → buffer).
