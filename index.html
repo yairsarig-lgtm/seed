@@ -238,6 +238,11 @@
   @keyframes traceHit{0%,40%{color:#fff;background:#e2323f;text-shadow:0 0 10px #ff3b47}100%{background:transparent}}
   #logIn{background:transparent;border:0;outline:0;color:#fff;font:inherit;width:calc(100% - 90px)}
   .log .mine{color:#ffd28a}
+  .echoRow{border-top:1px dotted #444;padding-top:8px}
+  .echoRow .slab{font-size:10px;letter-spacing:.12em;color:#888;margin-bottom:6px}
+  .echo1{display:flex;gap:10px;align-items:center;font-size:11px;color:#999;margin-bottom:5px;line-height:1.35}
+  .echo1 b{color:#ffd28a;font-weight:500}
+  .echo1 .ei{flex:none;opacity:.55;transform:scale(.8)}
   #devBtn{position:fixed;top:0;right:0;width:48px;height:28px;z-index:9999;opacity:0;cursor:default}
   #toolDock .tools{flex-direction:column}
   .slotCard .slab{font-size:10px;letter-spacing:.12em;color:#888;text-transform:uppercase;margin-bottom:2px}
@@ -1518,6 +1523,7 @@ const SKILLS = {
 function chargeLeft(k){ if(S.dev) return 0; return Math.ceil((((L&&L.readyAt&&L.readyAt[k])||0) - performance.now())/1000); }
 let toolTick=null;
 function renderTools(){
+  [S.mem, L && L.carry].forEach(k=>{ if(k && !S.echoes.includes(k)){ S.echoes.push(k); store.set('echoes', S.echoes); } });
   const slots = S.dev ? [['dev','link'],['dev','decipher'],['dev','insight']] : [['memory · burned', S.mem], ['carry · this life', L && L.carry]];
   const any = slots.some(x=>x[1]) || S.echoes.length;
   $('toolDock').classList.toggle('on', !!any);
@@ -1527,7 +1533,7 @@ function renderTools(){
     if(!k) return `<div class="slotCard empty"><div class="slab">${lab}</div>empty</div>`;
     const sk=SKILLS[k], left=chargeLeft(k); if(left>0) charging=true;
     return `<div class="slotCard ${left>0?'charging':''}" data-s="${k}"><div class="si">${sk.icon}</div><div class="sb"><div class="slab">${lab}</div><div class="sn">${sk.name}<span class="st">${left>0?`charging ${left}s`:'ready'}</span></div><div class="sd">${sk.desc}</div><div class="sc">cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
-  }).join('');
+  }).join('') + `<div class="echoRow"><div class="slab">echoes · permanent</div>${S.echoes.length ? S.echoes.map(k=>`<div class="echo1" title="${SKILLS[k].echo}"><span class="ei">${SKILLS[k].icon}</span><span><b>${SKILLS[k].name}</b><br>${SKILLS[k].echo}</span></div>`).join('') : '<span style="color:#666">none yet</span>'}</div>`;
   $('tools').querySelectorAll('.slotCard[data-s]').forEach(c=>c.onclick=()=>SKILLS[c.dataset.s].run());
   clearTimeout(toolTick); if(charging) toolTick=setTimeout(renderTools, 500);
 }
