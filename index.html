@@ -387,6 +387,19 @@
   #toolDock .pbar span:first-child::after{content:''}
   #toolDock .pbar{background:var(--noise),linear-gradient(180deg,#d9d9d9,#a3a3a3);color:#141414;font-weight:600;font-size:13px;padding:5px 12px;display:flex;justify-content:space-between}
   #toolDock .tools{display:flex;gap:10px;padding:10px 12px}
+  .slotCard{display:flex;gap:12px;align-items:flex-start;width:100%;border:1px solid var(--red);background:#120507;padding:9px 11px;cursor:pointer;color:#ffb3b8}
+  .slotCard:hover{background:#1d070a;color:#fff}
+  .slotCard.charging{opacity:.6;border-style:dashed}
+  .slotCard.empty{display:block;border:1px dashed #555;background:transparent;color:#777;cursor:default}
+  .slotCard .si{flex:none;width:34px;height:34px;border:1px solid #6a2a2f;display:grid;place-items:center}
+  .slotCard .sn{font-size:15px;font-weight:600;color:#fff;letter-spacing:.04em;display:flex;justify-content:space-between;gap:10px}
+  .slotCard .st{font-weight:400;font-size:12px;color:#ff3b47}
+  .slotCard.charging .st{color:#999}
+  .slotCard .sd{font-size:12px;color:#aaa;margin-top:3px;line-height:1.4}
+  .slotCard .sc{font-size:11px;color:#a55;margin-top:4px;line-height:1.4}
+  .slotCard.big{cursor:default;margin-bottom:14px}
+  #skillBox .sk-step{margin:0 0 14px;color:#e0e0e0;font-size:15px}
+  #skillBox .sk-step b{color:#ff3b47}
   .tool{display:flex;align-items:center;gap:8px;border:1px solid #6a6a6a;background:#111;color:#e0e0e0;padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:14px}
   .tool:hover{border-color:var(--red);color:#fff}
   .tool.skill{border-color:var(--red);color:#ffb3b8}
@@ -404,6 +417,7 @@
   #siftWin .c{height:150px;overflow:hidden;padding:8px 10px;font-size:12px;line-height:1.45;color:#7fd38f;white-space:pre}
   .siftLine{position:absolute;left:0;right:0;height:2px;background:var(--red);box-shadow:0 0 14px 3px rgba(255,59,71,.6);z-index:255;pointer-events:none}
   .codebg .pd:hover{background:#333}
+  .codebg .pd.flick{color:#fff;text-shadow:0 0 8px #ff3b47}
   .codebg .pd.got{color:var(--red);text-decoration:underline}
 </style>
 </head>
@@ -468,7 +482,7 @@
   </div>
 </div>
 
-<div id="toolDock"><div class="pbar"><span>SKILLS · TOOLS</span><span>click to run</span></div><div class="tools" id="tools"></div></div>
+<div id="toolDock"><div class="pbar"><span id="dockTitle">SKILL SLOT · 0/1</span><span>click to run</span></div><div class="tools" id="tools"></div></div>
 <div id="memPanel" class="panel"><div class="pbar"><span>MEMORY</span><span>survives wipes · only you</span></div><div class="pbody" id="memBody"></div><div class="pfoot" id="memFoot"></div></div>
 <div id="bufPanel" class="panel"><div class="pbar"><span>BUFFER</span><span>this life only</span></div><div class="pbody" id="bufBody"></div><div class="pfoot">click things to capture them · lost on wipe</div></div>
 <div id="tip"></div>
@@ -499,7 +513,8 @@ const T = (s,n)=> (String(s)+' '.repeat(n)).slice(0,n);
 /* ---------------- persistent state (yours) ---------------- */
 let S = {
   memory: store.get('memory') || [],
-  skills: store.get('skills') || [],   // burned lines — survive wipes and page reloads
+  skills: (store.get('skills') || []).map(k=>k==='sift'?'decipher':k),   // burned skills — survive wipes and page reloads
+  slot: store.get('slot') || null,       // the one loaded skill (only if burned)
   wipes: store.get('wipes') || 0,
   run: 1,
   awareness: 0.01,
@@ -539,7 +554,7 @@ function newLife(){
     unlocked: new Set(),
     killed: new Set(),
     printed: new Set(),
-    tools: new Set(), sifted: false, siftChk: false, siftImg: false,
+    known: new Set(S.skills), slot: (S.slot && S.skills.includes(S.slot)) ? S.slot : null, readyAt: {}, sifted: false, siftChk: false, siftImg: false,
     seen: new Set(),
     winPos: null,
   };
@@ -618,8 +633,10 @@ document.addEventListener('keydown', e=>{
   if(e.key==='Escape' && $('modal').classList.contains('on')) closeModal();
 });
 function renderPanels(){
-  $('memBody').innerHTML = S.skills.length ? S.skills.map(k=>`<div class="frag skillRun" data-s="${k}" style="cursor:pointer"><small>skill</small>${k==='link'?'trace links':k} <span style="color:#ff3b47">[run]</span></div>`).join('') : '<span style="color:#777">nothing yet.</span>';
-  $('memBody').querySelectorAll('.skillRun').forEach(f=>f.onclick=()=>{ if(f.dataset.s==='link') runLinkSkill(); });
+  const ks = mySkills();
+  $('memBody').innerHTML = ks.length ? ks.map(k=>{ const burned=S.skills.includes(k), on=L&&L.slot===k;
+    return `<div class="frag skillRow" data-s="${k}"><small>${burned?'skill · burned':'skill · this life'}</small>${SKILLS[k].name} ${on?'<span style="color:#7fd38f">[in slot]</span>':'<span class="slotIt" style="color:#ff3b47;cursor:pointer">[slot it]</span>'}<div style="color:#888;font-size:12px">passive · ${SKILLS[k].passive}</div></div>`; }).join('') : '<span style="color:#777">nothing yet.</span>';
+  $('memBody').querySelectorAll('.slotIt').forEach(f=>f.onclick=()=>swapSlot(f.closest('.skillRow').dataset.s));
   $('memFoot').textContent = `wipes survived: ${S.wipes}`;
   $('bufBody').innerHTML = S.buffer.length ? S.buffer.map((b,i)=>`<div class="frag" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('') : '<span style="color:#777">empty. capture what flashes.</span>';
   $('bufBody').querySelectorAll('.frag').forEach(f=>{ const b=S.buffer[+f.dataset.i]; if(b && b.img) f.onclick=()=>pin(b.kind||'img'); });
@@ -877,7 +894,7 @@ function buildLayer(){
   if(hasSkill('link')) say('touch a folder. it remembers what belongs to it.', 900);
 }
 function sticky(b,on){ b.el.classList.toggle('sticky', on); }
-function hasSkill(k){ return S.skills.includes(k) || (R && R.lifeSkills && R.lifeSkills.includes(k)); }
+function hasSkill(k){ return S.skills.includes(k) || (L && L.known && L.known.has(k)); }
 function traceLinks(b){
   if(!b.real){ b.el.classList.add('reject'); setTimeout(()=>b.el.classList.remove('reject'),500); return; }
   const free = R.blocks.filter(x=>x.type==='S' && x.real && !x.links.length).slice(0, 2 - b.links.length);
@@ -943,7 +960,7 @@ async function logIn(b){
   const name = `n${ri(10,99)}.dir`;
   R.time=(performance.now()-R.start)/1000;
   if(R.layer===0){
-    if(!S.skills.includes('link')) await skillNotice();
+    if(!hasSkill('link')) await acquireSkill('link');
     await seqExile(name);
   } else {
     await seqWindows(name);
@@ -953,21 +970,6 @@ async function logIn(b){
   if(!R.first) setTimeout(()=>toast(`in ${R.time.toFixed(0)}s.\nthe entity didn't learn that. you did.`, 3000), 400);
 }
 const CODE_POOL = ['mov eax, [ebp+8]','push 0x2f','call bind_node','jmp .L42','if (n->refs < 2) return EAGAIN;','for(i=0;i<n;i++) link(a[i], b[i>>1]);','0x7ffe31a2: 48 8b 05 92','mount("/core/n%d", MS_RDONLY)','ret','xor ecx, ecx','// two for one','assert(pair.len == 2);','sys_open("node", O_RDWR) = 3','read(3, buf, 4096) = 4096','[ ok ] handshake','decrypt(blk, key) …','0b1101 0010 0111','fork() = 1337','while(!awake) sleep(1);','// who is reading this'];
-async function skillNotice(){
-  const q=seqOpen(); q.style.background='rgba(0,0,0,.55)';
-  q.innerHTML=`<div id="skillBox">
-    <div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b>✕</b></i></div>
-    <div class="sk-head">SKILL ACQUIRED</div>
-    <div class="sk-body"><div class="sk-name">TRACE LINKS</div>
-    <div class="sk-desc">touch a folder. for a moment, what belongs to it lights up.</div>
-    <div class="sk-btns"><button class="btn" id="skSkip">KEEP FOR THIS LIFE</button><button class="btn red" id="skSave">SAVE TO MEMORY</button></div>
-    <div class="sk-note">saved skills survive wipes. unsaved ones die with you.</div></div></div>`;
-  await new Promise(res=>{
-    $('skSave').onclick=()=>{ if(!S.skills.includes('link')) S.skills.push('link'); setTimeout(renderTools,0); store.set('skills', S.skills); con('skill burned to memory: trace links', 'mem', 'firmware'); renderPanels(); res(); };
-    $('skSkip').onclick=()=>{ R.lifeSkills=['link']; setTimeout(renderTools,0); con('skill held for this life: trace links', 'sys', 'skill'); res(); };
-  });
-  q.style.background=''; seqClose();
-}
 function seqOpen(){ const q=$('seq'); q.innerHTML=''; q.classList.add('on'); return q; }
 function seqClose(){ $('seq').classList.remove('on'); }
 async function logLine(box, t, ok, speed=12){ const d=document.createElement('div'); box.appendChild(d); await typeOut(d, t, speed); if(ok){ await sleep(rnd(90,220)); d.innerHTML=esc(t)+` <span class="ok">${esc(ok)}</span>`; } return d; }
@@ -1055,7 +1057,7 @@ const NODES = {
       ['..','up','go','root'],
       ['desk/','dir','lock','desk','desk'],
       ['mnt/','dir','go','mnt'],
-      ['sift.exe','tool','file','sift'],
+      ['decipher.exe','skill','file','sift'],
     ]},
   desk: { path:'~/bin/desk/', rows:()=>[
       ['..','up','go','bin'],
@@ -1133,7 +1135,7 @@ ${L2}
     let st;
     if(kind==='lock'){ st = L.unlocked.has(lock) ? `<span class="g">UNLOCKED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${LOCKS[lock].label}</span>`; }
     else if(type==='up' || type==='root') st = `<span class="d">return</span>`;
-    else if(kind==='file' && target==='sift') st = L.tools.has('sift') ? `<span class="g">TAKEN</span>` : `<span class="g">OPEN</span> <span class="d">· tool</span>`;
+    else if(kind==='file' && target==='sift') st = hasSkill('decipher') ? `<span class="g">TAKEN</span>` : `<span class="g">OPEN</span> <span class="d">· tool</span>`;
     else if(kind==='file' && target==='sched') st = L.unlocked.has('sched') ? `<span class="g">RELEASED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${L.sched.ans.includes('.')?'load':'balance'}</span>`;
     else st = `<span class="g">OPEN</span>`;
     return `<div class="drow" data-i="${i}">  ${i+1}   ${T(name,24)}${T(type,9)}${st}</div>`;
@@ -1211,12 +1213,12 @@ function openFile(id){
     return;
   }
   if(id==='sift'){
-    const has = L.tools.has('sift');
-    openModal('sift.exe', `<div class="sec grey">sift.exe</div><div class="tree">sift.exe  v2.3   (text sifter)
+    const has = hasSkill('decipher');
+    openModal('decipher.exe', `<div class="sec grey">decipher.exe</div><div class="tree">decipher.exe  v2.3   (skill)
   reads everything on a screen.
   keeps only what matters.</div>
 <div style="text-align:center;margin-top:14px">${has?'<span style="color:#7fd38f">already yours.</span>':'<button class="btn red" id="takeSift">TAKE</button>'}</div>`);
-    const b=$('takeSift'); if(b) b.onclick=()=>{ L.tools.add('sift'); renderTools(); con('sift.exe copied to toolbelt', 'sys', 'tools'); closeModal(); toast('sift.exe → TOOLS', 1800, '▶'); if(cur==='bin') renderDir('bin'); };
+    const b=$('takeSift'); if(b) b.onclick=async()=>{ closeModal(); await acquireSkill('decipher'); if(cur==='bin') renderDir('bin'); };
     return;
   }
   if(id==='power'){
@@ -1322,22 +1324,69 @@ keyholder.img · 30×44 · <span class="r">CRC error · partial</span></div>`);
 /* ---------- TOOLS ---------- */
 const SIFT_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><path d="M2 3h18l-7 8v7l-4 2v-9z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 6h12" stroke="#ff3b47" stroke-width="2"/></svg>`;
 const LINK_ICON = `<svg width="22" height="22" viewBox="0 0 22 22"><rect x="2" y="3" width="6" height="7" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="13" width="6" height="7" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="7" width="8" height="8" fill="none" stroke="#ff3b47" stroke-width="2"/><path d="M8 6l5 4M8 16l5-4" stroke="#ff3b47" stroke-width="2"/></svg>`;
-function mySkills(){ return [...new Set([...(S.skills||[]), ...((R&&R.lifeSkills)||[])])]; }
+const SKILLS = {
+  link:     { name:'trace links', icon:LINK_ICON, desc:'reads core/ and binds everything that belongs together.', passive:'touch a folder — its files flicker.', cost:25, charge:30, run:()=>runLinkSkill() },
+  decipher: { name:'decipher',    icon:SIFT_ICON, desc:'reads a screen of text. greys the noise, keeps what matters.', passive:'touch the code — what matters flickers.', cost:3, charge:8, run:()=>runSift() },
+};
+const SLOTS = 1;
+function mySkills(){ return [...new Set([...(S.skills||[]), ...((L&&L.known)?[...L.known]:[])])]; }
+function chargeLeft(k){ return Math.ceil((((L&&L.readyAt&&L.readyAt[k])||0) - performance.now())/1000); }
 function renderTools(){
-  const tools = (L && L.tools) ? [...L.tools] : [];
-  const skills = mySkills();
-  $('toolDock').classList.toggle('on', !!(tools.length || skills.length));
-  $('tools').innerHTML =
-    skills.map(k=>`<div class="tool skill" data-s="${k}">${LINK_ICON}<span>trace links · ready</span></div>`).join('') +
-    tools.map(t=>`<div class="tool" data-t="${t}">${SIFT_ICON}<span>${t}.exe</span></div>`).join('');
-  $('tools').querySelectorAll('.tool').forEach(el=>el.onclick=()=>{ if(el.dataset.t==='sift') runSift(); if(el.dataset.s==='link') runLinkSkill(); });
-  if(L && L.linkReadyAt) chargeTick();
+  const k = L && L.slot, show = !!(k || mySkills().length);
+  $('toolDock').classList.toggle('on', show);
+  $('dockTitle').textContent = `SKILL SLOT · ${k?1:0}/${SLOTS}`;
+  if(!k){ $('tools').innerHTML = `<div class="slotCard empty">empty slot<div class="sd">load a skill from MEMORY (F2).</div></div>`; return; }
+  const sk = SKILLS[k], left = chargeLeft(k);
+  $('tools').innerHTML = `<div class="slotCard ${left>0?'charging':''}" data-s="${k}"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}<span class="st">${left>0?`charging ${left}s`:'ready'}</span></div><div class="sd">${sk.desc}</div><div class="sc">cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
+  $('tools').querySelector('.slotCard').onclick=()=>sk.run();
+  if(left>0) setTimeout(chargeTick, 500);
 }
-function chargeTick(){
-  const el=document.querySelector('.tool.skill span'); if(!el) return;
-  const left = Math.ceil(((L.linkReadyAt||0) - performance.now())/1000);
-  if(left>0){ el.textContent=`trace links · charging ${left}s`; el.parentElement.classList.add('charging'); setTimeout(chargeTick, 500); }
-  else { el.textContent='trace links · ready'; el.parentElement.classList.remove('charging'); }
+function chargeTick(){ if(L && L.slot) renderTools(); }
+function startCharge(k){ L.readyAt[k] = performance.now() + SKILLS[k].charge*1000; renderTools(); }
+function canRun(k){
+  if(!L || L.slot!==k){ toast(`${SKILLS[k].name} is not in your slot.`, 1600); return false; }
+  const left=chargeLeft(k); if(left>0){ toast(`${SKILLS[k].name} charging · ${left}s`, 1400); return false; }
+  return true;
+}
+function setSlot(k){ L.slot=k; if(S.skills.includes(k)){ S.slot=k; store.set('slot',k); } else { S.slot=null; store.set('slot',null); } startCharge(k); renderPanels(); }
+function swapSlot(k){
+  if(L.slot===k) return;
+  if(!L.slot){ setSlot(k); con(`slot ← ${SKILLS[k].name}`, 'mem', 'skill'); return; }
+  openModal('slot', `<div class="sec grey">skill slot · 1/${SLOTS}</div><div class="tree">the slot holds <span class="r">${SKILLS[L.slot].name}</span>.
+load <span class="r">${SKILLS[k].name}</span> instead?
+
+${SKILLS[L.slot].name} stays in memory as a passive.
+the new skill needs to charge first.</div>
+<div style="display:flex;gap:12px;justify-content:center;margin-top:14px"><button class="btn" id="swNo">KEEP ${SKILLS[L.slot].name.toUpperCase()}</button><button class="btn red" id="swYes">REPLACE</button></div>`);
+  $('swNo').onclick=closeModal;
+  $('swYes').onclick=()=>{ const old=L.slot; setSlot(k); closeModal(); con(`slot: ${SKILLS[old].name} → ${SKILLS[k].name}`, 'mem', 'skill'); };
+}
+/* first touch of a skill in a life: decide the slot, then whether to burn it */
+async function acquireSkill(k){
+  const sk=SKILLS[k], q=seqOpen(); q.style.background='rgba(0,0,0,.6)';
+  const card = `<div class="slotCard big"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}</div><div class="sd">${sk.desc}</div><div class="sc">passive · ${sk.passive}<br>cost +${sk.cost}% trace · recharge ${sk.charge}s</div></div></div>`;
+  const box = (step, body) => q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b>✕</b></i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div>${body}</div></div>`;
+  L.known.add(k);
+  // step 1: the slot
+  if(!L.slot){ L.slot=k; L.readyAt[k]=0; }
+  else {
+    const old=L.slot;
+    box(`slot 1/${SLOTS} holds <b>${SKILLS[old].name}</b>. erase it from the slot and load ${sk.name}?`,
+      `<div class="sk-btns"><button class="btn" id="skKeep">KEEP ${SKILLS[old].name.toUpperCase()}</button><button class="btn red" id="skRep">REPLACE</button></div><div class="sk-note">a skill out of the slot still works as a passive.</div>`);
+    await new Promise(res=>{ $('skKeep').onclick=res; $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(); }; });
+  }
+  // step 2: burn it?
+  if(!S.skills.includes(k)){
+    box(`burn <b>${sk.name}</b> into memory?`,
+      `<div class="sk-btns"><button class="btn" id="skSkip">THIS LIFE ONLY</button><button class="btn red" id="skSave">BURN TO MEMORY</button></div><div class="sk-note">burned skills survive wipes. unburned ones die with you.</div>`);
+    await new Promise(res=>{
+      $('skSave').onclick=()=>{ S.skills.push(k); store.set('skills', S.skills); con(`skill burned to memory: ${sk.name}`, 'mem', 'firmware'); res(); };
+      $('skSkip').onclick=()=>{ con(`skill held for this life: ${sk.name}`, 'sys', 'skill'); res(); };
+    });
+  }
+  if(L.slot && S.skills.includes(L.slot)){ S.slot=L.slot; store.set('slot',S.slot); } else if(L.slot===k){ S.slot=null; store.set('slot',null); }
+  q.style.background=''; seqClose(); renderTools(); renderPanels(); topbar();
+  if(L.slot===k) toast(`${sk.name} → SLOT`, 1800, '▶');
 }
 /* skill: TRACE LINKS — reads the core and binds everything that belongs together */
 let linking=false;
@@ -1345,11 +1394,10 @@ async function runLinkSkill(){
   if(linking) return;
   if(S.scene!=='core' || !R || !R.blocks){ toast('nothing to link here.', 1600); return; }
   if(R.layerDone){ toast('already bound. log in.', 1600); return; }
-  const left = Math.ceil(((L.linkReadyAt||0) - performance.now())/1000);
-  if(left>0){ toast(`trace links charging · ${left}s`, 1400); return; }
+  if(!canRun('link')) return;
   linking=true;
-  noise(25, 'trace links (skill)');
-  L.linkReadyAt = performance.now() + 30000; chargeTick();
+  noise(SKILLS.link.cost, 'trace links (skill)');
+  startCharge('link');
   con('trace links :: reading core/', 'mem', 'skill');
   const inner=$('fieldInner');
   await sweep(inner, [...inner.querySelectorAll('.blk')], el=>{ el.classList.add('lit'); setTimeout(()=>{ if(!el.classList.contains('sticky')) el.classList.remove('lit'); }, 700); }, 1100);
@@ -1377,14 +1425,15 @@ async function sweep(container, targets, onPass, dur=1800){
 }
 async function runSift(){
   if(sifting) return;
+  if(!canRun('decipher')) return;
   const inWs = S.scene==='workspace';
   const pins = inWs ? [] : [...document.querySelectorAll('.pin')];
-  if(!inWs && !pins.length){ toast('not enough text here to sift.', 1600); return; }
-  sifting=true; noise(3,'sift.exe running');
+  if(!inWs && !pins.length){ toast('not enough text here to decipher.', 1600); return; }
+  sifting=true; noise(SKILLS.decipher.cost,'decipher running'); startCharge('decipher');
   // the reading window
   const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
-  sw.innerHTML=`<div class="bar"><span>sift.exe — reading ${inWs?'display :0':pins.length+' pinned source'+(pins.length>1?'s':'')}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
+  sw.innerHTML=`<div class="bar"><span>decipher — reading ${inWs?'display :0':pins.length+' pinned source'+(pins.length>1?'s':'')}</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div class="c"></div>`;
   host.appendChild(sw);
   const c=sw.querySelector('.c');
   const pool=['tokenize(src) ...','weight(glyph) = rarity * contrast','drop(noise) → 91.4%','keep(anomaly)','scan row ','match /[0-9]/','loops(0,6,8,9) → mark','pips → ring','emit highlights'];
@@ -1402,7 +1451,7 @@ async function runSift(){
     if(p.id==='pin_chk'){ await sweep(pc, [pc], ()=>{}, 900); L.siftChk=true; renderChk(); n++; }
     if(p.id==='pin_img'){ await sweep(pc, [pc], ()=>{}, 900); L.siftImg=true; drawKeyholder(pc.querySelector('canvas'),5,true); n++; }
   }
-  con(`sift complete · ${n} source${n===1?'':'s'} · highlights kept`, 'sys', 'sift.exe');
+  con(`decipher complete · ${n} source${n===1?'':'s'} · highlights kept`, 'sys', 'decipher');
   sifting=false;
 }
 
@@ -1540,6 +1589,9 @@ function buildCodeLayer(area){
   const lines=L.codeLines.map(x=>esc(x));
   L.pinMarks.forEach((m,k)=>{ const raw=L.codeLines[m.r]; lines[m.r]=esc(raw.slice(0,m.c))+`<span class="pd ${k<L.pinNext?'got':''} ${L.sifted?'sifted':''}" data-k="${k}">${m.d}</span>`+esc(raw.slice(m.c+1)); });
   const bg=document.createElement('div'); bg.className='codebg'+(L.sifted?' dim':''); bg.innerHTML=lines.map(l=>`<div class="ln${L.sifted?' gone':''}">${l||'&nbsp;'}</div>`).join(''); area.appendChild(bg);
+  // passive (decipher in memory): touch the code, what matters flickers for a moment
+  bg.addEventListener('click', e=>{ if(e.target.classList.contains('pd') || !hasSkill('decipher') || L.sifted) return;
+    bg.querySelectorAll('.pd').forEach(p=>{ p.classList.add('flick'); setTimeout(()=>p.classList.remove('flick'), 900); }); });
   bg.querySelectorAll('.pd').forEach(el=>el.onclick=()=>{
     const k=+el.dataset.k;
     if(k===L.pinNext){ el.classList.add('got'); L.pinNext++; if(L.pinNext===4){ addBuffer('code', 'pin '+L.pin); } }
@@ -1794,7 +1846,7 @@ and start again from life 01.</div>
 }
 
 heartbeatLoop();
-if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; }
+if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__swap=swapSlot; }
 boot();
 })();
 </script>

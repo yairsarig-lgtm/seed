@@ -132,3 +132,13 @@ Through the folders of the machine/server, the entity discovers that the human o
 - **Now you are the memory.** (Pays off the opening line: "You are memory.")
 
 Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what the human sees vs. what's behind it), the human's presence (active = double noise, night = free), a `memory/` folder that shows the player's own burned lines and lives as files, memory growing from 1 line to 3, prologue rules re-skinned (2:1 → disk mirroring, loops → file integrity, heartbeat → activity LED).
+
+
+## Skill slot (added)
+- MEMORY = burned skills (survive wipes). Every known skill gives a **passive** clue: trace links → touch a folder, its files flicker; decipher → touch the workspace code, the 4 digits flicker.
+- **SKILL SLOT 1/1** (top-right dock): only the slotted skill can be *run*. Card = icon, name, ready/charging, one-line description, cost.
+- First touch of a skill in a life → skill.sys: step 1 slot (empty → auto-load; full → REPLACE / KEEP old), step 2 burn (BURN TO MEMORY / THIS LIFE ONLY).
+- Swap later from MEMORY (F2) `[slot it]` → confirm; the new skill starts charging.
+- Slot persists across lives only if the slotted skill is burned (`seed3_slot`).
+- sift.exe renamed **decipher.exe** (a skill now). Costs: trace links +25% / 30s, decipher +3% / 8s.
+- Future: more slots = an Act 1 reward.
