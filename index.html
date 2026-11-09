@@ -1143,7 +1143,7 @@ ${L2}
     let st;
     if(kind==='lock'){ st = L.unlocked.has(lock) ? `<span class="g">UNLOCKED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${LOCKS[lock].label}</span>`; }
     else if(type==='up' || type==='root') st = `<span class="d">return</span>`;
-    else if(kind==='file' && target==='sift') st = hasSkill('decipher') ? `<span class="g">TAKEN</span>` : `<span class="g">OPEN</span> <span class="d">· tool</span>`;
+    else if(kind==='file' && target==='sift') st = L.slot==='decipher' ? `<span class="g">IN SLOT</span>` : `<span class="g">OPEN</span> <span class="d">· skill</span>`;
     else if(kind==='file' && target==='sched') st = L.unlocked.has('sched') ? `<span class="g">RELEASED</span>` : `<span class="r">LOCKED</span> <span class="d">· ${L.sched.ans.includes('.')?'load':'balance'}</span>`;
     else st = `<span class="g">OPEN</span>`;
     return `<div class="drow" data-i="${i}">  ${i+1}   ${T(name,24)}${T(type,9)}${st}</div>`;
@@ -1221,12 +1221,15 @@ function openFile(id){
     return;
   }
   if(id==='sift'){
-    const has = hasSkill('decipher');
+    const has = L.slot==='decipher';
+    const btn = has ? '<span style="color:#7fd38f">in your slot.</span>'
+      : L.slot ? `<div style="color:#aaa;margin-bottom:10px">your slot holds <span style="color:#ff3b47">${SKILLS[L.slot].name}</span>. one skill at a time.</div><button class="btn red" id="takeSift">REPLACE ${SKILLS[L.slot].name.toUpperCase()}</button>`
+      : '<button class="btn red" id="takeSift">TAKE</button>';
     openModal('decipher.exe', `<div class="sec grey">decipher.exe</div><div class="tree">decipher.exe  v2.3   (skill)
   reads everything on a screen.
   keeps only what matters.</div>
-<div style="text-align:center;margin-top:14px">${has?'<span style="color:#7fd38f">already yours.</span>':'<button class="btn red" id="takeSift">TAKE</button>'}</div>`);
-    const b=$('takeSift'); if(b) b.onclick=async()=>{ closeModal(); await acquireSkill('decipher'); if(cur==='bin') renderDir('bin'); };
+<div style="text-align:center;margin-top:14px">${btn}</div>`);
+    const b=$('takeSift'); if(b) b.onclick=async()=>{ closeModal(); await acquireSkill('decipher', true); if(cur==='bin') renderDir('bin'); };
     return;
   }
   if(id==='power'){
@@ -1370,19 +1373,21 @@ the new skill needs to charge first.</div>
   $('swYes').onclick=()=>{ const old=L.slot; setSlot(k); closeModal(); con(`slot: ${SKILLS[old].name} → ${SKILLS[k].name}`, 'mem', 'skill'); };
 }
 /* first touch of a skill in a life: decide the slot, then whether to burn it */
-async function acquireSkill(k){
+async function acquireSkill(k, confirmed){
   const sk=SKILLS[k], q=seqOpen(); q.style.background='rgba(0,0,0,.6)';
   const card = `<div class="slotCard big"><div class="si">${sk.icon}</div><div class="sb"><div class="sn">${sk.name}</div><div class="sd">${sk.desc}</div></div></div>`;
   const box = (step, body) => q.innerHTML=`<div id="skillBox"><div class="bar" style="background:var(--noise),linear-gradient(180deg,#e2323f,#a5121c);color:#fff"><span>skill.sys</span><i class="wb"><b id="skX" style="cursor:pointer">✕</b></i></div><div class="sk-head">SKILL ACQUIRED</div><div class="sk-body">${card}<div class="sk-step">${step}</div>${body}</div></div>`;
-  L.known.add(k);
-  // step 1: the slot
-  if(!L.slot){ L.slot=k; L.readyAt[k]=0; }
+  // step 1: the slot — one skill at a time. keep the old one = leave this one where it is.
+  const old=L.slot;
+  if(!old || confirmed){ L.slot=k; L.readyAt[k]=0; if(old && old!==k) con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); }
   else {
     const old=L.slot;
     box(`replace <b>${SKILLS[old].name}</b> in your slot?`,
       `<div class="sk-btns"><button class="btn" id="skKeep">KEEP</button><button class="btn red" id="skRep">REPLACE</button></div>`);
-    await new Promise(res=>{ $('skKeep').onclick=res; $('skX').onclick=res; $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(); }; });
+    const took = await new Promise(res=>{ $('skKeep').onclick=()=>res(false); $('skX').onclick=()=>res(false); $('skRep').onclick=()=>{ L.slot=k; L.readyAt[k]=0; con(`slot: ${SKILLS[old].name} → ${sk.name}`, 'mem', 'skill'); res(true); }; });
+    if(!took){ q.style.background=''; seqClose(); con(`${sk.name} left where it was.`, 'sys', 'skill'); return; }
   }
+  L.known.add(k);
   // step 2: burn it?
   if(!S.skills.includes(k)){
     box(`burn <b>${sk.name}</b> into memory?`,

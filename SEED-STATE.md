@@ -148,3 +148,4 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - Skill slot, buffer and memory panels are draggable anywhere by their title bar (clamped on screen); double-click the title to snap back.
 - checksum.svc windows (workspace + pinned) are bigger so every row fits.
 - skill.sys pickup window trimmed: card = icon, name, one line; question "replace X in your slot?" KEEP / REPLACE; ✕ works (= keep / this life only).
+- decipher.exe can always be reopened. With a skill already slotted the only option is **REPLACE <slotted skill>**; closing the window leaves decipher in ~/bin/ untaken (no passive, not known) to claim later. Never two in the slot.
