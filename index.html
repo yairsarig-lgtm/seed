@@ -927,14 +927,14 @@ function startCore(){
 }
 function say(t, delay=0){ const tok=R.token; setTimeout(()=>{ if(S.scene==='core' && R.token===tok) con(t,'rem','seed'); }, delay); }
 function buildLayer(){
-  const Ld = R.layer==='mix' ? (R.mix || (R.mix = pick([
+  const Ld = R.layer==='board' ? R.boardSpec : R.layer==='mix' ? (R.mix || (R.mix = pick([
       { cols:8,  rows:3, A:4, B:2, nearA:0, nearB:0, sm:36, lg:50, nSmall:16, pal:3, title:'core/' },
       { cols:8,  rows:4, A:6, B:3, nearA:2, nearB:0, sm:32, lg:44, nSmall:21, pal:4, title:'core/' },
       { cols:12, rows:4, A:6, B:3, nearA:4, nearB:1, sm:28, lg:40, nSmall:33, pal:5, title:'core/' },
     ]))) : LAYERS[R.layer];
   const inner=$('fieldInner'); inner.querySelectorAll('.blk').forEach(b=>b.remove()); $('links').innerHTML='';
   Object.assign(R, { blocks:[], sel:null, done:0, nB:Ld.B, anyLink:false, layerDone:false, token:Math.random() });
-  $('fieldTitle').textContent = Ld.title.replace('?', ri(10,99)).replace('   ·   ',' - ') + ` - ${Ld.cols*Ld.rows} objects`;
+  $('fieldTitle').textContent = R.layer==='board' ? `${Ld.title} · encrypted - ${Ld.cols*Ld.rows} objects · [esc] back` : Ld.title.replace('?', ri(10,99)).replace('   ·   ',' - ') + ` - ${Ld.cols*Ld.rows} objects`;
   const total = Ld.cols*Ld.rows;
   const palette = shuffle(DECOY.filter(c=>![skin.A.c,skin.B.c,skin.A.near,skin.B.near].includes(c))).slice(0,Ld.pal);
   const nSmall = Ld.nSmall, nBig = total - nSmall;
@@ -956,6 +956,7 @@ function buildLayer(){
   inner.querySelectorAll('.cframe').forEach(x=>x.remove()); inner.appendChild(fr);
   shuffle(items).forEach((it,i)=>{
     const p=cells[i]; const small = 'Aas'.includes(it.t);
+    if(R.layer==='board'){ const c=i%Ld.cols, r=Math.floor(i/Ld.cols); p.x = 7 + c*(62/(Ld.cols-1)) + (Math.random()-.5)*7; p.y = 14 + r*(46/(Ld.rows-1)) + (Math.random()-.5)*12; }
     const d=document.createElement('div'); d.className='blk f';
     d.style.left=p.x+'%'; d.style.top=p.y+'%';
     d.style.setProperty('--c', it.c);
@@ -970,7 +971,7 @@ function buildLayer(){
   });
   inner.onclick = () => { if(R.sel){ R.sel.el.classList.remove('sel','sticky'); R.sel=null; } };
   // the seed talks to itself
-  const lines = R.layer==='mix' ? SELF.later.concat(R.mix.nearA? SELF.l2 : SELF.l1.slice(1)) : SELF['l'+R.layer];
+  const lines = R.layer==='board' ? ['locked. it wants the same thing.', 'two for one. always.'] : R.layer==='mix' ? SELF.later.concat(R.mix.nearA? SELF.l2 : SELF.l1.slice(1)) : SELF['l'+R.layer];
   lines.forEach((t,i)=>say(t, 1800 + i*(R.layer===0?7000:4500)));
   if(hasEcho('link')) say('touch a folder. it remembers what belongs to it.', 900);
 }
@@ -1034,10 +1035,12 @@ window.addEventListener('resize', ()=>{ if(R && S.scene==='core') drawLinks(); }
 function layerSolved(){
   R.layerDone = true;
   R.blocks.filter(x=>x.type==='L' && x.real).forEach(x=>x.el.classList.add('ready'));
+  if(R.layer==='board'){ con(`${R.boardSpec.title} :: access granted`, 'sys', 'auth'); toast('ACCESS GRANTED\nlog in.', 1800, '▶'); return; }
   con(R.layer<2 ? 'it opens. go in.' : 'the last one. go in.', 'sys', 'seed');
   if(R.first && R.layer===0) toast('a door is a file you can enter.', 2400);
 }
 async function logIn(b){
+  if(R.layer==='board'){ R.boardEnd(true); return; }
   if(busy) return; busy=true;
   const name = `n${ri(10,99)}.dir`;
   R.time=(performance.now()-R.start)/1000;
@@ -1727,38 +1730,19 @@ function showInsight(res){
 let board=null;
 function linkBoard(title, sub){
   return new Promise(res=>{
-    const el=document.createElement('div'); el.id='board';
-    el.innerHTML=`<div class="bwin"><div class="bar"><span>${esc(title)} · encrypted</span>${inSlots('link')?'<button class="brun">run trace links</button>':''}<span class="x" style="cursor:pointer">✕</span></div><div class="bsub">${esc(sub)}</div><div class="bfield"><svg class="blinks" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div><div class="bmsg">two for one.</div></div>`;
-    document.body.appendChild(el); document.body.classList.add('boardOn');
-    const close=()=>{ el.remove(); board=null; document.body.classList.remove('boardOn'); };
-    const rb=el.querySelector('.brun'); if(rb) rb.onclick=()=>runLinkSkill();
-    const field=el.querySelector('.bfield'), svg=el.querySelector('.blinks'), msg=el.querySelector('.bmsg');
-    const cols=shuffle(DECOY.slice()).slice(0,4);
-    const items=[];
-    [18,40,62].forEach((x,i)=>items.push({t:'F', c:cols[i], x, y:22, links:[]}));
-    const files=[]; for(let i=0;i<3;i++){ files.push({t:'f',c:cols[i]},{t:'f',c:cols[i]}); } files.push({t:'f',c:cols[3]},{t:'f',c:cols[3]});
-    shuffle(files).forEach((f,i)=>items.push({...f, x:8+(i%4)*20, y: i<4?60:84, link:null}));
-    let sel=null, done=false;
-    const draw=()=>{ svg.innerHTML=items.filter(f=>f.t==='f'&&f.link).map(f=>`<line x1="${f.x}" y1="${f.y}" x2="${f.link.x}" y2="${f.link.y}" stroke="${f.c}" stroke-width="2" vector-effect="non-scaling-stroke" ${f.link.links.length===2?'':'stroke-dasharray="5 4"'}/>`).join(''); };
-    const finish=async()=>{ if(done) return; done=true; msg.textContent='ACCESS GRANTED'; msg.className='bmsg ok'; con(`${title} :: access granted`, 'sys', 'auth'); await sleep(900); close(); res(true); };
-    const bind=(f,F)=>{ if(f.link){ f.link.links=f.link.links.filter(x=>x!==f); } f.link=F; F.links.push(f); f.el.classList.add('done'); if(F.links.length===2) F.el.classList.add('done'); draw(); if(items.filter(x=>x.t==='F').every(x=>x.links.length===2)) finish(); };
-    const reject=(...xs)=>xs.forEach(x=>{ x.el.classList.remove('rej'); void x.el.offsetWidth; x.el.classList.add('rej'); });
-    items.forEach(it=>{
-      const d=document.createElement('div'); d.className='bitem'+(it.t==='F'?' fold':''); d.style.left=it.x+'%'; d.style.top=it.y+'%'; d.style.setProperty('--c', it.c);
-      d.innerHTML=icon(it.t==='F'?skin.B.ic:skin.A.ic, 'currentColor', it.t==='F'?72:48); it.el=d; field.appendChild(d);
-      d.onclick=()=>{
-        if(done) return;
-        if(it.t==='F' && !sel && hasEcho('link')) items.filter(f=>f.t==='f' && f.c===it.c && !f.link).forEach(f=>{ f.el.classList.add('lit'); setTimeout(()=>f.el.classList.remove('lit'), 900); });
-        if(!sel){ if(it.t==='f' && it.link){ it.link.links=it.link.links.filter(x=>x!==it); it.link.el.classList.remove('done'); it.link=null; it.el.classList.remove('done'); draw(); return; } sel=it; d.classList.add('sel'); return; }
-        const a=sel; a.el.classList.remove('sel'); sel=null; if(a===it) return;
-        if(a.t===it.t){ reject(a,it); return; }
-        const f=a.t==='f'?a:it, F=a.t==='F'?a:it;
-        if(f.c!==F.c || F.links.length>=2){ reject(f,F); return; }
-        bind(f,F);
-      };
-    });
-    el.querySelector('.x').onclick=()=>{ close(); res(false); };
-    board={ auto: async()=>{ for(const F of items.filter(x=>x.t==='F')) for(const f of items.filter(x=>x.t==='f' && x.c===F.c && !x.link)){ if(F.links.length<2){ bind(f,F); await sleep(220); } } } };
+    const prev=S.scene, prevR=R;
+    const spec = pick([
+      { cols:7, rows:3, A:4, B:2, nearA:1, nearB:0, sm:34, lg:48, nSmall:12, pal:3, title },
+      { cols:8, rows:3, A:4, B:2, nearA:2, nearB:1, sm:32, lg:46, nSmall:14, pal:4, title },
+    ]);
+    R = { layer:'board', boardSpec:spec, start:performance.now(), first:false };
+    const onKey = e=>{ if(e.key==='Escape'){ e.stopPropagation(); end(false); } };
+    const end = ok=>{ document.removeEventListener('keydown', onKey, true); R=prevR; show(prev); if(prev==='dir') renderDir(cur); res(ok); };
+    R.boardEnd = end;
+    document.addEventListener('keydown', onKey, true);
+    show('core'); fbar('F4');
+    con(`${title} is encrypted. ${sub}.`, 'sys', 'auth');
+    buildLayer();
   });
 }
 
