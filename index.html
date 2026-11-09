@@ -1106,7 +1106,7 @@ async function enterTree(){
   clearInterval(traceTimer);
   traceTimer = setInterval(()=>{
     if(!['dir','workspace'].includes(S.scene) || busy) return;
-    S.trace += L.power ? 0.20 : 0.42; topbar();
+    S.trace += L.power ? 0.12 : 100/420; topbar();   // ~7 min from 0 to 100 with no mistakes (power.cfg: ~14)
     if(S.trace>=100){ S.trace=100; format('trace'); }
   }, 1000);
   clearInterval(dripTimer);
