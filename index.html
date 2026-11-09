@@ -277,7 +277,7 @@
   #logUi .lfr:hover{background:#1a0a0b}
   .log .ow{cursor:pointer;outline:1px dashed var(--red)}
   #logUi .logsync{margin-top:10px;border-top:1px dotted #333;padding-top:8px;text-align:center}
-  #logUi .lfound.sync{border-color:#888}
+  #logUi .lsh{color:#666;font-size:11px;margin-top:4px}
   #insNet{position:fixed;inset:0;z-index:420;pointer-events:none}
   #insBox{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:430;width:min(560px,90vw);border:1px solid #ffd28a;background:rgba(6,6,6,.97)}
   #insBox .bar{background:#ffd28a;color:#000;height:22px;display:flex;justify-content:space-between;align-items:center;padding:0 10px;font-size:12px;font-weight:600}
@@ -1396,16 +1396,23 @@ function paintLog(mode, pending){
   let html = `<div class="logbar"><span class="ts">[${num(5+Math.min(mine.length,LOG_MAX-1))}]</span> <button class="lbtn" id="lgW">write</button><button class="lbtn red" id="lgA">add found ▾ ${found.length}</button><span class="lcap">lines ${mine.length} / ${LOG_MAX}</span></div>`;
   if(mode==='write') html += `<input id="logIn" maxlength="80" placeholder="write to the log…" autocomplete="off">`;
   if(mode==='add') html += `<div class="lfound">${found.length ? '<div class="lfh">found · not saved yet</div>'+found.map((f,i)=>`<div class="lfr" data-i="${i}"><span>${esc(f)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">nothing found yet. decipher and insight find things worth keeping.</div>'}</div>`;
-  if(mode==='buf') html += `<div class="lfound sync">${S.buffer.length ? '<div class="lfh">buffer · this life only</div>'+S.buffer.map((b,i)=>`<div class="lfr bfr" data-i="${i}"><span>${esc(b.src)} · ${esc(b.v)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">the buffer is empty. click things to capture them.</div>'}</div>`;
   if(mode==='over') html += `<div class="lfh r">the log is full. click one of your lines to overwrite it.</div>`;
-  html += `<div class="logsync"><button class="lbtn" id="lgS">⇄ sync with buffer</button></div>`;
+  html += `<div class="logsync"><button class="lbtn" id="lgS">⇄ sync with buffer</button><div class="lsh">copies your lines and what you found into this life's buffer</div></div>`;
   ui.innerHTML = html;
   $('lgW').onclick=()=>paintLog('write'); $('lgA').onclick=()=>paintLog('add');
   const inp=$('logIn'); if(inp){ inp.focus(); inp.onkeydown=e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key==='Enter'){ const t=inp.value.trim().toLowerCase(); if(t) placeLog(t); } }; }
   ui.querySelectorAll('.lfr:not(.bfr)').forEach(r=>r.onclick=()=>placeLog(found[+r.dataset.i]));
-  ui.querySelectorAll('.bfr').forEach(r=>r.onclick=()=>{ const b=S.buffer[+r.dataset.i]; placeLog(`${b.src} · ${b.v}`); });
-  $('lgS').onclick=()=>paintLog('buf');
+  $('lgS').onclick=syncToBuffer;
   if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(5+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
+}
+/* sync with buffer: everything you wrote, added or found (the yellow lines) goes into this life's buffer */
+function syncToBuffer(){
+  const items = logMine().map(t=>['seed_0.log', t]).concat(L.found.filter(f=>!logMine().includes(f)).map(f=>['found', f]));
+  let n=0; items.forEach(([src,v])=>{ if(!S.buffer.some(b=>b.v===v)){ S.buffer.push({src, v, img:false}); n++; } });
+  if(!items.length){ toast('nothing to sync yet.\nwrite or add something first.', 2000); return; }
+  togglePanel('buf', true); topbar(); renderPanels();
+  con(`seed_0.log ⇄ buffer · ${n} new line${n===1?'':'s'}`, 'mem', 'log');
+  toast(n ? `synced → buffer\n${n} line${n===1?'':'s'}` : 'buffer already has all of it.', 1800, '⇄');
 }
 function placeLog(t){
   const m=logMine();
