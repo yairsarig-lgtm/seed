@@ -189,3 +189,4 @@ Mechanics proposed (to be designed): FRONT/BACK view of the same machine (what t
 - **proc/buffer.txt** (next to workspace/): 7 rules; 1, 2, 4, 6 are pixel noise until decipher:
   1 move windows, don't kill — a kill is a click, they listen for clicks · 2 to keep something, press it → buffer · 3 the buffer forgets when you do · 4 what is pinned outside can be read twice · 5 two for one. always · 6 the log remembers what the buffer forgets. sync them · 7 noise is a number. it only goes up.
 - With the BUFFER panel open, hovering anything capturable (keycard image, checksum, deciphered words) shows "▸ PRESS TO ADD TO BUFFER" + a yellow outline.
+- Workspace: explorer.exe replaced by **skills.txt** — 'SKILLS' + pixelated text until decipher (when the window isn't covered): 'a burned skill makes no trace. a carried one does.'

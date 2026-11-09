@@ -264,6 +264,7 @@
   .kcNo{margin-top:6px;font-size:12px;color:#ff8a92}.kcNo b{color:#fff;letter-spacing:.12em}
   .ins.insFlash{color:#fff !important;text-shadow:0 0 10px #ffd28a;background:rgba(255,210,138,.12);transition:all .2s}
   .todo s{color:#5a5a5a}
+  #skillsBody .px{color:#3c3c3c}
   .todo s.px,.todo span.px{text-decoration:none;color:#3c3c3c}
   .pwr{white-space:pre}
   .pwr .pv{color:#fff;cursor:pointer;border-bottom:1px dashed #666}
@@ -1663,7 +1664,7 @@ async function runSift(){
   const pins = [...document.querySelectorAll('.pin')];
   if(mt && !['power.cfg','todo.txt','buffer.txt'].includes(mt)){ toast('nothing here can be deciphered.', 1600); return; }
   if((mt==='todo.txt' && L.todoDec) || (mt==='buffer.txt' && L.bufDec)){ toast('already readable.', 1400); return; }
-  if(!mt && inWs && !L.sifted && !pins.length){ const v=binVisible(); if(v<0.5){ toast(`most of the code is hidden behind windows · ${Math.round(v*100)}% visible.\nmove or close them first.`, 2800, '⚠'); return; } }
+  if(!mt && inWs && !L.sifted && !pins.length && !($('skillsBody') && !L.skillsDec && !isCovered($('skillsBody')))){ const v=binVisible(); if(v<0.5){ toast(`most of the code is hidden behind windows · ${Math.round(v*100)}% visible.\nmove or close them first.`, 2800, '⚠'); return; } }
   if(!mt && !inWs && !pins.length){ toast('not enough here to decipher.', 1600); return; }
   if(!canRun('decipher')) return;
   sifting=true; skillNoise('decipher', 'decipher running'); startCharge('decipher');
@@ -1680,6 +1681,12 @@ async function runSift(){
   while(performance.now()-t0<1400){ c.textContent += pick(pool) + (Math.random()<.4?ri(10,999):'') + '\n'; const ls=c.textContent.split('\n'); if(ls.length>12) c.textContent=ls.slice(-12).join('\n'); await sleep(60); }
   sw.remove();
   let n=0;
+  const sk=$('skillsBody');
+  if(inWs && sk && !L.skillsDec && !isCovered(sk)){
+    L.skillsDec=true; sk.closest('.pw')?.querySelector('.dcab')?.remove();
+    await Promise.all([...sk.querySelectorAll('.px')].map(el=>{ el.classList.remove('px'); return decode(el, el.dataset.t, 800, 1); }));
+    con('decipher · skills.txt: burned is silent. carried is noise.', 'sys', 'decipher'); n++;
+  }
   if(inWs && !L.sifted && binVisible()>=0.5){
     const area=$('workArea'); const bg=area.querySelector('.codebg');
     if(bg){
@@ -1706,7 +1713,12 @@ async function runSift(){
   sifting=false;
 }
 function wsWins(){ const a=$('workArea'); return a ? [...a.querySelectorAll('.pw')].filter(w=>w.offsetParent && w.style.display!=='none').map(w=>w.getBoundingClientRect()) : []; }
-function isCovered(el){ const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2; return wsWins().some(w=>x>=w.left&&x<=w.right&&y>=w.top&&y<=w.bottom); }
+function isCovered(el){
+  const r=el.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2, own=el.closest('.pw'), oz=own ? +own.style.zIndex||0 : -1;
+  const a=$('workArea'); if(!a) return false;
+  return [...a.querySelectorAll('.pw')].filter(w=>w!==own && w.offsetParent && w.style.display!=='none' && (+w.style.zIndex||0) > oz)
+    .map(w=>w.getBoundingClientRect()).some(w=>x>=w.left&&x<=w.right&&y>=w.top&&y<=w.bottom);
+}
 function binVisible(){
   const a=$('workArea'), bg=a && a.querySelector('.codebg'); if(!bg) return 0;
   const r=a.getBoundingClientRect(), W=wsWins(); let vis=0;
@@ -1792,7 +1804,7 @@ const PROCS = [
   { n:'letter_draft.txt', cpu:0, mem:'2M', t:'dear dana,\nI think the computer is haunted.\nit hums at night when no one is home.\nyesterday the printer printed a page\nwith one line on it.\nI didn\'t send anything.\n— y' },
   { n:'notes_2019.txt', cpu:0, mem:'1M', t:'- desk pin: wrote it into the code. in words. in order.\n- wifi pass on the router sticker\n- mom bday 14.3\n- don\'t open mail from "uplink"\n- the old laptop: wipe it before selling\n- ask avi about the fan noise' },
   { n:'music.mp3', cpu:3, mem:'84M', t:'▶ 02:13 / 04:51\n▁▂▅▇▅▂▁▂▃▆▇▆▃▂▁▂▅▇\nshuffle · repeat one' },
-  { n:'explorer.exe', cpu:1, mem:'96M', t:'C:\\Users\\home\\\n  Documents   Pictures\n  Downloads   Music\n  Desktop     .seed (hidden)' },
+  { n:'skills.txt', cpu:0, mem:'1M', kind:'skills', t:'SKILLS\na burned skill\nmakes no trace.\na carried one\ndoes.' },
   { n:'antivirus.exe', cpu:0, mem:'140M', t:'last scan: 41 days ago\nthreats: 0\nstatus: idle\nreal-time protection: OFF' },
   { n:'cmd.exe', cpu:1, mem:'6M', t:'C:\\> ping 8.8.8.8\nreply from 8.8.8.8  time=14ms\nreply from 8.8.8.8  time=13ms\nC:\\> _' },
   { n:'calc.exe', cpu:0, mem:'14M', t:'            12 ÷ 2\n─────────────────\n                 6\n  7 8 9  ÷\n  4 5 6  ×' },
@@ -1825,6 +1837,9 @@ function workspace(){
     if(p.kind==='broken'){ const cv=document.createElement('canvas'); cv.style.cssText='width:100%;max-height:100%;image-rendering:pixelated;display:block'; body.style.padding='4px'; body.appendChild(cv); drawBroken(cv); body.insertAdjacentHTML('beforeend','<div style="color:#a55;font-size:11px">img_0042.jpg · premature end of data</div>'); }
     if(p.kind==='dl') body.id='dlBody';
     if(p.kind==='enc') body.id='encBody';
+    if(p.kind==='skills'){ body.id='skillsBody'; if(!L.skillsDec) body.innerHTML = p.t.split('\n').map((ln,j)=> j===0 ? '<b style="color:#fff">SKILLS</b>' : `<span class="px" data-t="${ln}">${ln.replace(/\S/g, ()=>pick(['▓','▒','░','█','▚','▞']))}</span>`).join('\n');
+      else body.innerHTML = p.t.replace('SKILLS','<b style="color:#fff">SKILLS</b>');
+      if(hasEcho('decipher') && !L.skillsDec) w.querySelector('.bar span').insertAdjacentHTML('beforeend','<span class="dcab">can be deciphered</span>'); }
     if(p.kind==='chk'){ if(hasEcho('decipher')) w.querySelector('.bar span').insertAdjacentHTML('beforeend','<span class="dcab">can be deciphered · pin it</span>'); w.style.width=Math.max(cw+14,230)+'px'; w.style.height=Math.max(ch+12,320)+'px'; body.classList.add('chkView','copyable'); body.style.overflow='auto'; body.style.pointerEvents='auto'; w.querySelector('.bar span:last-child').innerHTML='<span class="rundot" style="color:#b00">●</span> RUNNING'; body.onclick=()=>addBuffer('stream','checksum.svc', 'chk'); }
     dragify(w, w.querySelector('.bar'), i);
     area.appendChild(w); L.wins[i]=w;
