@@ -284,6 +284,9 @@
   .log .ow{cursor:pointer;outline:1px dashed var(--red)}
   #logUi .logsync{margin-top:10px;border-top:1px dotted #333;padding-top:8px;text-align:center}
   #logUi .lsh{color:#666;font-size:11px;margin-top:4px}
+  #bootCode .addr{transition:all .3s}
+  #bootCode .addr.lit{color:#000;background:#ffd28a;padding:0 3px;position:relative}
+  #bootCode .addr.lit::after{content:attr(data-n);position:absolute;top:-10px;right:-8px;font-size:10px;color:#ffd28a;background:none}
   #insWin{position:fixed;right:24px;bottom:96px;z-index:430;width:302px;border:1px solid #ffd28a;background:rgba(6,6,6,.97);transition:opacity .25s}
   #insWin.out{opacity:0}
   #insWin .bar{display:flex;justify-content:space-between;align-items:center;height:22px;padding:0 10px;background:#ffd28a;color:#000;font-size:11px;font-weight:600}
@@ -885,6 +888,10 @@ async function boot(){
     await sleep(p<0.6 ? 16 : (p<0.85 ? 60 : 150));
   }
   await sleep(350);
+  // the way out is written in the code that starts you. insight can read it.
+  { const ls=[...box.children], n=ls.length, parts=SERVER.split('.');
+    const pre=['mov  r1, ','cmp  r2, ','xor  r3, ','jmp  .'];
+    [n-13, n-9, n-6, n-2].forEach((ix,k)=>{ const d=ls[ix]; if(!d) return; d.innerHTML = esc(pre[k]) + `<span class="addr" data-i="${k}">${parts[k]}</span>` + esc('          ; ' + pick(['seg','hold','ret','sync','wake','fs']) + ri(10,99)); }); }
   // what stays on screen at the bottom of the code
   const say = async (t,cls,speed=26)=>{ const d=add('',cls); await typeOut(d,t,speed); await sleep(220); };
   await say('> seed_0 :: fs mounted', 'k', 18);
@@ -1740,7 +1747,7 @@ function binVisible(){
 let insighting=false;
 function nextHint(){
   const u=L.unlocked;
-  if(!u.has('glyphs')) return 'the cursor is a pulse. count it.';
+  if(!u.has('glyphs')) return 'every cursor blinks, then rests. count the blinks between the rests.';
   if(!u.has('digits')) return 'the checksum is a rule, not a number.';
   if(!u.has('desk')) return 'the pin is in the code. not in digits — in words, in ones and zeros.';
   if(!u.has('vault')) return 'the number is on the card. take the card out, then read it.';
@@ -1757,8 +1764,13 @@ async function runInsight(){
   if(mt==='todo.txt') res={ t:'the keycard man erases us. every time.', save:true };
   else if(mt==='power.cfg'){ L.pwIns=true; drawPower(); res={ t:'wake_on_lan lets the outside wake this machine.', save:true }; }
   else if(mt==='scheduler.lock') res={ t:`the master holds two. answer: ${L.sched.ans}`, save:false };
-  else if(mt==='uplink :: connect' || (S.scene==='dir' && ['uplink','vault'].includes(cur))) res={ t:`there is a machine outside this one. node · ${SERVER}`, save:true, found:`◆ server · ${SERVER}` };
-  else if(S.scene==='workspace' || $('pin_chk')){ L.insChk=true; renderChk(); res={ t:'checksum counts closed loops — 0 6 9 = 1 · 8 = 2.', save:true }; }
+  else if(S.scene==='boot'){
+    const sp=[...document.querySelectorAll('#bootCode .addr')];
+    if(sp.length===4){ sp.forEach((e,k)=>setTimeout(()=>{ e.classList.add('lit'); e.dataset.n=k+1; }, 600+k*350)); res={ t:`the way out was written at the beginning.\n${SERVER}`, save:true, found:`◆ server · ${SERVER}` }; }
+    else res={ t:'nothing here yet. the beginning is still writing itself.', save:false };
+  }
+  else if(mt==='uplink :: connect' || (S.scene==='dir' && ['uplink','vault'].includes(cur))) res={ t:'to get out of the box, the shell has to break.\ndie — and read the beginning.', save:true };
+  else if(S.scene==='workspace' || $('pin_chk')){ L.insChk=true; renderChk(); res={ t:'checksum counts closed loops — each 0, 6 or 9 = 1 · each 8 = 2.', save:true }; }
   else res={ t:nextHint(), save:false };
   await insightNet();
   showInsight(res);
@@ -1891,7 +1903,7 @@ function chkStep(){
 function renderChk(){
   const build = marked => L.chk.lines.length ? L.chk.lines.map((x,i)=>`${String(i+1).padStart(2,'0')}  ${marked?[...x].map(c=>LOOPS[c]?`<b class="sl">${c}</b>`:c).join(''):x}  =  ${loopCount(x)}`).join('\n') : '-- restarting --';
   const plain=build(false), marked=build(true);
-  const foot = pinned => (L.siftChk && pinned ? `\n\n<span class="dcl">decipher · it is not the digits.\n           it is their shape.</span>` : '') + (L.insChk ? `\n\n<span class="inl">insight · counts closed loops\n          0 6 9 = 1  ·  8 = 2</span>` : '');
+  const foot = pinned => (L.siftChk && pinned ? `\n\n<span class="dcl">decipher · it is not the digits.\n           it is their shape.</span>` : '') + (L.insChk ? `\n\n<span class="inl">insight · counts closed loops\n          0 / 6 / 9 = 1 each\n          8 = 2</span>` : '');
   document.querySelectorAll('.chkView').forEach(v=>{ const pinned=!!v.closest('.pin'); const atBottom = v.scrollTop + v.clientHeight >= v.scrollHeight - 4; v.innerHTML = ((L.siftChk && pinned) ? marked : plain) + foot(pinned); if(atBottom) v.scrollTop = v.scrollHeight; });
 }
 function startChk(){ clearInterval(chkTimer); chkTimer=setInterval(chkStep, 2300); chkStep(); }
