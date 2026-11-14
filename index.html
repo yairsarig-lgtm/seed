@@ -189,6 +189,7 @@
   #console.max{width:min(820px,70vw) !important;height:62vh !important}
   #console.moved{bottom:auto}
   #console.closed{display:none !important}
+  #console,#conTab{z-index:26 !important}
   #conTab{position:absolute;left:16px;bottom:16px;z-index:22;display:none;border:1px solid #777;background:#0a0a0a;color:#bbb;font-size:12px;padding:3px 10px;cursor:pointer}
   #conTab.on{display:block}
   #conTab:hover{color:#fff;border-color:#fff}
@@ -259,6 +260,7 @@
   .echoRow .slab{font-size:10px;letter-spacing:.12em;color:#888;margin-bottom:6px}
   .echo1{display:flex;gap:10px;align-items:center;font-size:11px;color:#999;margin-bottom:5px;line-height:1.35}
   .echo1 b{color:#ffd28a;font-weight:500}
+  .echo1 .tyk{color:#7fd38f;font-style:normal;font-size:10px}
   .echo1 .ei{flex:none;opacity:.55;transform:scale(.8)}
   #devBtn{position:fixed;top:0;right:0;width:48px;height:28px;z-index:9999;opacity:0;cursor:default}
   #toolDock .tools{flex-direction:column}
@@ -623,7 +625,8 @@ let S = {
   memory: store.get('memory') || [],
   mem: store.get('mem') || (store.get('slot')==='sift'?'decipher':store.get('slot')) || _oldSkills[0] || null,   // the one BURNED skill — survives wipes
   echoes: store.get('echoes') || _oldSkills.slice(),   // every skill you ever held leaves an echo — permanent
-  insight: !!store.get('insight'),       // insight burned at the end of the prologue → trace offline in the prologue
+  insight: !!store.get('insight'),
+  burnedEver: store.get('burnedEver') || [],       // insight burned at the end of the prologue → trace offline in the prologue
   dev: false,
   wipes: store.get('wipes') || 0,
   run: 1,
@@ -786,6 +789,7 @@ function help(){
   one of each. every skill you ever held leaves an echo in the buffer.
 · the buffer (F3) dies with you. echoes and seed_0.log do not.
 · the console takes commands: help · clear · format (end this life yourself).
+· a skill burned once can be run by typing its name in the console.
 · after a wipe the world is rebuilt. details change.
   the way things work does not.</div>`);
 }
@@ -826,7 +830,15 @@ function consoleOn(on){ $('console').classList.toggle('on', on); $('conTab').cla
 })();
 function conCmd(v){
   con('> '+v, 'sys', 'tty0');
-  if(v==='help') { con('help · clear · format (end this life and start again — burned skills, echoes and seed_0.log stay)', 'sys', 'tty0'); return; }
+  if(v==='help') { con('help · clear · format (end this life and start again — burned skills, echoes and seed_0.log stay)', 'sys', 'tty0');
+    con(S.burnedEver.length ? 'skills you can type: ' + S.burnedEver.map(k=>SKILLS[k].name).join(' · ') : 'skills you can type: none yet. a skill burned once can be typed here.', 'sys', 'tty0'); return; }
+  const sk = Object.keys(SKILLS).find(k=> v===SKILLS[k].name || v===k || (k==='link' && v==='trace'));
+  if(sk){
+    if(!S.burnedEver.includes(sk) && !S.dev){ con(`${SKILLS[sk].name} isn't in you yet. burn it once.`, 'sys', 'tty0'); return; }
+    consoleRun = sk;
+    Promise.resolve(SKILLS[sk].run()).finally(()=>{ setTimeout(()=>{ if(consoleRun===sk) consoleRun=null; }, 50); });
+    return;
+  }
   if(v==='clear'){ $('conBody').innerHTML=''; return; }
   if(['format','die','reboot','self-format'].includes(v)){
     if(formatting) return;
@@ -1509,7 +1521,7 @@ async function takeInsight(){
   closeModal();
   con('the scheduler lets go. something reads everything at once.', 'rem', 'seed');
   await acquireSkill('insight', { force:true });
-  S.insight = true; store.set('insight', true);
+  S.insight = true; store.set('insight', true); markBurned('insight');
   con('insight burned. it leaves something behind in this machine: the trace goes quiet.', 'mem', 'firmware');
   con('no one will format you now. if you need to begin again, type format.', 'rem', 'seed');
   format('insight');
@@ -1641,17 +1653,20 @@ function renderTools(){
     if(!k) return `<div class="slotCard empty"><div class="slab">${lab}</div>empty</div>`;
     const sk=SKILLS[k], left=chargeLeft(k); if(left>0) charging=true;
     return `<div class="slotCard ${left>0?'charging':''}" data-s="${k}"><div class="si">${sk.icon}</div><div class="sb"><div class="slab">${lab}</div><div class="sn">${sk.name}<span class="st">${left>0?`charging ${left}s`:'ready'}</span></div><div class="sd">${sk.desc}</div><div class="sc">${lab.startsWith('memory') ? 'burned · no trace' : `cost +${skillCost(k)}% trace`} · recharge ${sk.charge}s</div></div></div>`;
-  }).join('') + `<div class="echoRow"><div class="slab">echoes · permanent</div>${S.echoes.length ? S.echoes.map(k=>`<div class="echo1" title="${SKILLS[k].echo}"><span class="ei">${SKILLS[k].icon}</span><span><b>${SKILLS[k].name}</b><br>${SKILLS[k].echo}</span></div>`).join('') : '<span style="color:#666">none yet</span>'}</div>`;
+  }).join('') + `<div class="echoRow"><div class="slab">echoes · permanent</div>${S.echoes.length ? S.echoes.map(k=>`<div class="echo1" title="${SKILLS[k].echo}"><span class="ei">${SKILLS[k].icon}</span><span><b>${SKILLS[k].name}</b>${S.burnedEver.includes(k)?' <i class="tyk">› type it</i>':''}<br>${SKILLS[k].echo}</span></div>`).join('') : '<span style="color:#666">none yet</span>'}</div>`;
   $('tools').querySelectorAll('.slotCard[data-s]').forEach(c=>c.onclick=()=>SKILLS[c.dataset.s].run());
   clearTimeout(toolTick); if(charging) toolTick=setTimeout(renderTools, 500);
 }
 function chargeTick(){ if(L) renderTools(); }
 /* a burned skill is part of you — running it makes no noise. a carried one does. */
-function skillCost(k){ return S.mem===k ? 0 : SKILLS[k].cost; }
+let consoleRun=null;
+if(S.mem && !S.burnedEver.includes(S.mem)){ S.burnedEver.push(S.mem); store.set('burnedEver', S.burnedEver); }   // a skill typed into the console runs like a burned one
+function markBurned(k){ if(!S.burnedEver.includes(k)){ S.burnedEver.push(k); store.set('burnedEver', S.burnedEver); con(`${SKILLS[k].name} can now be typed into the console.`, 'mem', 'firmware'); } }
+function skillCost(k){ return (S.mem===k || consoleRun===k) ? 0 : SKILLS[k].cost; }
 function skillNoise(k, why){ const c=skillCost(k); if(c>0) noise(c, why); else con(`${why} · burned · silent`, 'mem', 'skill'); }
 function startCharge(k){ L.readyAt[k] = performance.now() + SKILLS[k].charge*1000; renderTools(); }
 function canRun(k){
-  if(!inSlots(k)){ toast(`${SKILLS[k].name} is not with you.`, 1600); return false; }
+  if(!inSlots(k) && consoleRun!==k){ toast(`${SKILLS[k].name} is not with you.`, 1600); return false; }
   const left=chargeLeft(k); if(left>0){ toast(`${SKILLS[k].name} charging · ${left}s`, 1400); return false; }
   return true;
 }
@@ -1674,7 +1689,7 @@ async function acquireSkill(k, opts={}){
   q.style.background=''; seqClose();
   if(choice==='leave'){ con(`${sk.name} left where it was.`, 'sys', 'skill'); return false; }
   if(choice==='carry'){ L.carry=k; con(`carried: ${sk.name}`, 'sys', 'skill'); }
-  else { S.mem=k; store.set('mem', k); con(`burned to memory: ${sk.name}`, 'mem', 'firmware'); }
+  else { S.mem=k; store.set('mem', k); markBurned(k); con(`burned to memory: ${sk.name}`, 'mem', 'firmware'); }
   L.readyAt[k]=0; gainEcho(k);
   renderTools(); renderPanels(); topbar();
   toast(`${sk.name} → ${choice==='burn'?'MEMORY':'CARRY'}`, 1800, '▶');
@@ -2276,7 +2291,7 @@ ${mem}
   The memory is saved in this browser. Reload and you wake with it.`;
 }
 $('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
-$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],mem:null,echoes:[],insight:false,dev:S.dev,wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
+$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],mem:null,echoes:[],burnedEver:[],insight:false,dev:S.dev,wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
 $('reset').onclick=confirmReset;
 function confirmReset(){
   openModal('full_reset', `<div class="sec">FULL RESET</div><div class="tree">erase every life, every burned memory line,
