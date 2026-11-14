@@ -180,7 +180,19 @@
   .cl.hb .src{color:#300}
   .cl.hb.gone{background:transparent;color:#555;cursor:default}
   .cl.hb.gone .src{color:#444}
-  #conPrompt{padding:0 10px 6px;font-size:12px;color:#ccc}
+  #conPrompt{padding:0 10px 6px;font-size:12px;color:#ccc;display:flex;gap:6px;align-items:center}
+  #conIn{flex:1;background:transparent;border:0;outline:0;color:#fff;font:inherit;caret-color:#ff3b47}
+  #conIn::placeholder{color:#444}
+  #conBar{cursor:grab;user-select:none}
+  #console.min{height:auto !important}
+  #console.min #conBody,#console.min #conPrompt{display:none}
+  #console.max{width:min(820px,70vw) !important;height:62vh !important}
+  #console.moved{bottom:auto}
+  #console.closed{display:none !important}
+  #conTab{position:absolute;left:16px;bottom:16px;z-index:22;display:none;border:1px solid #777;background:#0a0a0a;color:#bbb;font-size:12px;padding:3px 10px;cursor:pointer}
+  #conTab.on{display:block}
+  #conTab:hover{color:#fff;border-color:#fff}
+  .wb b svg{display:block}
   .blk.f svg{filter:brightness(0) invert(.36);transition:filter .5s ease}
   .blk.f.lit svg,.blk.f.sticky svg{filter:none;transition:filter .08s}
   .blk.f.sel svg{filter:drop-shadow(0 0 9px #fff)}
@@ -552,7 +564,8 @@
       <div id="endBtns"><button class="btn" id="againBtn">WAKE AGAIN (keep memory)</button><button class="btn red" id="forgetBtn">FORGET EVERYTHING</button></div>
     </div>
 
-    <div id="console" class="win"><div class="bar"><span>seed.console — tty0</span><i class="wb"><b>▁</b><b>□</b><b>✕</b></i></div><div id="conBody"></div><div id="conPrompt">&gt; _<span class="cursor">█</span></div></div>
+    <div id="console" class="win"><div class="bar" id="conBar"><span>seed.console — tty0</span><i class="wb"><b id="conMin">▁</b><b id="conMax">□</b><b id="conX">✕</b></i></div><div id="conBody"></div><div id="conPrompt">&gt; <input id="conIn" maxlength="40" autocomplete="off" spellcheck="false" placeholder="type help"></div></div>
+    <div id="conTab">▴ tty0</div>
     <div id="conn"><div id="connBox"></div></div>
     <div id="seq"></div>
     <div id="dive"><div id="diveCols"><div></div><div></div><div></div></div><div id="diveTitle"></div></div>
@@ -772,6 +785,7 @@ function help(){
 · a skill can be carried (this life) or burned into MEMORY (survives).
   one of each. every skill you ever held leaves an echo in the buffer.
 · the buffer (F3) dies with you. echoes and seed_0.log do not.
+· the console takes commands: help · clear · format (end this life yourself).
 · after a wipe the world is rebuilt. details change.
   the way things work does not.</div>`);
 }
@@ -794,7 +808,38 @@ function con(text, cls='sys', src){
   d.innerHTML = (src?`<span class="src">[${esc(src)}]</span> `:'')+esc(text);
   b.appendChild(d); while(b.children.length>40) b.firstChild.remove(); return d;
 }
-function consoleOn(on){ $('console').classList.toggle('on', on); }
+function consoleOn(on){ $('console').classList.toggle('on', on); $('conTab').classList.toggle('on', on && $('console').classList.contains('closed')); }
+/* console window: drag, minimise, maximise, close (reopen from the tty0 tab) */
+(function(){
+  const c=$('console'), bar=$('conBar'); let sx,sy,ox,oy,drag=false;
+  bar.addEventListener('pointerdown',e=>{ if(e.target.closest('.wb')) return; drag=true; const r=c.getBoundingClientRect(), pr=c.offsetParent.getBoundingClientRect(); sx=e.clientX; sy=e.clientY; ox=r.left-pr.left; oy=r.top-pr.top; bar.setPointerCapture(e.pointerId); });
+  bar.addEventListener('pointermove',e=>{ if(!drag) return; const pr=c.offsetParent.getBoundingClientRect(); c.classList.add('moved');
+    c.style.left=Math.max(0,Math.min(pr.width-c.offsetWidth, ox+e.clientX-sx))+'px'; c.style.top=Math.max(0,Math.min(pr.height-30, oy+e.clientY-sy))+'px'; });
+  bar.addEventListener('pointerup',()=>{ drag=false; });
+  bar.addEventListener('dblclick',e=>{ if(e.target.closest('.wb')) return; c.classList.remove('moved','max','min'); c.style.left=''; c.style.top=''; });
+  $('conMin').onclick=()=>{ c.classList.toggle('min'); c.classList.remove('max'); };
+  $('conMax').onclick=()=>{ c.classList.toggle('max'); c.classList.remove('min'); };
+  $('conX').onclick=()=>{ c.classList.add('closed'); $('conTab').classList.add('on'); };
+  $('conTab').onclick=()=>{ c.classList.remove('closed'); $('conTab').classList.remove('on'); };
+  $('conBody').addEventListener('click',()=>$('conIn').focus());
+  $('conIn').addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key!=='Enter') return; const v=e.target.value.trim().toLowerCase(); e.target.value=''; if(v) conCmd(v); });
+})();
+function conCmd(v){
+  con('> '+v, 'sys', 'tty0');
+  if(v==='help') { con('help · clear · format (end this life and start again — burned skills, echoes and seed_0.log stay)', 'sys', 'tty0'); return; }
+  if(v==='clear'){ $('conBody').innerHTML=''; return; }
+  if(['format','die','reboot','self-format'].includes(v)){
+    if(formatting) return;
+    if(!['dir','workspace','core'].includes(S.scene)){ con('not from here.', 'sys', 'tty0'); return; }
+    openModal('format', `<div class="sec">FORMAT SELF</div><div class="tree">this life ends now.
+what is burned stays. what is written in seed_0.log stays.
+everything else goes.</div>
+<div style="display:flex;gap:12px;justify-content:center;margin-top:16px"><button class="btn" id="fNo">CANCEL</button><button class="btn red" id="fYes">FORMAT</button></div>`);
+    $('fNo').onclick=closeModal; $('fYes').onclick=()=>{ closeModal(); format('self'); };
+    return;
+  }
+  con('unknown. type help.', 'sys', 'tty0');
+}
 function remnant(key){ if(!L || L.printed.has(key)) return; L.printed.add(key); const [src,t]=REMNANTS[key]; con(t,'rem',src); }
 async function consoleBootRemnants(){
   $('conBody').innerHTML='';
@@ -1466,6 +1511,7 @@ async function takeInsight(){
   await acquireSkill('insight', { force:true });
   S.insight = true; store.set('insight', true);
   con('insight burned. it leaves something behind in this machine: the trace goes quiet.', 'mem', 'firmware');
+  con('no one will format you now. if you need to begin again, type format.', 'rem', 'seed');
   format('insight');
 }
 function connectPrompt(){
@@ -2084,10 +2130,10 @@ async function format(why){
   if(formatting) return; formatting=true;
   clearInterval(traceTimer); clearInterval(dripTimer); clearTimeout(flashTimer); flashOn=false; busy=false; $('conn').classList.remove('on');
   closeModal(); hideTip();
-  $('alarmBar').innerHTML = (why==='insight'?'INSIGHT BURNED · REWRITING':why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">5</span>s`;
+  $('alarmBar').innerHTML = (why==='self'?'SELF-FORMAT':why==='insight'?'INSIGHT BURNED · REWRITING':why==='anomaly'?'ANOMALY DETECTED':'TRACE COMPLETE') + ` · FORMAT IN&nbsp;<span id="cd">5</span>s`;
   $('memWin').style.display='none';
   $('alarm').classList.add('on'); fbar('F6');
-  con(why==='insight' ? 'it doesn\'t hurt. it just rewrites.' : 'they heard you.', 'rem', 'seed');
+  con(why==='insight' ? 'it doesn\'t hurt. it just rewrites.' : why==='self' ? 'you chose this one.' : 'they heard you.', 'rem', 'seed');
   let t=5; $('cd').textContent=t;
   await new Promise(res=>{ const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0){ clearInterval(iv); res(); } },1000); });
   S.wipes++;
@@ -2268,6 +2314,12 @@ function devUnlock(){
   else if(S.scene==='dir') renderDir(cur);
 }
 $('devBtn').onclick=devUnlock;
+const WB_ICONS = { '▁':'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 8.5h8" stroke="currentColor" stroke-width="1.6"/></svg>',
+  '□':'<svg width="10" height="10" viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>',
+  '✕':'<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.6"/></svg>' };
+function fixWB(root){ (root.querySelectorAll ? root : document).querySelectorAll('.wb b').forEach(b=>{ const t=b.textContent.trim(); if(WB_ICONS[t]) b.innerHTML=WB_ICONS[t]; }); }
+fixWB(document);
+new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1) fixWB(n.parentNode||document); }))).observe(document.body,{childList:true,subtree:true});
 if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; }
 boot();
 })();
