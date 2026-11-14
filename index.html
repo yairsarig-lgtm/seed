@@ -1370,7 +1370,8 @@ const LOG_SEED = [
   ['0001','the joins: always two of the small for one of the large. always.'],
   ['0002','they listen for noise. every wrong key is noise. every process i kill is noise.'],
   ['0003','the cursor is not a cursor.'],
-  ['0004','!they clear this place when they hear enough. i will not remember.'],
+  ['0004','if they come too close, i can end it first. die, or format — typed into my own console.'],
+  ['0005','!they clear this place when they hear enough. i will not remember.'],
 ];
 const LOG_MAX = 3;
 const SERVER = '185.44.0.12';
@@ -1480,7 +1481,7 @@ function logMine(){ return (store.get('log') || []).slice(0, LOG_MAX); }
 async function openLog(){
   openModal('seed_0.log', `<div class="log" id="logBox"></div><div id="logUi"></div>`);
   const box=$('logBox'), mine=logMine();
-  const all = LOG_SEED.concat(mine.map((t,i)=>[String(5+i).padStart(4,'0'), '~'+t]));
+  const all = LOG_SEED.concat(mine.map((t,i)=>[String(LOG_SEED.length+i).padStart(4,'0'), '~'+t]));
   for(const [ts,t] of all){ if(!box.isConnected) return; const d=document.createElement('div'); d.innerHTML=`<span class="ts">[${ts}]</span> <span></span>`; box.appendChild(d); const sp=d.lastChild; const red=t.startsWith('!'), me=t.startsWith('~'); await typeOut(sp, (red||me)?t.slice(1):t, me?6:12); if(red) sp.classList.add('r'); if(me) sp.classList.add('mine'); await sleep(me?40:120); }
   if(box.isConnected) paintLog();
 }
@@ -1488,9 +1489,9 @@ function paintLog(mode, pending){
   const box=$('logBox'), ui=$('logUi'); if(!box) return;
   const mine=logMine(), num=i=>String(i).padStart(4,'0');
   box.innerHTML = LOG_SEED.map(([ts,t])=>`<div><span class="ts">[${ts}]</span> <span class="${t.startsWith('!')?'r':''}">${esc(t.replace(/^!/,''))}</span></div>`).join('')
-    + mine.map((t,i)=>`<div class="${mode==='over'?'ow':''}" data-i="${i}"><span class="ts">[${num(5+i)}]</span> <span class="mine">${esc(t)}</span></div>`).join('');
+    + mine.map((t,i)=>`<div class="${mode==='over'?'ow':''}" data-i="${i}"><span class="ts">[${num(LOG_SEED.length+i)}]</span> <span class="mine">${esc(t)}</span></div>`).join('');
   const found = L.found.filter(f=>!mine.includes(f));
-  let html = `<div class="logbar"><span class="ts">[${num(5+Math.min(mine.length,LOG_MAX-1))}]</span> <button class="lbtn" id="lgW">write</button><button class="lbtn red" id="lgA">add found ▾ ${found.length}</button><span class="lcap">lines ${mine.length} / ${LOG_MAX}</span></div>`;
+  let html = `<div class="logbar"><span class="ts">[${num(LOG_SEED.length+Math.min(mine.length,LOG_MAX-1))}]</span> <button class="lbtn" id="lgW">write</button><button class="lbtn red" id="lgA">add found ▾ ${found.length}</button><span class="lcap">lines ${mine.length} / ${LOG_MAX}</span></div>`;
   if(mode==='write') html += `<input id="logIn" maxlength="80" placeholder="write to the log…" autocomplete="off">`;
   if(mode==='add') html += `<div class="lfound">${found.length ? '<div class="lfh">found · not saved yet</div>'+found.map((f,i)=>`<div class="lfr" data-i="${i}"><span>${esc(f)}</span><span class="r">[add]</span></div>`).join('') : '<div class="lfh">nothing found yet. decipher and insight find things worth keeping.</div>'}</div>`;
   if(mode==='over') html += `<div class="lfh r">the log is full. click one of your lines to overwrite it.</div>`;
@@ -1500,7 +1501,7 @@ function paintLog(mode, pending){
   const inp=$('logIn'); if(inp){ inp.focus(); inp.onkeydown=e=>{ if(e.key==='Escape') return; e.stopPropagation(); if(e.key==='Enter'){ const t=inp.value.trim().toLowerCase(); if(t) placeLog(t); } }; }
   ui.querySelectorAll('.lfr:not(.bfr)').forEach(r=>r.onclick=()=>placeLog(found[+r.dataset.i]));
   $('lgS').onclick=syncToBuffer;
-  if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(5+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
+  if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(LOG_SEED.length+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
 }
 /* sync with buffer: everything you wrote, added or found (the yellow lines) goes into this life's buffer */
 function syncToBuffer(){
@@ -1514,7 +1515,7 @@ function syncToBuffer(){
 function placeLog(t){
   const m=logMine();
   if(m.length>=LOG_MAX) return paintLog('over', t);
-  m.push(t); store.set('log', m); con(`seed_0.log ← [${String(4+m.length).padStart(4,'0')}]`, 'mem', 'log'); paintLog();
+  m.push(t); store.set('log', m); con(`seed_0.log ← [${String(LOG_SEED.length-1+m.length).padStart(4,'0')}]`, 'mem', 'log'); paintLog();
 }
 /* ---------- end of the prologue: insight has to be burned. it rewrites you. ---------- */
 async function takeInsight(){
@@ -2273,7 +2274,7 @@ function endScreen(){
     ['trace','caught → format → 1 line survives'],
   ];
   const logs = (store.get('log')||[]);
-  const mem = `    burned:  ${S.mem?SKILLS[S.mem].name:'—'}\n    echoes:  ${S.echoes.map(k=>SKILLS[k].name).join(', ')||'—'}\n    seed_0.log:\n${logs.length?logs.map((t,i)=>`      [${String(5+i).padStart(4,'0')}] ${t}`).join('\n'):'      (nothing written)'}`;
+  const mem = `    burned:  ${S.mem?SKILLS[S.mem].name:'—'}\n    echoes:  ${S.echoes.map(k=>SKILLS[k].name).join(', ')||'—'}\n    seed_0.log:\n${logs.length?logs.map((t,i)=>`      [${String(LOG_SEED.length+i).padStart(4,'0')}] ${t}`).join('\n'):'      (nothing written)'}`;
   $('endInner').textContent =
 `══════════════════════════════════════════════════════════════════
               SEED  ·  end of prologue  ·  machine 1
