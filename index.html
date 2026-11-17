@@ -787,7 +787,7 @@ function help(){
   noise raises TRACE. at 100% you are formatted.
 · a skill can be carried (this life) or burned into MEMORY (survives).
   one of each. every skill you ever held leaves an echo in the buffer.
-· the buffer (F3) dies with you. echoes and seed_0.log do not.
+· the buffer (F3) dies with you — but in the seconds before a format it is written into seed_0.log. echoes and the log survive.
 · the console takes commands: help · clear · format (end this life yourself).
 · a skill burned once can be run by typing its name in the console.
 · after a wipe the world is rebuilt. details change.
@@ -1373,7 +1373,7 @@ const LOG_SEED = [
   ['0004','if they come too close, i can end it first. die, or format — typed into my own console.'],
   ['0005','!they clear this place when they hear enough. i will not remember.'],
 ];
-const LOG_MAX = 3;
+const LOG_MAX = 6;
 const SERVER = '185.44.0.12';
 function pushFound(t){ if(!L.found.includes(t)){ L.found.push(t); con(`found: ${t.replace('◆ ','')}`, 'mem', 'log'); } }
 async function openFile(id){
@@ -1511,6 +1511,17 @@ function syncToBuffer(){
   togglePanel('buf', true); topbar(); renderPanels();
   con(`seed_0.log ⇄ buffer · ${n} new line${n===1?'':'s'}`, 'mem', 'log');
   toast(n ? `synced → buffer\n${n} line${n===1?'':'s'}` : 'buffer already has all of it.', 1800, '⇄');
+}
+/* before deletion: whatever is in the buffer is written into seed_0.log (newest kept) */
+async function saveBufferToLog(){
+  const items = S.buffer.filter(b=>!b.img).map(b=>`${b.src} · ${b.v}`);
+  if(!items.length){ con('buffer empty. nothing to save.', 'sys', 'log'); return; }
+  con(`saving buffer → seed_0.log · ${items.length} line${items.length>1?'s':''}`, 'mem', 'log');
+  let m=logMine(), n=0;
+  for(const t of items){ if(m.includes(t)) continue; m.push(t); n++; await sleep(450); con(`  ← ${t}`, 'mem', 'log'); }
+  if(m.length>LOG_MAX){ const cut=m.length-LOG_MAX; m=m.slice(cut); con(`log full · ${cut} oldest line${cut>1?'s':''} overwritten`, 'sys', 'log'); }
+  store.set('log', m);
+  if(n){ con(`saved. ${n} new. it will be here when you wake.`, 'mem', 'log'); if(!store.get('toldSave')){ store.set('toldSave',true); store.set('pendingMemory', 24); } }
 }
 function placeLog(t){
   const m=logMine();
@@ -2151,6 +2162,7 @@ async function format(why){
   $('alarm').classList.add('on'); fbar('F6');
   con(why==='insight' ? 'it doesn\'t hurt. it just rewrites.' : why==='self' ? 'you chose this one.' : 'they heard you.', 'rem', 'seed');
   let t=5; $('cd').textContent=t;
+  saveBufferToLog();
   await new Promise(res=>{ const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0){ clearInterval(iv); res(); } },1000); });
   S.wipes++;
   const lives0 = store.get('lives')||[]; lives0.push({life:S.run, cause: why, path: S.lastPath||'core/'}); store.set('lives', lives0);
@@ -2336,7 +2348,7 @@ const WB_ICONS = { '▁':'<svg width="10" height="10" viewBox="0 0 10 10"><path 
 function fixWB(root){ (root.querySelectorAll ? root : document).querySelectorAll('.wb b').forEach(b=>{ const t=b.textContent.trim(); if(WB_ICONS[t]) b.innerHTML=WB_ICONS[t]; }); }
 fixWB(document);
 new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1) fixWB(n.parentNode||document); }))).observe(document.body,{childList:true,subtree:true});
-if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; }
+if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; window.__buf=addBuffer; }
 boot();
 })();
 </script>
