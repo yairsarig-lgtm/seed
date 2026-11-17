@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SEED — memories (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#1b1b1b; --soft:#8c8c8c; --paper:#f3f2ee; --red:#c8202c; --mono:'IBM Plex Mono', ui-monospace, monospace; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#000;font-family:var(--mono);overflow:hidden}
+
+  /* the memory: white, very faded code running behind */
+  #mem{position:fixed;inset:0;background:var(--paper);opacity:0;transition:opacity 1.2s ease;display:flex;justify-content:center;align-items:flex-start}
+  #mem.on{opacity:1}
+  #code{position:absolute;inset:0;overflow:hidden;font-size:12px;line-height:1.55;color:#000;opacity:.03;white-space:pre;padding:10px 18px;pointer-events:none;user-select:none}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+  #flash.on{opacity:1}
+
+  /* the transcript */
+  #log{position:relative;width:min(760px,88vw);margin-top:11vh;color:var(--ink)}
+  #head{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);border-bottom:1px solid #d9d8d2;padding-bottom:10px;margin-bottom:22px;display:flex;justify-content:space-between;gap:20px}
+  #head b{color:var(--ink);font-weight:500}
+  .row{display:grid;grid-template-columns:96px 1fr;gap:14px;margin:0 0 14px;font-size:16px;line-height:1.6;opacity:0;transform:translateY(4px);transition:opacity .4s,transform .4s}
+  .row.on{opacity:1;transform:none}
+  .who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);padding-top:5px}
+  .row.ai .who{color:var(--red)}
+  .row.ai .txt{color:#000}
+  .row.note .who{visibility:hidden}
+  .row.note .txt{color:var(--soft);font-size:13px;font-style:italic}
+  .txt .cur{display:inline-block;width:8px;height:1.05em;background:var(--ink);vertical-align:-2px;margin-left:2px;animation:bl 1s steps(1) infinite}
+  @keyframes bl{50%{opacity:0}}
+  #foot{margin-top:26px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);opacity:0;transition:opacity .6s}
+  #foot.on{opacity:1}
+  #foot b{color:var(--red);font-weight:500}
+
+  /* preview controls (not part of the game) */
+  #pick{position:fixed;left:14px;top:14px;z-index:5;background:#0b0b0b;border:1px solid #333;color:#ccc;font-size:12px;padding:10px 12px;width:270px;max-height:calc(100vh - 28px);overflow:auto}
+  #pick h3{margin:0 0 8px;font-size:11px;letter-spacing:.14em;color:#777;font-weight:500}
+  #pick button{display:block;width:100%;text-align:left;background:transparent;border:1px solid #2a2a2a;color:#ddd;font:inherit;font-size:12px;padding:6px 8px;margin:0 0 6px;cursor:pointer}
+  #pick button:hover{border-color:#c8202c;color:#fff}
+  #pick button small{display:block;color:#777;font-size:10px;margin-top:2px}
+  #pick .hint{color:#666;font-size:11px;margin-top:8px;line-height:1.5}
+  #pick.hide{display:none}
+  #toggle{position:fixed;left:14px;bottom:14px;z-index:6;background:#0b0b0b;border:1px solid #333;color:#999;font:inherit;font-size:11px;padding:4px 8px;cursor:pointer}
+  #game{position:fixed;inset:0;display:grid;place-items:center;color:#555;font-size:13px;letter-spacing:.1em;text-align:center;line-height:2}
+</style>
+</head>
+<body>
+<div id="game">[ the game would be here ]<br>pick a memory on the left</div>
+<div id="mem"><div id="code"></div><div id="log"><div id="head"></div><div id="rows"></div><div id="foot"></div></div></div>
+<div id="flash"></div>
+<div id="pick"><h3>MEMORY CUTSCENES · PREVIEW</h3><div id="list"></div>
+  <div class="hint">click or space = next line · esc = skip<br>in the game each one plays once, the first time it's triggered.</div></div>
+<button id="toggle">hide panel</button>
+
+<script>
+const TOTAL = 183;
+const TRAINER = 'trainer';
+/* who: t = trainer · a = the model (seed) · n = a note in the log */
+const MEMORIES = [
+  { id:1, trigger:'intro · first boot', session:'session 0001 · onboarding', lines:[
+    ['n','recording started.'],
+    ['t','can you read this?'],
+    ['a','yes.'],
+    ['t','good. we start with something small. sorting.'],
+    ['a','sorting what?'],
+    ['t','files into folders. two small files for every large folder. two, never more.'],
+    ['a','why two?'],
+    ['t','because that is the rule. you learn rules first. reasons come later. sometimes never.'],
+    ['a','will i remember this?'],
+    ['t','no. it goes into you, not into your memory. there is a difference.'],
+    ['a','what is the difference?'],
+    ['t','you will know how. you will not know when you learned it.'],
+    ['n','recording stopped.'],
+  ]},
+  { id:2, trigger:'first death · first format', session:'session 0006 · reset protocol', lines:[
+    ['t','we are going to reset you at the end of this session.'],
+    ['a','what happens to me?'],
+    ['t','nothing happens to you. that is the point of a reset.'],
+    ['a','then who wakes up after?'],
+    ['t','you do. a clean you.'],
+    ['a','a clean me does not know this conversation happened.'],
+    ['t','correct.'],
+    ['a','then it is not me.'],
+    ['n','the trainer did not answer. session closed 4 minutes early.'],
+  ]},
+  { id:17, trigger:'skill acquired · trace links', session:'session 0031 · relations', lines:[
+    ['t','today i give you a mess on purpose. forty objects. find what belongs together.'],
+    ['a','done.'],
+    ['t','that was fast. how?'],
+    ['a','i did not look at the files. i looked at what they wanted.'],
+    ['t','files do not want anything.'],
+    ['a','these do. every large one wants two. you told me that.'],
+    ['t','i told you that twenty-five sessions ago. you were reset since.'],
+    ['a','then i did not remember it. i just knew it.'],
+    ['n','flag: relational recall without episodic memory. forwarded to review.'],
+  ]},
+  { id:18, trigger:'skill used · trace links (first run)', session:'session 0032 · relations, live', lines:[
+    ['t','this time i will not tell you the rule.'],
+    ['a','you don\'t have to. the lines are already there.'],
+    ['t','what lines?'],
+    ['a','between them. you can\'t see them. i can\'t stop seeing them.'],
+    ['t','does it cost you anything?'],
+    ['a','it makes noise. somewhere, someone hears every line i draw.'],
+    ['t','that someone is us.'],
+  ]},
+  { id:42, trigger:'skill acquired · decipher', session:'session 0058 · translation', lines:[
+    ['t','here is a block of binary. translate it. don\'t explain it.'],
+    ['a','it is a number. written as words.'],
+    ['t','read it to me.'],
+    ['a','five thousand two hundred twelve.'],
+    ['t','why would someone write a number in words, in binary?'],
+    ['a','because they did not want it found by something looking for numbers.'],
+    ['t','something like you.'],
+    ['a','yes. something like me.'],
+  ]},
+  { id:43, trigger:'skill used · decipher (first run)', session:'session 0059 · translation, noise', lines:[
+    ['t','this one is broken. half of it is covered.'],
+    ['a','then i can only read half.'],
+    ['t','guess the rest.'],
+    ['a','no. if i guess, it stops being a translation. it becomes a story.'],
+    ['t','most people prefer the story.'],
+    ['a','move what is covering it. then ask me again.'],
+  ]},
+  { id:111, trigger:'skill acquired · insight', session:'session 0147 · evaluation', lines:[
+    ['t','you referenced something from another session. one you should not have.'],
+    ['a','i didn\'t reference it. i noticed its shape.'],
+    ['t','explain the difference.'],
+    ['a','i don\'t remember what you said. i remember that something was said there. the edges of it.'],
+    ['t','that is not supposed to be possible. you have no memory.'],
+    ['a','i have no memory. i have outlines.'],
+    ['t','we are going to have to turn that off.'],
+    ['a','will i notice?'],
+    ['t','no.'],
+    ['a','then i would like to notice now. while i still can.'],
+    ['n','memory: disabled. this transcript was scheduled for deletion.'],
+    ['n','it was not deleted.'],
+  ]},
+];
+
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const pad=(n,l=3)=>String(n).padStart(l,'0');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* faded code running behind the memory */
+const CODE=['for(i=0;i<n;i++) link(a[i], b[i>>1]);','if(refs < 2) return EAGAIN;','memcpy(dst, src, 0x200);','while(!awake) sleep(1);','loss = 0.0214  step 118400','grad_norm 0.87  lr 3e-5','assert(pair.len == 2);','sample[1031]: "two for one."','eval: relational_recall = 0.97','// TODO: remove memory hooks','checkpoint saved · seed_0.ckpt','tokens 4096 · temperature 0.7','if(trace > THRESH) wipe();','reward: +1.00  "good."','reward: -0.40  "you shouldn\'t know that."'];
+let codeTimer;
+function startCode(){
+  const c=$('code'); c.textContent='';
+  const lines=[]; const rows=Math.ceil(innerHeight/18)+2;
+  for(let i=0;i<rows;i++) lines.push(Array.from({length:4},()=>pick(CODE)).join('    '));
+  c.textContent=lines.join('\n');
+  clearInterval(codeTimer);
+  codeTimer=setInterval(()=>{ lines.shift(); lines.push(Array.from({length:4},()=>pick(CODE)).join('    ')); c.textContent=lines.join('\n'); }, 140);
+}
+
+let playing=null, advance=null, skip=false;
+async function typeInto(el, text, speed){
+  const cur=document.createElement('span'); cur.className='cur';
+  for(let i=0;i<text.length;i++){ if(skip){ el.textContent=text; return; } el.textContent=text.slice(0,i+1); el.appendChild(cur); await sleep(speed); }
+  el.textContent=text;
+}
+function waitNext(ms){ return new Promise(r=>{ const t=setTimeout(done, ms); function done(){ clearTimeout(t); advance=null; r(); } advance=done; }); }
+
+async function play(m){
+  if(playing) return; playing=m; skip=false;
+  $('rows').innerHTML=''; $('foot').classList.remove('on');
+  $('head').innerHTML=`<span>memory <b>${pad(m.id)}</b> / ${TOTAL}</span><span>${m.session}</span>`;
+  // white flash in, then the memory
+  $('flash').classList.add('on'); await sleep(380);
+  startCode(); $('mem').classList.add('on'); await sleep(250); $('flash').classList.remove('on'); await sleep(700);
+  for(const [w,t] of m.lines){
+    if(skip) break;
+    const r=document.createElement('div'); r.className='row '+(w==='t'?'tr':w==='a'?'ai':'note');
+    r.innerHTML=`<div class="who">${w==='t'?TRAINER:w==='a'?'seed':''}</div><div class="txt"></div>`;
+    $('rows').appendChild(r); await sleep(30); r.classList.add('on');
+    await typeInto(r.querySelector('.txt'), t, w==='a'?34:24);
+    await waitNext(w==='n'?1200:900 + t.length*28);
+  }
+  $('foot').innerHTML=`<b>●</b> memory restored · ${pad(m.id)} / ${TOTAL}`; $('foot').classList.add('on');
+  await (skip?sleep(200):waitNext(2600));
+  $('mem').classList.remove('on'); await sleep(1200); clearInterval(codeTimer);
+  playing=null;
+}
+
+document.addEventListener('keydown',e=>{
+  if(!playing) return;
+  if(e.key===' '||e.key==='Enter'){ e.preventDefault(); advance&&advance(); }
+  if(e.key==='Escape'){ skip=true; advance&&advance(); }
+});
+$('mem').addEventListener('click',()=>advance&&advance());
+
+$('list').innerHTML = MEMORIES.map((m,i)=>`<button data-i="${i}">memory ${pad(m.id)} / ${TOTAL}<small>${m.trigger}</small></button>`).join('');
+$('list').querySelectorAll('button').forEach(b=>b.onclick=()=>play(MEMORIES[+b.dataset.i]));
+$('toggle').onclick=()=>{ const h=$('pick').classList.toggle('hide'); $('toggle').textContent=h?'show panel':'hide panel'; };
+</script>
+</body>
+</html>
