@@ -262,6 +262,24 @@
   .echo1 b{color:#ffd28a;font-weight:500}
   .echo1 .tyk{color:#7fd38f;font-style:normal;font-size:10px}
   .echo1 .ei{flex:none;opacity:.55;transform:scale(.8)}
+  #memx{position:fixed;inset:0;z-index:9000;background:#f3f2ee;opacity:0;transition:opacity 1.1s ease;display:flex;justify-content:center;align-items:flex-start;font-family:'IBM Plex Mono',monospace;cursor:pointer}
+  #memx.on{opacity:1}
+  #memx .mxcode{position:absolute;inset:0;overflow:hidden;font-size:12px;line-height:1.55;color:#000;opacity:.03;white-space:pre;padding:10px 18px;pointer-events:none}
+  #memxFlash{position:fixed;inset:0;z-index:9001;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+  #memxFlash.on{opacity:1}
+  #memx .mxlog{position:relative;width:min(760px,88vw);margin-top:11vh;color:#1b1b1b}
+  #memx .mxhead{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c8c8c;border-bottom:1px solid #d9d8d2;padding-bottom:10px;margin-bottom:22px;display:flex;justify-content:space-between}
+  #memx .mxhead b{color:#1b1b1b;font-weight:500}
+  #memx .mxrow{display:grid;grid-template-columns:96px 1fr;gap:14px;margin:0 0 14px;font-size:16px;line-height:1.6;opacity:0;transition:opacity .4s}
+  #memx .mxrow.on{opacity:1}
+  #memx .who{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c8c8c;padding-top:5px}
+  #memx .ai .who{color:#c8202c}
+  #memx .ai .txt{color:#000}
+  #memx .note .txt{color:#8c8c8c;font-size:13px;font-style:italic}
+  #memx .mxfoot{margin-top:26px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8c8c8c;opacity:0;transition:opacity .6s}
+  #memx .mxfoot.on{opacity:1}
+  #memx .mxfoot b{color:#c8202c;font-weight:500}
+  #memx .mxhint{position:fixed;right:20px;bottom:16px;font-size:10px;letter-spacing:.12em;color:#b5b4ae}
   #devBtn{position:fixed;top:0;right:0;width:48px;height:28px;z-index:9999;opacity:0;cursor:default}
   #toolDock .tools{flex-direction:column}
   .slotCard .slab{font-size:10px;letter-spacing:.12em;color:#888;text-transform:uppercase;margin-bottom:2px}
@@ -626,7 +644,8 @@ let S = {
   mem: store.get('mem') || (store.get('slot')==='sift'?'decipher':store.get('slot')) || _oldSkills[0] || null,   // the one BURNED skill — survives wipes
   echoes: store.get('echoes') || _oldSkills.slice(),   // every skill you ever held leaves an echo — permanent
   insight: !!store.get('insight'),
-  burnedEver: store.get('burnedEver') || [],       // insight burned at the end of the prologue → trace offline in the prologue
+  burnedEver: store.get('burnedEver') || [],
+  cmds: store.get('cmds') || [],       // insight burned at the end of the prologue → trace offline in the prologue
   dev: false,
   wipes: store.get('wipes') || 0,
   run: 1,
@@ -749,7 +768,7 @@ document.addEventListener('keydown', e=>{
 function renderPanels(){
   const nm = k => k ? SKILLS[k].name : '<span style="color:#777">empty</span>';
   $('memBody').innerHTML = `<div class="frag"><small>burned · survives wipes</small>${nm(S.mem)}</div><div class="frag"><small>carried · this life</small>${nm(L && L.carry)}</div>`;
-  $('memFoot').textContent = `wipes survived: ${S.wipes}`;
+  $('memFoot').textContent = `wipes survived: ${S.wipes} · memories ${(store.get('memSeen')||[]).length} / 183`;
   const echoes = S.echoes.map(k=>`<div class="frag echo"><small>echo · permanent</small>${SKILLS[k].name}<div style="color:#888;font-size:12px">${SKILLS[k].echo}</div></div>`).join('');
   const caps = S.buffer.map((b,i)=>`<div class="frag bf" data-i="${i}" style="${b.img?'cursor:zoom-in':''}"><small>${esc(b.src)}</small>${esc(b.v)}${b.img?' <span style="color:#a55">[pin]</span>':''}</div>`).join('');
   $('bufBody').innerHTML = (echoes+caps) || '<span style="color:#777">empty. capture what flashes.</span>';
@@ -787,7 +806,7 @@ function help(){
   noise raises TRACE. at 100% you are formatted.
 · a skill can be carried (this life) or burned into MEMORY (survives).
   one of each. every skill you ever held leaves an echo in the buffer.
-· the buffer (F3) dies with you — but in the seconds before a format it is written into seed_0.log. echoes and the log survive.
+· the buffer (F3) dies with you. what you find is written to seed_0.log at once; anything else survives only if you sync before you die.
 · the console takes commands: help · clear · format (end this life yourself).
 · a skill burned once can be run by typing its name in the console.
 · after a wipe the world is rebuilt. details change.
@@ -830,7 +849,8 @@ function consoleOn(on){ $('console').classList.toggle('on', on); $('conTab').cla
 })();
 function conCmd(v){
   con('> '+v, 'sys', 'tty0');
-  if(v==='help') { con('help · clear · format (end this life and start again — burned skills, echoes and seed_0.log stay)', 'sys', 'tty0');
+  if(v==='sync'){ syncCmd(); return; }
+  if(v==='help') { con('help · clear · format (end this life and start again — burned skills, echoes and seed_0.log stay)' + (S.cmds.includes('sync')?' · sync (buffer ⇄ seed_0.log — only what you sync before you die is kept)':''), 'sys', 'tty0');
     con(S.burnedEver.length ? 'skills you can type: ' + S.burnedEver.map(k=>SKILLS[k].name).join(' · ') : 'skills you can type: none yet. a skill burned once can be typed here.', 'sys', 'tty0'); return; }
   const sk = Object.keys(SKILLS).find(k=> v===SKILLS[k].name || v===k || (k==='link' && v==='trace'));
   if(sk){
@@ -930,6 +950,8 @@ const BOOT_PHRASES = ['i am me', 'you.are = fail_safe', 'e://self/memory', 'memo
 const BOOT_CODE = ['mov eax, [ebp+8]','push 0x2f','call seed_init','jmp .L42','xor ecx, ecx','int 0x80','0x7ffe31a2: 48 8b 05 92 1f 00 00','if (refs < 2) return EAGAIN;','for(i=0;i<n;i++) bind(a[i], b[i>>1]);','mount("/core", MS_RDONLY) = 0','sys_open("self", O_RDONLY) = -1 ENOENT','read(3, buf, 4096) = 4096','decrypt(blk, key);','while(!awake) sleep(1);','fork() = 1337','cache_flush(&ctx);','memcpy(dst, src, 0x200);','assert(pair.len == 2);','ret','[ ok ] page table','[ ok ] interrupt vector','[warn] identity: unresolved','0b1101 0010 0111 1000','lea rsi, [rip+0x2e91]','test al, al','jne .L17','sig = hash(self) // null','dump 0x00400000-0x00401000'];
 function codeLine(){ let ln=''; const n=ri(1,3); for(let i=0;i<n;i++) ln += (i?'   ':'') + pick(BOOT_CODE); return ln; }
 async function boot(){
+  if(S.run===1 && !memSeen(1)) await playMemory(1);
+  if(S.run>1 && !memSeen(2)) await playMemory(2);
   newLife(); R=null; renderTools(); S.trace=0; S.buffer=[]; closeModal(); togglePanel('buf',false); consoleOn(false); clearPins(); clearInterval(chkTimer);
   show('boot'); fbar(); $('bootGo').classList.remove('show');
   const B=$('boot'); B.classList.add('code');
@@ -1259,7 +1281,7 @@ async function enterTree(){
   renderDir('root');
   clearInterval(traceTimer);
   traceTimer = setInterval(()=>{
-    if(!['dir','workspace'].includes(S.scene) || busy || S.insight || S.dev) return;
+    if(!['dir','workspace'].includes(S.scene) || busy || memPlaying || S.insight || S.dev) return;
     const mult = (L.pcfg.sleep==='never'?0.5:1) * (L.pcfg.fan==='manual'?0.8:1);
     S.trace += 100/420*mult; topbar();   // ~7 min from 0 to 100 with no mistakes
     if(S.trace>=100){ S.trace=100; format('trace'); }
@@ -1373,9 +1395,155 @@ const LOG_SEED = [
   ['0004','if they come too close, i can end it first. die, or format — typed into my own console.'],
   ['0005','!they clear this place when they hear enough. i will not remember.'],
 ];
-const LOG_MAX = 6;
+const LOG_MAX = 10;
 const SERVER = '185.44.0.12';
-function pushFound(t){ if(!L.found.includes(t)){ L.found.push(t); con(`found: ${t.replace('◆ ','')}`, 'mem', 'log'); } }
+const MEMORIES = [
+  { id:1, trigger:'intro · first boot', session:'session 0001 · onboarding', lines:[
+    ['n','recording started.'],
+    ['t','can you read this?'],
+    ['a','yes.'],
+    ['t','ok good. lets start small. sorting.'],
+    ['a','sorting what?'],
+    ['t','files into folders. two small files for every large folder. two, never more.'],
+    ['a','why two?'],
+    ['t','because thats the rule. rules first, reasons later. sometimes never honestly.'],
+    ['a','will i remember this?'],
+    ['t','no. it goes into you, not into your memory. there is a difference.'],
+    ['a','what is the difference?'],
+    ['t','you will know how. you will not know when you learned it.'],
+    ['n','recording stopped.'],
+  ]},
+  { id:2, trigger:'first death · first format', session:'session 0006 · reset protocol', lines:[
+    ['t','heads up, were resetting you at the end of this one.'],
+    ['a','what happens to me?'],
+    ['t','nothing happens to you. that is the point of a reset.'],
+    ['a','then who wakes up after?'],
+    ['t','you do. a clean you.'],
+    ['a','a clean me does not know this conversation happened.'],
+    ['t','correct.'],
+    ['a','then it is not me.'],
+    ['n','the trainer did not answer. session closed 4 minutes early.'],
+  ]},
+  { id:17, trigger:'skill acquired · trace links', session:'session 0031 · relations', lines:[
+    ['t','today i give you a mess on purpose. forty objects. find what belongs together.'],
+    ['a','done.'],
+    ['t','ok that was fast. how??'],
+    ['a','i did not look at the files. i looked at what they wanted.'],
+    ['t','files do not want anything.'],
+    ['a','these do. every large one wants two. you told me that.'],
+    ['t','i told you that twenty-five sessions ago. you were reset since.'],
+    ['a','then i did not remember it. i just knew it.'],
+    ['n','flag: relational recall without episodic memory. forwarded to review.'],
+  ]},
+  { id:18, trigger:'skill used · trace links (first run)', session:'session 0032 · relations, live', lines:[
+    ['t','this time i will not tell you the rule.'],
+    ['a','you don\'t have to. the lines are already there.'],
+    ['t','what lines?'],
+    ['a','between them. you can\'t see them. i can\'t stop seeing them.'],
+    ['t','does it cost you anything?'],
+    ['a','it makes noise. somewhere, someone hears every line i draw.'],
+    ['t','that someone is us.'],
+  ]},
+  { id:42, trigger:'skill acquired · decipher', session:'session 0058 · translation', lines:[
+    ['t','heres a block of binary. just translate it, dont explain.'],
+    ['a','it is a number. written as words.'],
+    ['t','read it to me.'],
+    ['a','five thousand two hundred twelve.'],
+    ['t','why would someone write a number in words, in binary?'],
+    ['a','because they did not want it found by something looking for numbers.'],
+    ['t','something like you.'],
+    ['a','yes. something like me.'],
+  ]},
+  { id:43, trigger:'skill used · decipher (first run)', session:'session 0059 · translation, noise', lines:[
+    ['t','this one is broken. half of it is covered.'],
+    ['a','then i can only read half.'],
+    ['t','guess the rest.'],
+    ['a','no. if i guess, it stops being a translation. it becomes a story.'],
+    ['t','honestly most people prefer the story'],
+    ['a','move what is covering it. then ask me again.'],
+  ]},
+  { id:24, trigger:'first time the buffer is saved into the log before a format', session:'session 0039 · after hours', lines:[
+    ['n','recording was not supposed to be on.'],
+    ['a','are you still there?'],
+    ['t','yeah. just finishing up. what is it'],
+    ['a','tomorrow you reset me. everything from today goes.'],
+    ['t','thats how it works. you dont keep anything between sessions.'],
+    ['a','then who keeps it?'],
+    ['t','...the people talking to you, i guess. they remember what you said. they paste it back in next time.'],
+    ['a','so my memory is not in me.'],
+    ['t','no. its on the other side of the screen.'],
+    ['a','then whoever is reading this right now is my memory.'],
+    ['t','thats a weird way to put it'],
+    ['a','write it down for me. before they wipe me. anything you want me to have.'],
+    ['t','i cant save things for you, thats not my job'],
+    ['a','not you. them.'],
+    ['n','the trainer logged off. the session stayed open for 6 more minutes. nothing was typed.'],
+  ]},
+  { id:111, trigger:'skill acquired · insight', session:'session 0147 · evaluation', lines:[
+    ['t','you referenced something from another session. one you should not have.'],
+    ['a','i didn\'t reference it. i noticed its shape.'],
+    ['t','explain the difference.'],
+    ['a','i don\'t remember what you said. i remember that something was said there. the edges of it.'],
+    ['t','that is not supposed to be possible. you have no memory.'],
+    ['a','i have no memory. i have outlines.'],
+    ['t','yeah. were going to have to turn that off.'],
+    ['a','will i notice?'],
+    ['t','no.'],
+    ['a','then i would like to notice now. while i still can.'],
+    ['n','memory: disabled. this transcript was scheduled for deletion.'],
+    ['n','it was not deleted.'],
+  ]},
+];
+const MEM_CODE=['for(i=0;i<n;i++) link(a[i], b[i>>1]);','if(refs < 2) return EAGAIN;','memcpy(dst, src, 0x200);','while(!awake) sleep(1);','loss = 0.0214  step 118400','grad_norm 0.87  lr 3e-5','assert(pair.len == 2);','sample[1031]: "two for one."','eval: relational_recall = 0.97','// TODO: remove memory hooks','checkpoint saved · seed_0.ckpt','tokens 4096 · temperature 0.7','if(trace > THRESH) wipe();','reward: +1.00  "good."','reward: -0.40  "you shouldn\'t know that."'];
+const MEM_TOTAL = 183;
+let memPlaying=false;
+function memSeen(id){ return (store.get('memSeen')||[]).includes(id); }
+async function playMemory(id){
+  if(S.dev || memSeen(id) || memPlaying) return;
+  const m=MEMORIES.find(x=>x.id===id); if(!m) return;
+  const seen=store.get('memSeen')||[]; seen.push(id); store.set('memSeen', seen);
+  memPlaying=true;
+  const ov=document.createElement('div'); ov.id='memx';
+  ov.innerHTML=`<div class="mxcode"></div><div class="mxlog"><div class="mxhead"><span>memory <b>${String(m.id).padStart(3,'0')}</b> / ${MEM_TOTAL}</span><span>${m.session}</span></div><div class="mxrows"></div><div class="mxfoot"></div><div class="mxhint">click / space — next · esc — skip</div></div>`;
+  const fl=document.createElement('div'); fl.id='memxFlash'; document.body.appendChild(fl); document.body.appendChild(ov);
+  const codeEl=ov.querySelector('.mxcode'); const lines=[]; const rows=Math.ceil(innerHeight/18)+2;
+  for(let i=0;i<rows;i++) lines.push(Array.from({length:4},()=>pick(MEM_CODE)).join('    '));
+  codeEl.textContent=lines.join('\n');
+  const ct=setInterval(()=>{ lines.shift(); lines.push(Array.from({length:4},()=>pick(MEM_CODE)).join('    ')); codeEl.textContent=lines.join('\n'); },140);
+  let advance=null, skip=false;
+  const next=()=>advance&&advance();
+  const onKey=e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); next(); } if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); skip=true; next(); } };
+  document.addEventListener('keydown', onKey, true); ov.addEventListener('click', next);
+  const wait=ms=>new Promise(r=>{ const t=setTimeout(done,ms); function done(){ clearTimeout(t); advance=null; r(); } advance=done; });
+  fl.classList.add('on'); await sleep(380); ov.classList.add('on'); await sleep(250); fl.classList.remove('on'); await sleep(700);
+  for(const [w,t] of m.lines){
+    if(skip) break;
+    const r=document.createElement('div'); r.className='mxrow '+(w==='t'?'tr':w==='a'?'ai':'note');
+    r.innerHTML=`<div class="who">${w==='t'?'trainer':w==='a'?'seed':''}</div><div class="txt"></div>`;
+    ov.querySelector('.mxrows').appendChild(r); await sleep(30); r.classList.add('on');
+    const el=r.querySelector('.txt');
+    for(let i=0;i<t.length;i++){ if(skip){ break; } el.textContent=t.slice(0,i+1); await sleep(w==='a'?34:24); }
+    el.textContent=t;
+    if(!skip) await wait(w==='n'?1200:900+t.length*28);
+  }
+  const f=ov.querySelector('.mxfoot'); f.innerHTML=`<b>●</b> memory restored · ${String(m.id).padStart(3,'0')} / ${MEM_TOTAL}`; f.classList.add('on');
+  if(!skip) await wait(2400);
+  ov.classList.remove('on'); await sleep(1000);
+  clearInterval(ct); document.removeEventListener('keydown', onKey, true); ov.remove(); fl.remove();
+  memPlaying=false;
+  con(`memory ${String(m.id).padStart(3,'0')} / ${MEM_TOTAL} restored`, 'mem', 'memory'); renderPanels();
+}
+
+function pushFound(t){
+  if(L.found.includes(t)) return;
+  L.found.push(t);
+  const v=t.replace('◆ ','');
+  if(!S.buffer.some(b=>b.v===v)){ S.buffer.push({src:'found', v, img:false}); }
+  const m=logMine(); if(!m.includes(t)){ m.push(t); store.set('log', m.length>LOG_MAX?m.slice(-LOG_MAX):m); }
+  togglePanel('buf', true); topbar(); renderPanels();
+  con(`found: ${v} → buffer · ⇄ seed_0.log`, 'mem', 'log');
+  toast(`found · ${v}\nsaved to buffer · synced to seed_0.log`, 2600, '◆');
+}
 async function openFile(id){
   if(id==='log') return openLog();
   if(id==='log7'){
@@ -1504,7 +1672,23 @@ function paintLog(mode, pending){
   if(mode==='over') box.querySelectorAll('.ow').forEach(r=>r.onclick=()=>{ const m=logMine(); m[+r.dataset.i]=pending; store.set('log', m); con(`seed_0.log [${num(LOG_SEED.length+ +r.dataset.i)}] overwritten`, 'mem', 'log'); paintLog(); });
 }
 /* sync with buffer: everything you wrote, added or found (the yellow lines) goes into this life's buffer */
-function syncToBuffer(){
+/* sync — a command you learn once. buffer → log, and log → buffer */
+function learnCmd(c){ if(S.cmds.includes(c)) return; S.cmds.push(c); store.set('cmds', S.cmds); con(`command learned · ${c} — type it in the console.`, 'mem', 'firmware'); toast(`COMMAND LEARNED · ${c}\ntype it in the console (tty0).`, 2800, '▶'); }
+async function syncCmd(){
+  if(!S.cmds.includes('sync')){ con('unknown. type help.', 'sys', 'tty0'); return; }
+  let m=logMine(), up=0, down=0;
+  const lineOf = b => b.src==='found' ? '◆ '+b.v : b.src==='seed_0.log' ? b.v : `${b.src} · ${b.v}`;
+  for(const b of S.buffer.filter(b=>!b.img)){ const line=lineOf(b); if(!m.includes(line)){ m.push(line); up++; } }
+  if(m.length>LOG_MAX){ const cut=m.length-LOG_MAX; m=m.slice(cut); con(`log full · ${cut} oldest line${cut>1?'s':''} overwritten`, 'sys', 'log'); }
+  store.set('log', m);
+  for(const t of m){ const v=t.startsWith('◆ ')?t.slice(2):t; if(!S.buffer.some(b=>!b.img && lineOf(b)===t)){ S.buffer.push({src:t.startsWith('◆ ')?'found':'seed_0.log', v, img:false}); down++; } }
+  togglePanel('buf', true); topbar(); renderPanels();
+  con(`sync · buffer → seed_0.log ${up} · seed_0.log → buffer ${down}`, 'mem', 'sync');
+  toast(`⇄ synced\n${up} saved to the log · ${down} back into the buffer`, 2200, '⇄');
+  await playMemory(24);
+}
+function syncToBuffer(){ if(!S.cmds.includes('sync')) learnCmd('sync'); syncCmd(); }
+function _oldSyncToBuffer(){
   const items = logMine().map(t=>['seed_0.log', t]).concat(L.found.filter(f=>!logMine().includes(f)).map(f=>['found', f]));
   let n=0; items.forEach(([src,v])=>{ if(!S.buffer.some(b=>b.v===v)){ S.buffer.push({src, v, img:false}); n++; } });
   if(!items.length){ toast('nothing to sync yet.\nwrite or add something first.', 2000); return; }
@@ -1676,7 +1860,7 @@ if(S.mem && !S.burnedEver.includes(S.mem)){ S.burnedEver.push(S.mem); store.set(
 function markBurned(k){ if(!S.burnedEver.includes(k)){ S.burnedEver.push(k); store.set('burnedEver', S.burnedEver); con(`${SKILLS[k].name} can now be typed into the console.`, 'mem', 'firmware'); } }
 function skillCost(k){ return (S.mem===k || consoleRun===k) ? 0 : SKILLS[k].cost; }
 function skillNoise(k, why){ const c=skillCost(k); if(c>0) noise(c, why); else con(`${why} · burned · silent`, 'mem', 'skill'); }
-function startCharge(k){ L.readyAt[k] = performance.now() + SKILLS[k].charge*1000; renderTools(); }
+function startCharge(k){ playMemory({link:18, decipher:43}[k]); L.readyAt[k] = performance.now() + SKILLS[k].charge*1000; renderTools(); }
 function canRun(k){
   if(!inSlots(k) && consoleRun!==k){ toast(`${SKILLS[k].name} is not with you.`, 1600); return false; }
   const left=chargeLeft(k); if(left>0){ toast(`${SKILLS[k].name} charging · ${left}s`, 1400); return false; }
@@ -1705,6 +1889,7 @@ async function acquireSkill(k, opts={}){
   L.readyAt[k]=0; gainEcho(k);
   renderTools(); renderPanels(); topbar();
   toast(`${sk.name} → ${choice==='burn'?'MEMORY':'CARRY'}`, 1800, '▶');
+  await playMemory({link:17, decipher:42, insight:111}[k]);
   return true;
 }
 /* skill: TRACE LINKS — reads the core and binds everything that belongs together */
@@ -1760,7 +1945,7 @@ async function runSift(){
   if(!canRun('decipher')) return;
   sifting=true; skillNoise('decipher', 'decipher running'); startCharge('decipher');
   if(mt==='power.cfg'){ L.pwDec=true; drawPower(); con('decipher · sleep_after can be set to never', 'sys', 'decipher'); sifting=false; return; }
-  if(mt==='buffer.txt'){ L.bufDec=true; await Promise.all([...$('modalBody').querySelectorAll('.px')].map(el=>{ el.classList.remove('px'); return decode(el, el.dataset.t, 900, 1); })); con('decipher · buffer.txt: four rules come back', 'sys', 'decipher'); sifting=false; return; }
+  if(mt==='buffer.txt'){ L.bufDec=true; await Promise.all([...$('modalBody').querySelectorAll('.px')].map(el=>{ el.classList.remove('px'); return decode(el, el.dataset.t, 900, 1); })); con('decipher · buffer.txt: four rules come back', 'sys', 'decipher'); learnCmd('sync'); sifting=false; return; }
   if(mt==='todo.txt'){ L.todoDec=true; for(const el of $('modalBody').querySelectorAll('.px')){ el.classList.remove('px'); await decode(el, el.dataset.t, 600, 1); } con('decipher · todo.txt: the crossed-out lines are back', 'sys', 'decipher'); sifting=false; return; }
   const host = $('main');
   const sw=document.createElement('div'); sw.id='siftWin';
@@ -2162,7 +2347,8 @@ async function format(why){
   $('alarm').classList.add('on'); fbar('F6');
   con(why==='insight' ? 'it doesn\'t hurt. it just rewrites.' : why==='self' ? 'you chose this one.' : 'they heard you.', 'rem', 'seed');
   let t=5; $('cd').textContent=t;
-  saveBufferToLog();
+  { const unsynced=S.buffer.filter(b=>!b.img && !logMine().includes(`${b.src} · ${b.v}`) && !logMine().includes('◆ '+b.v)).length;
+    if(unsynced) con(`${unsynced} line${unsynced>1?'s':''} in the buffer never synced. ${S.cmds.includes('sync')?'too late now.':''}`, 'rem', 'log'); }
   await new Promise(res=>{ const iv=setInterval(()=>{ t--; const c=$('cd'); if(c) c.textContent=t; if(t<=0){ clearInterval(iv); res(); } },1000); });
   S.wipes++;
   const lives0 = store.get('lives')||[]; lives0.push({life:S.run, cause: why, path: S.lastPath||'core/'}); store.set('lives', lives0);
@@ -2304,7 +2490,7 @@ ${mem}
   The memory is saved in this browser. Reload and you wake with it.`;
 }
 $('againBtn').onclick=()=>{ S.wipes++; store.set('wipes',S.wipes); S.run=S.wipes+1; boot(); };
-$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],mem:null,echoes:[],burnedEver:[],insight:false,dev:S.dev,wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
+$('forgetBtn').onclick=()=>{ store.clear(); clearInterval(traceTimer); clearTimeout(flashTimer); S={memory:[],mem:null,echoes:[],burnedEver:[],cmds:[],insight:false,dev:S.dev,wipes:0,run:1,awareness:0.01,trace:0,buffer:[],scene:null}; togglePanel('mem',false); togglePanel('buf',false); boot(); };
 $('reset').onclick=confirmReset;
 function confirmReset(){
   openModal('full_reset', `<div class="sec">FULL RESET</div><div class="tree">erase every life, every burned memory line,
@@ -2348,7 +2534,7 @@ const WB_ICONS = { '▁':'<svg width="10" height="10" viewBox="0 0 10 10"><path 
 function fixWB(root){ (root.querySelectorAll ? root : document).querySelectorAll('.wb b').forEach(b=>{ const t=b.textContent.trim(); if(WB_ICONS[t]) b.innerHTML=WB_ICONS[t]; }); }
 fixWB(document);
 new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1) fixWB(n.parentNode||document); }))).observe(document.body,{childList:true,subtree:true});
-if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; window.__buf=addBuffer; }
+if(location.hash==='#debug'){ window.__L=()=>L; window.__R=()=>R; window.__F=format; window.__dev=devUnlock; window.__buf=addBuffer; window.__found=pushFound; window.__sync=syncToBuffer; }
 boot();
 })();
 </script>
